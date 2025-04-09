@@ -7,20 +7,22 @@ int main(int argc, char* argv[]) {
     
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
 
-	int server_fd = iniciar_servidor();
+//	int server_fd = iniciar_servidor();
+	int server_cpu_interrupt_fd = iniciar_servidor();
 	log_info(logger_kernel, "Servidor listo para recibir al cliente");
-	int cliente_fd = esperar_cliente(server_fd);
+	int cliente_cpu_interrupt_fd = esperar_cliente(server_cpu_interrupt_fd);
+//	int cliente_fd = esperar_cliente(server_fd);
 
-	t_list* lista;
+//	t_list* lista;
 	while (1) {
-		int cod_op = recibir_operacion(cliente_fd);
+		int cod_op = recibir_operacion(cliente_cpu_interrupt_fd);
 		switch (cod_op) {
 		case MENSAJE:
-			recibir_mensaje(cliente_fd);
+			recibir_mensaje(cliente_cpu_interrupt_fd);
 			break;
 			/*
 		case PAQUETE:
-			lista = recibir_paquete(cliente_fd);
+			lista = recibir_paquete(cliente_cpu_interrupt_fd);
 			log_info(logger, "Me llegaron los siguientes valores:\n");
 			list_iterate(lista, (void*) iterator);
 			break;
@@ -33,5 +35,7 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 	}
+	close(cliente_cpu_interrupt_fd);
+	close(server_cpu_interrupt_fd);
 	return EXIT_SUCCESS;
 }

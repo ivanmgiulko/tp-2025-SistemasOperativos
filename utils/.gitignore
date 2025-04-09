@@ -9,7 +9,7 @@ obj/
 .project
 
 # CLion files
-.idea/
+.idea/z
 
 # Visual Studio Code files
 .vscode/*
