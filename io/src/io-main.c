@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
 	char* valor_prueba = "LLEGUE AL SERVER!!!";
 
 	t_log* logger_io = iniciar_logger();
-	t_config* config_io = iniciar_config();
+	t_config* config_io = iniciar_config("./io.config");
     
 	/* ---------------- LOGGING ---------------- */
 
@@ -17,9 +17,6 @@ int main(int argc, char* argv[]) {
     // log_info(logger_io, "Primer log");
 	
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
-
-	config_io = config_create("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/io/io.config");
-
 	ip_kernel = config_get_string_value(config_io, "IP_KERNEL");
 	puerto_kernel = config_get_string_value(config_io, "PUERTO_KERNEL");
 	log_info(logger_io, ip_kernel);

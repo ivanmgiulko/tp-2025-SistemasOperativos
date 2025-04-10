@@ -3,44 +3,46 @@
 
 
 int main(int argc, char* argv[]) {
-	t_config* config_kernel = iniciar_config();
-		char* puerto_kernel_interrupt;
-
+	
+	t_config* config_kernel = iniciar_config("./kernel.config");
 	logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE);
-    
-	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
-config_kernel = config_create("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/kernel.config");
 
-	puerto_kernel_interrupt = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_INTERRUPT");
-//	int server_fd = iniciar_servidor();
+	char* puerto_kernel_interrupt = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_INTERRUPT");
+	char* puerto_kernel_dispatch = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_DISPATCH");
+	char* ip_memoria = config_get_string_value(config_kernel, "IP_MEMORIA");
+	char* puerto_memoria = config_get_string_value(config_kernel, "PUERTO_MEMORIA");
+
+    
+	// INICIO SERVER KERNEL
 	int server_cpu_interrupt_fd = iniciar_servidor(puerto_kernel_interrupt);
-	log_info(logger_kernel, "Servidor listo para recibir al cliente");
+	int server_cpu_dispatch_fd = iniciar_servidor(puerto_kernel_dispatch);
+
+	// VALIDAR QUE EL VALOR DE LOS FILE DESCRIPTORS SON CORRECTOS
+	if(server_cpu_interrupt_fd == -1){
+        log_error(logger_kernel, "Error al iniciar servidor de interrupt");
+        abort();
+    }
+
+	if(server_cpu_dispatch_fd == -1){
+        log_error(logger_kernel, "Error al iniciar servidor de dispatch");
+        abort();
+    }
+
+	log_info(logger_kernel, "Servidor INTERRUPT listo para recibir al cliente");
+	log_info(logger_kernel, "Servidor DISPATCH listo para recibir al cliente");
+	
+	// CONEXION DE KERNEL A MEMORIA Y MENSAJE DE PRUEBA
+	int conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+	enviar_mensaje(config_get_string_value(config_kernel, "VALOR_PRUEBA"), conexion_memoria);
+
+	// ESPERA DE CONEXION
+	int cliente_cpu_dispatch_fd = esperar_cliente(server_cpu_dispatch_fd);
 	int cliente_cpu_interrupt_fd = esperar_cliente(server_cpu_interrupt_fd);
 //	int cliente_fd = esperar_cliente(server_fd);
 
+	// ARREGLAR ESTO PARA MANEJAR MENSAJES DE AMBOS CLIENTES
+	manejar_conexion(server_cpu_dispatch_fd, cliente_cpu_dispatch_fd);
+	manejar_conexion(server_cpu_interrupt_fd, cliente_cpu_interrupt_fd);
 //	t_list* lista;
-	while (1) {
-		int cod_op = recibir_operacion(cliente_cpu_interrupt_fd);
-		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(cliente_cpu_interrupt_fd);
-			break;
-			/*
-		case PAQUETE:
-			lista = recibir_paquete(cliente_cpu_interrupt_fd);
-			log_info(logger, "Me llegaron los siguientes valores:\n");
-			list_iterate(lista, (void*) iterator);
-			break;
-			*/
-		case -1:
-			log_error(logger_kernel, "el cliente se desconecto. Terminando servidor");
-			return EXIT_FAILURE;
-		default:
-			log_warning(logger_kernel,"Operacion desconocida. No quieras meter la pata");
-			break;
-		}
-	}
-	close(cliente_cpu_interrupt_fd);
-	close(server_cpu_interrupt_fd);
-	return EXIT_SUCCESS;
+
 }

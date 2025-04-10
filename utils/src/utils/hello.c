@@ -7,10 +7,10 @@ t_log* iniciar_logger(void)
 	return nuevo_logger;
 }
 
-t_config* iniciar_config(void)
+t_config* iniciar_config(char* ruta)
 {
-	t_config* nuevo_config;
-
+	t_config* nuevo_config = config_create(ruta);
+	
 	return nuevo_config;
 }
 

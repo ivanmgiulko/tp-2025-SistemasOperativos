@@ -15,7 +15,7 @@
 void saludar(char* quien);
 
 t_log* iniciar_logger(void);
-t_config* iniciar_config(void);
+t_config* iniciar_config(char*);
 
 
 #endif
