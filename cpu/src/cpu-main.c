@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
 
 	config_cpu = config_create("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/cpu/cpu.config");
 
-	ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
+	ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	log_info(logger_cpu, ip_kernel);
 	log_info(logger_cpu, puerto_kernel_interrupt);
 	
