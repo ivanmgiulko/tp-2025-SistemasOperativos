@@ -1,5 +1,5 @@
-#include <utils/hello.h>
-#include "cpu-header.h"
+#include <utils/client.h>
+
 int main(int argc, char* argv[]) {
 	char* valor_prueba_interrupt = "Conectado a KERNEL desde INTERRUPT";
 	char* valor_prueba_dispatch = "Conectado a KERNEL desde DISPATCH";

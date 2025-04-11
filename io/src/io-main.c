@@ -1,7 +1,4 @@
-#include <utils/hello.h>
-#include "io-header.h"
-#include <readline/history.h>
-#include<readline/readline.h>
+#include <utils/client.h>
 
 int main(int argc, char* argv[]) {
 
@@ -29,7 +26,7 @@ int main(int argc, char* argv[]) {
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	enviar_mensaje(valor_prueba, conexion);
 
-	paquete(conexion);
+	// 	paquete(conexion);
 	
     config_destroy(config_io);
 	log_destroy(logger_io);
