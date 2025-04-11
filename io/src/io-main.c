@@ -1,9 +1,10 @@
 #include <utils/hello.h>
 #include "io-header.h"
+#include <readline/history.h>
+#include<readline/readline.h>
 
 int main(int argc, char* argv[]) {
-    
-   
+
 	char* ip_kernel;
 	char* puerto_kernel;
 	char* valor_prueba = "LLEGUE AL SERVER!!!";
@@ -28,9 +29,39 @@ int main(int argc, char* argv[]) {
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	enviar_mensaje(valor_prueba, conexion);
 
+	paquete(conexion);
+	
     config_destroy(config_io);
 	log_destroy(logger_io);
 
 
     return 0;
+}
+
+void paquete(int conexion)
+{
+	// Ahora toca lo divertido!
+	char* leido;
+	t_paquete* paquete = crear_paquete();
+
+	while (1) {
+        leido = readline("> ");
+
+        if (leido) {
+            add_history(leido);
+        }
+        if (!strncmp(leido, "exit", 4) || !strncmp(leido, "\0", 2)){
+            free(leido);
+            break;
+        }
+		// Leemos y esta vez agregamos las lineas al paquete
+        agregar_a_paquete(paquete, leido, strlen(leido) + 1);
+        free(leido);
+    }
+	
+	// ¡No te olvides de liberar las líneas y el paquete antes de regresar!
+	enviar_paquete(paquete, conexion);
+	
+	eliminar_paquete(paquete);
+
 }

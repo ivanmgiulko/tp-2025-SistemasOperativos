@@ -102,19 +102,18 @@ t_list* recibir_paquete(int socket_cliente)
 }
 
 int manejar_conexion(socket_server, socket_cliente){
+	t_list* lista;
 	while (1) {
 		int cod_op = recibir_operacion(socket_cliente);
 		switch (cod_op) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente);
 			break;
-			/*
 		case PAQUETE:
-			lista = recibir_paquete(cliente_cpu_interrupt_fd);
-			log_info(logger, "Me llegaron los siguientes valores:\n");
+			lista = recibir_paquete(socket_cliente);
+			log_info(logger_kernel, "Me llegaron los siguientes valores:\n");
 			list_iterate(lista, (void*) iterator);
 			break;
-			*/
 		case -1:
 			log_error(logger_kernel, "el cliente se desconecto. Terminando servidor");
 			return EXIT_FAILURE;
@@ -123,12 +122,15 @@ int manejar_conexion(socket_server, socket_cliente){
 			break;
 		}
 	}
+	
 	close(socket_server);
 	close(socket_cliente);
 	return EXIT_SUCCESS;
 }
 
-
+void iterator(char* value) {
+	log_info(logger_kernel,"%s", value);
+}
 
 // PARA COMUNICARSE CON MEMORIA (CLIENTE)
 

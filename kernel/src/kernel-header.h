@@ -35,7 +35,7 @@ typedef struct
 extern t_log* logger_kernel;
 
 void* recibir_buffer(int*, int);
-
+void iterator(char* value);
 int iniciar_servidor(char*);
 int esperar_cliente(int);
 t_list* recibir_paquete(int);
