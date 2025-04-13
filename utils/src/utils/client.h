@@ -3,13 +3,13 @@
 
 #include "utils.h"
 
-int crear_conexion(char* ip, char* puerto);
-void enviar_mensaje(char* mensaje, int socket_cliente);
+int crear_conexion(char*, char*);
+void enviar_mensaje(char*, int);
 t_paquete* crear_paquete(void);
-void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio);
-void enviar_paquete(t_paquete* paquete, int socket_cliente);
-void liberar_conexion(int socket_cliente);
-void eliminar_paquete(t_paquete* paquete);
-void* serializar_paquete(t_paquete* paquete, int bytes);
+void agregar_a_paquete(t_paquete*, void*, int);
+void enviar_paquete(t_paquete*, int);
+void liberar_conexion(int);
+void eliminar_paquete(t_paquete*);
+void* serializar_paquete(t_paquete*, int);
 
 #endif // CLIENT_H_

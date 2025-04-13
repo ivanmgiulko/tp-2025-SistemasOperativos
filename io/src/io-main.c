@@ -27,7 +27,6 @@ int main(int argc, char* argv[]) {
 	enviar_mensaje(valor_prueba, conexion);
 
 	// 	paquete(conexion);
-	
     config_destroy(config_io);
 	log_destroy(logger_io);
 

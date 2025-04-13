@@ -1,6 +1,8 @@
 #include"server.h"
 
-int iniciar_servidor(char* puerto, t_log* logger_servidor)
+t_log* logger_servidor; // logger de Kernel o de Memoria
+
+int iniciar_servidor(char* puerto)
 {
 	int socket_servidor;
 
@@ -32,7 +34,7 @@ int iniciar_servidor(char* puerto, t_log* logger_servidor)
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor, t_log* logger_servidor)
+int esperar_cliente(int socket_servidor)
 { 
 	// Aceptamos un nuevo cliente
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
@@ -41,12 +43,12 @@ int esperar_cliente(int socket_servidor, t_log* logger_servidor)
 	return socket_cliente;
 }
 
-void manejar_hilos(int server_fd, t_log* logger_servidor){
+void manejar_hilos(int server_fd){
 
     while(1){
-        int socket_cliente = esperar_cliente(server_fd, logger_servidor);
+        int socket_cliente = esperar_cliente(server_fd);
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion, (void*)socket_cliente, (void*)logger_servidor);
+        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion, (void*)socket_cliente);
         pthread_detach(hilo_cliente);
     }
 
@@ -75,7 +77,7 @@ void* recibir_buffer(int* size, int socket_cliente)
 	return buffer;
 }
 
-void recibir_mensaje(int socket_cliente, t_log* logger_servidor)
+void recibir_mensaje(int socket_cliente)
 {
 	int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
@@ -105,13 +107,13 @@ t_list* recibir_paquete(int socket_cliente)
 	return valores;
 }
 
-int manejar_conexion(int socket_server, int socket_cliente, t_log* logger_servidor){
+int manejar_conexion(int socket_cliente){
 	t_list* lista;
 	while (1) {
 		int cod_op = recibir_operacion(socket_cliente);
 		switch (cod_op) {
 		case MENSAJE:
-			recibir_mensaje(socket_cliente, logger_servidor);
+			recibir_mensaje(socket_cliente);
 			break;
             /*
 		case PAQUETE:
@@ -121,15 +123,14 @@ int manejar_conexion(int socket_server, int socket_cliente, t_log* logger_servid
 			break;
             */
 		case -1:
-			// log_error(logger_servidor, "el cliente se desconecto. Terminando servidor");
+			log_error(logger_servidor, "el cliente se desconecto. Terminando servidor");
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_servidor, "Operacion desconocida. No quieras meter la pata");
 			break;
 		}
 	}
-	
-	close(socket_server);
+
 	close(socket_cliente);
 	return EXIT_SUCCESS;
 }
