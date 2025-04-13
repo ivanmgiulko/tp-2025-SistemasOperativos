@@ -46,7 +46,7 @@ void manejar_hilos(int server_fd, t_log* logger_servidor){
     while(1){
         int socket_cliente = esperar_cliente(server_fd, logger_servidor);
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion, (void*)socket_cliente);
+        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion, (void*)socket_cliente, (void*)logger_servidor);
         pthread_detach(hilo_cliente);
     }
 
@@ -121,7 +121,7 @@ int manejar_conexion(int socket_server, int socket_cliente, t_log* logger_servid
 			break;
             */
 		case -1:
-			log_error(logger_servidor, "el cliente se desconecto. Terminando servidor");
+			// log_error(logger_servidor, "el cliente se desconecto. Terminando servidor");
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_servidor, "Operacion desconocida. No quieras meter la pata");

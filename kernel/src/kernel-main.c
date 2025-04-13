@@ -48,19 +48,19 @@ int main(int argc, char* argv[]) {
 	manejar_conexion(server_cpu_interrupt_fd, cliente_cpu_interrupt_fd, logger_kernel);
 //	t_list* lista;
 	
-/*
-	#define PUERTO_KERNEL "40073"
+
+	
 	char* puerto_io = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_IO");
 
-	int server_io_fd = iniciar_servidor(PUERTO_KERNEL, logger_servidor);
+	int server_io_fd = iniciar_servidor(puerto_io, logger_kernel);
 
 	if(server_io_fd == -1){
-        log_error(logger_servidor, "Error al iniciar servidor de IO");
+        log_error(logger_kernel, "Error al iniciar servidor de IO");
         abort();
     }
 	
-	log_info(logger_servidor, "Servidor KERNEL listo para recibir al IO");
-	int cliente_io_fd = esperar_cliente(server_io_fd, logger_servidor);
-	manejar_conexion(server_io_fd, cliente_io_fd, logger_servidor);
-	*/
+	log_info(logger_kernel, "Servidor KERNEL listo para recibir al IO");
+	int cliente_io_fd = esperar_cliente(server_io_fd, logger_kernel);
+	manejar_conexion(server_io_fd, cliente_io_fd, logger_kernel);
+	
 }

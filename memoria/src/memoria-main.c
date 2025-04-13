@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
     
     // CREACION DE HILO PARA EL SERVIDOR DE MEMORIA
     pthread_t hilo_servidor;
-    pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos, (void*)server_memoria_fd);
+    pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos, (void*)server_memoria_fd, (void*)logger_memoria);
     pthread_detach(hilo_servidor);
-
+    
     while(1){
         
     }
