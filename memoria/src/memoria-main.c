@@ -3,7 +3,7 @@
 
 int main(int argc, char* argv[]) {
     char* puerto_servidor_memoria;
-    int cliente_fd;
+    
     logger_servidor = log_create("./memoria.log", "log", true, LOG_LEVEL_TRACE);
     t_config* config_memoria = iniciar_config("./memoria.config");
   
@@ -28,22 +28,16 @@ int main(int argc, char* argv[]) {
 
     log_info(logger_servidor, "Servidor de memoria iniciado con exito");
     
-    // CREACION DE HILO PARA EL SERVIDOR DE MEMORIA
-    // pthread_t hilo_servidor;
-    // pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos, (void*)server_memoria_fd);
-    // pthread_detach(hilo_servidor);
-    // while(1){}
+    //CREACION DE HILO PARA EL SERVIDOR DE MEMORIA
+    pthread_t hilo_servidor;
+    pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos, (void*)server_memoria_fd);
+    pthread_join(hilo_servidor, NULL);
+    
 
     // Vini - si descomentan este porcion, recibe msj desde Kernel
-    /* 
-    while (1) {
-        pthread_t thread;
-        int *cliente_io_fd = malloc(sizeof(int));
-        *cliente_io_fd = esperar_cliente(server_memoria_fd);
-        pthread_create(&thread, NULL, (void*) manejar_conexion, *cliente_io_fd);
-        pthread_detach(thread);
-    }
-    */
+    
+    
+    
 
     
 

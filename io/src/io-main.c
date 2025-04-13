@@ -1,5 +1,5 @@
 #include <utils/client.h>
-
+#include <utils/server.h>
 int main(int argc, char* argv[]) {
 
 	char* ip_kernel;
@@ -21,11 +21,13 @@ int main(int argc, char* argv[]) {
 	log_info(logger_io, puerto_kernel);
 	
     // Creamos una conexión hacia el servidor, en este caso el KERNEL
-	int conexion = crear_conexion(ip_kernel, puerto_kernel);
+	int conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
-	enviar_mensaje(valor_prueba, conexion);
-
+	enviar_mensaje(valor_prueba, conexion_kernel_fd);
+	pthread_t hilo_cliente_io_akernel;
+    pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion, (void*) conexion_kernel_fd);
+    pthread_join(hilo_cliente_io_akernel, NULL);
 	// 	paquete(conexion);
     config_destroy(config_io);
 	log_destroy(logger_io);
