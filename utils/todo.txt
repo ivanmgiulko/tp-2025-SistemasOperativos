@@ -1,11 +1,16 @@
-* Inicializar todos los modulos   [HACIDO]
-    - Testear que el multihilo de memo pueda recibir desde Kernel y CPU al mismo tiempo   [HECHO]
-    - Que el Kernel muestre los 2 mensajes desde CPU interrupt y Dispatch y no solo 1  [HECHO]
 * Corroborar que realmente los handshakes esten en las conexiones [?]
-* Poder enviar paquetes y no solo mensajes entre los distintos modulos 
-* Generar issue: ¿Cómo definir las interfaces de IO?
+* Poder enviar paquetes y no solo mensajes entre los distintos modulos - Me fijo yo vini esto
+* Generar issue: ¿Cómo definir las interfaces de IO? - Me fijo yo vini esto
 * Chequear warnings de cada modulo.
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
+
+
+Creamos hilos para recibir peticiones.
+IO: creamos hilos para manejar las peticiones del KERNEL
+MEMORIA: creamos hilos para manejar como servidor la conexion con el CPU
+CPU: creamos hilos para manejar mensajes/peticiones futuras del KERNEL y la MEMORIA
+KERNEL: arreglados los comentarios y creados los hilos para manejar las conexiones con sus clientes 
+
 
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⡀⠤⠤⡤⠤⣀⣀⡀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⢔⠲⠈⠉⠀⠀⠀⠀⡸⠀⠀⠈⣿⣿⣦⡀⠀
@@ -14,7 +19,7 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀⠎⢀⣡⠴⠒⠈⠉⠉⢉⣩⣿⣶⣦⣄⡀⠀⡆⠀⠀⣿⣿⣿⣿⠀
 ⠀⠀⠀⠀⠀⠀⠀⣼⣴⠉⠀⢀⠖⠉⠉⠙⠿⣿⣿⣿⣿⣿⣿⣷⣼⡀⠀⣿⣿⣿⣿⠀
 ⠀⠀⠀⠀⠀⠀⠀⢻⣿⣄⣴⠏⠀⠀⠀⠀⠀⠙⣿⣿⣿⡿⠿⠛⠁⡇⠀⣿⣿⣿⣿⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⡹⠛⠁⠀⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⡇⠀⣿⣿⣿⣿⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⡹⠛⠁⠀⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⡇⠀⣿⣿⣿⣿⠀Grupo basado (ˉ﹃ˉ)
 ⠀⠀⠀⠀⠀⠀⢀⡔⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⣿⣿⣿⣿⠀
 ⠀⠀⠀⠀⠀⡠⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⣿⣿⣿⣿⠀
 ⠀⠀⢀⠔⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡜⠀⠀⣿⣿⣿⣿⠀
@@ -31,8 +36,3 @@
 ⠀⠑⠢⠤⠀⠀⠀⠀⠀⠒⣄⣀⠠⠶⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠋⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⡜⢠⠃⠀⠀⠀⠀⠻⣿⣿⣿⣿⣿⣿⣿⠿⠟⠋⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠉⠐⠒⠒⠂⠈⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-Creamos hilos para recibir peticiones.
-IO: creamos hilos para manejar las peticiones del KERNEL
-MEMORIA: creamos hilos para manejar como servidor la conexion con el CPU
-CPU: creamos hilos para manejar mensajes/peticiones futuras del KERNEL y la MEMORIA
-KERNEL: arreglados los comentarios y creados los hilos para manejar las conexiones con sus clientes 

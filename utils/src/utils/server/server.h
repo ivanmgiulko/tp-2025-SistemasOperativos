@@ -1,7 +1,7 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
-#include "utils.h"
+#include "./utils/utils.h"
 
 void* recibir_buffer(int*, int);
 void iterator(char*);

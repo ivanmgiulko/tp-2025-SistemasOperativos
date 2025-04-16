@@ -1,4 +1,6 @@
-#include <utils/server.h>
+#include <utils/cliente/client.h>
+#include <utils/server/server.h>
+#include <utils/proceso/process.h>
 #include "memoria-header.h"
 
 int main(int argc, char* argv[]) {
@@ -33,13 +35,5 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos, (void*)server_memoria_fd);
     pthread_join(hilo_servidor, NULL);
     
-
-    // Vini - si descomentan este porcion, recibe msj desde Kernel
-    
-    
-    
-
-    
-
     return 0;
 }

@@ -1,7 +1,7 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
 
-#include "utils.h"
+#include "./utils/utils.h"
 
 int crear_conexion(char*, char*);
 void enviar_mensaje(char*, int);

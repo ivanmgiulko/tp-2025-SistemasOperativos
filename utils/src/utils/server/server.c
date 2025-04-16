@@ -135,8 +135,7 @@ int manejar_conexion(int socket_cliente){
 	return EXIT_SUCCESS;
 }
 
-/*
+
 void iterator(char* value) {
 	log_info(logger_servidor,"%s", value);
 }
-*/

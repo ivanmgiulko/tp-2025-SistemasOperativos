@@ -1,5 +1,6 @@
-#include <utils/client.h>
-#include <utils/server.h>
+#include <utils/cliente/client.h>
+#include <utils/server/server.h>
+#include <utils/proceso/process.h>
 int main(int argc, char* argv[]) {
 
 	char* ip_kernel;

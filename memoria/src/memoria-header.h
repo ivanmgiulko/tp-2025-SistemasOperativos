@@ -1,6 +1,6 @@
 #ifndef MEMORIA_HEADER_H_
 #define MEMORIA_HEADER_H_
-#include <utils/server.h>
+#include <utils/server/server.h>
 
 extern t_log* logger_servidor;
 
