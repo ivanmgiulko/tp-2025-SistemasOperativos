@@ -4,22 +4,23 @@
 #include "kernel-header.h"
 
 int main(int argc, char* argv[]) {
-
+// [archivo_pseudocodigo] [tamanio_proceso] 
+	
 	t_config* config_kernel = iniciar_config("./kernel.config");
 	logger_servidor = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); // Crea el logger del Kernel
 	
 	int pid = 0;
 	process proceso_ejemplo = iniciarProceso(pid);
 	char *msgPrueba = string_new(); // Gloria eterna al creador de las commons
-	string_append(&msgPrueba, string_itoa(proceso_ejemplo.metricasEstado.cantVecesExec));
+	string_append(&msgPrueba, string_itoa(proceso_ejemplo.metricas_estado.cantVecesExec));
 	string_append(&msgPrueba," Se crea el proceso - Estado: NEW");
-	log_info(logger_servidor, msgPrueba);
+	log_info(logger_servidor, "%s", msgPrueba);
 	free(msgPrueba);
 	
 	// CONEXION DE KERNEL A MEMORIA Y MENSAJE DE PRUEBA
 	char* ip_memoria = config_get_string_value(config_kernel, "IP_MEMORIA");
 	char* puerto_memoria = config_get_string_value(config_kernel, "PUERTO_MEMORIA");
-	log_info(logger_servidor, ip_memoria);
+	log_info(logger_servidor, "IP Memoria: %s",ip_memoria);
 	int conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 	enviar_mensaje("ALOHA DESDE KERNEL!", conexion_memoria);
 

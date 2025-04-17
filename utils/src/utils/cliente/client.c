@@ -4,7 +4,6 @@
 
 int crear_conexion(char *ip, char* puerto)
 {
-	int err;
 	struct addrinfo hints, *server_info;
 
 	memset(&hints, 0, sizeof(hints));
@@ -12,7 +11,7 @@ int crear_conexion(char *ip, char* puerto)
 	hints.ai_socktype = SOCK_STREAM;
 
 
-	err = getaddrinfo(ip, puerto, &hints, &server_info);
+	getaddrinfo(ip, puerto, &hints, &server_info);
 
 	// Ahora vamos a crear el socket.
 	int socket_cliente = 0;

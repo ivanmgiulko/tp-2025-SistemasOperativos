@@ -2,7 +2,11 @@
 #include <utils/server/server.h>
 #include <utils/proceso/process.h>
 int main(int argc, char* argv[]) {
-
+	if(argc<2){
+		fprintf(stderr, "Falta nombre de identificacion de dispositivo IO \n");
+		return EXIT_FAILURE;
+	}
+	char* io_nombre = argv[1];
 	char* ip_kernel;
 	char* puerto_kernel;
 	char* valor_prueba = "LLEGUE AL SERVER!!!";
@@ -18,14 +22,16 @@ int main(int argc, char* argv[]) {
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
 	ip_kernel = config_get_string_value(config_io, "IP_KERNEL");
 	puerto_kernel = config_get_string_value(config_io, "PUERTO_KERNEL");
-	log_info(logger_io, ip_kernel);
-	log_info(logger_io, puerto_kernel);
+	log_info(logger_io, "Nombre de dispositivo IO: %s", io_nombre);
+	log_info(logger_io, "IP Kernel: %s", ip_kernel);
+	log_info(logger_io, "Puerto Kernel: %s",puerto_kernel);
 	
     // Creamos una conexión hacia el servidor, en este caso el KERNEL
 	int conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	enviar_mensaje(valor_prueba, conexion_kernel_fd);
+	enviar_mensaje(io_nombre, conexion_kernel_fd);
 	pthread_t hilo_cliente_io_akernel;
     pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion, (void*) conexion_kernel_fd);
     pthread_join(hilo_cliente_io_akernel, NULL);

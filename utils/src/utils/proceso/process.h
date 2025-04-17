@@ -1,7 +1,7 @@
 #ifndef PROCESS_H_
 #define PROCESS_H_
 
-#include "utils.h"
+#include <./utils/utils.h>
 
 typedef enum {
     NEW, 
@@ -39,8 +39,8 @@ typedef struct
 {
     int pid;
     int pc;
-    metricas_estado metricasEstado;
-    metricas_tiempo metricasTiempo;
+    metricas_estado metricas_estado;
+    metricas_tiempo metricas_tiempo;
     p_estados estadoProceso;
 
 } process; 

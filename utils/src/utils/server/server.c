@@ -108,7 +108,6 @@ t_list* recibir_paquete(int socket_cliente)
 }
 
 int manejar_conexion(int socket_cliente){
-	t_list* lista;
 	while (1) {
 		int cod_op = recibir_operacion(socket_cliente);
 		switch (cod_op) {
