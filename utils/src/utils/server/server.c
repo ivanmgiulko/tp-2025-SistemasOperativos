@@ -121,8 +121,10 @@ int manejar_conexion(int socket_cliente){
 			list_iterate(lista, (void*) iterator);
 			break;
             */
+		case INSTRUCCION:
+			
 		case -1:
-			log_error(logger_servidor, "el cliente se desconecto. Terminando servidor");
+			log_error(logger_servidor, "el cliente se desconecto.");
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_servidor, "Operacion desconocida. No quieras meter la pata");

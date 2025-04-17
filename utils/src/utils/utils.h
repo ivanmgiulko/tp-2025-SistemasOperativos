@@ -20,7 +20,8 @@
 typedef enum
 {
 	MENSAJE,
-	PAQUETE
+	PAQUETE,
+	INSTRUCCION
 } op_code;
 
 typedef struct

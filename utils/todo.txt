@@ -19,6 +19,24 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
     "./bin/{modulo} [argumentos]
 - Creacion de archivos de Logs independientes de cada CPU segun su ID.
 
+
+CHECK 2:
+Módulo Kernel:
+    +   Planificación de corto y largo plazo con FIFO
+    +   Administración de IO
+
+Módulo CPU:
+    +   Interpretación de instrucciones y ejecución de instrucciones
+
+Módulo Memoria:
+    +   Devolver lista de instrucciones
+    +   Devolver un valor fijo de espacio libre (mock)
+
+Módulo IO: 
+    Completo 
+
+
+
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⡀⠤⠤⡤⠤⣀⣀⡀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⢔⠲⠈⠉⠀⠀⠀⠀⡸⠀⠀⠈⣿⣿⣦⡀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⠂⡡⠄⠀⠀⠀⠀⠀⠈⠀⠀⢇⠀⠀⠀⣿⣿⣿⣷⠀
