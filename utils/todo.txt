@@ -19,6 +19,12 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
     "./bin/{modulo} [argumentos]
 - Creacion de archivos de Logs independientes de cada CPU segun su ID.
 
+#11
+- Creacion de carpeta serializacion en donde pondremos todo lo que debera ser de/serializado
+    - Agrego #include para que funcionen las funciones para de/serializar
+- implementacion de/serializacion del nombre de la interfaz enviada desde IO -> Kernel
+- En Kernel-Utils hice la funcion IO que esta puesta en el enunciado, pero todavia no la pude probar
+- Creacion de lista_interfaces para almacenar los nombres de las interfaces -> quizas implementar una lista sea mucha crema al taco, no se
 
 CHECK 2:
 Módulo Kernel:
