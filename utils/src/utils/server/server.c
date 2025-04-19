@@ -1,5 +1,6 @@
 #include"server.h"
-
+#include <utils/serializacion/serializacion.h>
+t_list* lista_interfaces; // Lista de interfaces usada por el Kernel
 t_log* logger_servidor; // logger de Kernel o de Memoria
 
 int iniciar_servidor(char* puerto)
@@ -54,59 +55,6 @@ void manejar_hilos(int server_fd){
 
 }
 
-int recibir_operacion(int socket_cliente)
-{
-	int cod_op;
-	if(recv(socket_cliente, &cod_op, sizeof(int), MSG_WAITALL) > 0)
-		return cod_op;
-	else
-	{
-		close(socket_cliente);
-		return -1;
-	}
-}
-
-void* recibir_buffer(int* size, int socket_cliente)
-{
-	void * buffer;
-
-	recv(socket_cliente, size, sizeof(int), MSG_WAITALL);
-	buffer = malloc(*size);
-	recv(socket_cliente, buffer, *size, MSG_WAITALL);
-
-	return buffer;
-}
-
-void recibir_mensaje(int socket_cliente)
-{
-	int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	log_info(logger_servidor, "Me llego el mensaje %s", buffer);
-	free(buffer);
-}
-
-t_list* recibir_paquete(int socket_cliente)
-{
-	int size;
-	int desplazamiento = 0;
-	void * buffer;
-	t_list* valores = list_create();
-	int tamanio;
-
-	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size)
-	{
-		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-		desplazamiento+=sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
-		desplazamiento+=tamanio;
-		list_add(valores, valor);
-	}
-	free(buffer);
-	return valores;
-}
-
 int manejar_conexion(int socket_cliente){
 	while (1) {
 		int cod_op = recibir_operacion(socket_cliente);
@@ -114,15 +62,21 @@ int manejar_conexion(int socket_cliente){
 		case MENSAJE:
 			recibir_mensaje(socket_cliente);
 			break;
-            /*
+        case INTERFAZ:
+			char* nombreInterfaz = recibir_nommbreInterfaz(socket_cliente);
+			log_info(logger_servidor, "Recibi la interfaz desde IO: %s", nombreInterfaz);
+			list_add(lista_interfaces, nombreInterfaz);
+			
+			break;
+		case INSTRUCCION:
+			break;
+			/*
 		case PAQUETE:
 			lista = recibir_paquete(socket_cliente);
 			log_info(logger_servidor, "Me llegaron los siguientes valores:\n");
 			list_iterate(lista, (void*) iterator);
 			break;
             */
-		case INSTRUCCION:
-			
 		case -1:
 			log_error(logger_servidor, "el cliente se desconecto.");
 			return EXIT_FAILURE;

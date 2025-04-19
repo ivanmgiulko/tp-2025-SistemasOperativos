@@ -5,12 +5,14 @@
 
 int main(int argc, char* argv[]) {
 // [archivo_pseudocodigo] [tamanio_proceso] 
-	
+	lista_interfaces = list_create();
+
 	t_config* config_kernel = iniciar_config("./kernel.config");
 	logger_servidor = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); // Crea el logger del Kernel
 	
 	int pid = 0;
 	process proceso_ejemplo = iniciarProceso(pid);
+
 	char *msgPrueba = string_new(); // Gloria eterna al creador de las commons
 	string_append(&msgPrueba, string_itoa(proceso_ejemplo.metricas_estado.cantVecesExec));
 	string_append(&msgPrueba," Se crea el proceso - Estado: NEW");
@@ -22,7 +24,6 @@ int main(int argc, char* argv[]) {
 	char* puerto_memoria = config_get_string_value(config_kernel, "PUERTO_MEMORIA");
 	log_info(logger_servidor, "IP Memoria: %s",ip_memoria);
 	int conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-	enviar_mensaje("ALOHA DESDE KERNEL!", conexion_memoria);
 
 	// INICIO SERVER KERNEL PARA RECIBIR A CPU
 	char* puerto_kernel_interrupt = config_get_string_value(config_kernel, "PUERTO_ESCUCHA_INTERRUPT");
@@ -52,16 +53,17 @@ int main(int argc, char* argv[]) {
 	log_info(logger_servidor, "KERNEL listo para recibir al cliente IO");
 
 	// HILOS PARA MANEJAR LAS PETICIONES
-	pthread_t hilo_servidor_kernel_interrupt;
-    pthread_create(&hilo_servidor_kernel_interrupt, NULL, (void*)manejar_hilos, (void*)server_kernel_interrupt_fd);
-    pthread_detach(hilo_servidor_kernel_interrupt);
-
 	pthread_t hilo_servidor_io;
     pthread_create(&hilo_servidor_io, NULL, (void*)manejar_hilos, (void*)server_io_fd);
     pthread_detach(hilo_servidor_io);
 
+	pthread_t hilo_servidor_kernel_interrupt;
+    pthread_create(&hilo_servidor_kernel_interrupt, NULL, (void*)manejar_hilos, (void*)server_kernel_interrupt_fd);
+    pthread_detach(hilo_servidor_kernel_interrupt);
+
 	pthread_t hilo_servidor_kernel_dispatch;
     pthread_create(&hilo_servidor_kernel_dispatch, NULL, (void*)manejar_hilos, (void*)server_kernel_dispatch_fd);
     pthread_join(hilo_servidor_kernel_dispatch, NULL);
+
 	
 }

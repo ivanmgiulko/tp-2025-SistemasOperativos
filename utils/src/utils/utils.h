@@ -14,6 +14,7 @@
 #include<readline/history.h>
 #include<readline/readline.h>
 #include<commons/collections/list.h>
+#include<commons/collections/queue.h>
 #include<assert.h>
 #include<pthread.h>
 
@@ -21,7 +22,8 @@ typedef enum
 {
 	MENSAJE,
 	PAQUETE,
-	INSTRUCCION
+	INSTRUCCION,
+	INTERFAZ
 } op_code;
 
 typedef struct
