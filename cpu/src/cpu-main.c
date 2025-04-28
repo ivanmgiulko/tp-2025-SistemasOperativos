@@ -1,6 +1,7 @@
 #include <utils/cliente/client.h>
 #include <utils/server/server.h>
 #include <utils/proceso/process.h>
+#include"cpu-header.h"
 int main(int argc, char* argv[]){
 	if(argc<2){
 		fprintf(stderr, "Falta ID del CPU\n");
@@ -71,6 +72,29 @@ int main(int argc, char* argv[]){
 	enviar_mensaje(valor_prueba_dispatch, conexion_kernel_dispatch_fd);
 	enviar_mensaje(cpu_id, conexion_kernel_dispatch_fd);
 	enviar_mensaje(valor_prueba_memoria, conexion_memoria_fd);
+
+	// SIMULO PETICION DE INSTRUCCION A MEMORIA
+	t_peticion_instruccion peticion = {
+        .pid = 1,
+        .pc = 0
+    };
+
+	int size_peticion;
+	void* buffer_peticion = serializar_peticion_instruccion(&peticion, &size_peticion);
+
+	send(conexion_memoria_fd, buffer_peticion, size_peticion, 0);
+	free(buffer_peticion);
+
+	int size_respuesta;
+	void* buffer_respuesta = recibir_buffer(&size_respuesta, conexion_memoria_fd);
+
+	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(buffer_respuesta);
+	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
+
+	free(respuesta->instruccion);
+	free(respuesta);
+	free(buffer_respuesta);
+	// FIN SIMULACION PETICION DE INSTRUCCION A MEMORIA
 
 //	while(1){
 //	};

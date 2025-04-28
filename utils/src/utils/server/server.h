@@ -2,6 +2,7 @@
 #define SERVER_H_
 
 #include "./utils/utils.h"
+#include <../../memoria/src/memoria-header.h>
 
 int iniciar_servidor(char*);
 int esperar_cliente(int);
