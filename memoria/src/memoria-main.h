@@ -17,4 +17,7 @@
     // CONFIG
     t_config* config_memoria;
 
+    // VARIABLES
+    int cantMemoria;
+
 #endif // MEMORIA_H_

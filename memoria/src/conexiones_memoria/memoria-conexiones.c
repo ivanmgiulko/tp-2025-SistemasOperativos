@@ -21,8 +21,10 @@ int manejar_conexion_cliente(int socket_cliente){
         case TAMANIO_PROCESO:
 			char* tamProceso = recibir_tamProceso(socket_cliente);
 			int tamProcesoEnInt = atoi(tamProceso);
+			log_info(logger_memoria, "Tamanio de la memoria antes: %d", cantMemoria);
 			log_info(logger_memoria, "Recibi el tamProceso desde KERNEL: %d", tamProcesoEnInt);
-			
+			cantMemoria -= tamProcesoEnInt;
+			log_info(logger_memoria, "Tamanio de la memoria despues: %d", cantMemoria);
 			break;
 		case INSTRUCCION:
 			break;

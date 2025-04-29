@@ -23,4 +23,7 @@
     // CONFIG
     extern t_config* config_memoria;
 
+    // VARIABLES
+    extern int cantMemoria;
+
 #endif // MEMORIA_GESTOR_H_

@@ -5,10 +5,9 @@ int main(int argc, char* argv[]) {
     
     logger_memoria = log_create("./memoria.log", "log", true, LOG_LEVEL_TRACE);
     t_memoria_config* config_memoria = crear_config_memoria("./memoria.config", logger_memoria);
-  
+    cantMemoria = atoi(config_memoria->TAM_MEMORIA);
     
-
-    puerto_servidor_memoria =  config_memoria->PUERTO_ESCUCHA;
+    puerto_servidor_memoria = config_memoria->PUERTO_ESCUCHA;
 
     int server_memoria_fd = iniciar_servidor(puerto_servidor_memoria, logger_memoria);
 

@@ -1,7 +1,7 @@
 #ifndef CONFIG_KERNEL_H
 #define CONFIG_KERNEL_H
 
-    #include <./memoria-gestor.h>
+    #include "memoria-gestor.h"
 
     /**
 	 * @file
