@@ -26,6 +26,9 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 . CPU:
 
 . MEMORIA:
+    - Definir estructuras para manejo de archivos de pseudocódigo/instrucciones
+    - Traducir las direcciones lógicas (propias del proceso) a direcciones físicas (instrucciones que afecten a la memoria)
+    - Definir qué se considera cómo una linea
 
 . IO:
     - Descripcion de funciones

@@ -5,6 +5,7 @@
 #include <utils/server/server.h>
 #include <utils/proceso/process.h>
 #include <utils/serializacion/serializacion.h>
+#include <utils/contrato/contrato.h>
 extern t_log* logger_cpu;
 
 
