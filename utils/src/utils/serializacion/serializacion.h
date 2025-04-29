@@ -6,10 +6,10 @@
 extern t_log* logger_servidor; 
 // Funciones de serializacion junto su respectiva deserializacion
 void enviar_nombreInterfaz(char* mensaje, int socket_cliente);
-char* recibir_nommbreInterfaz(int);
+char* recibir_tamProceso(int socket_cliente);
 
 void enviar_mensaje(char*, int);
-void recibir_mensaje(int);
+void recibir_mensaje(int, t_log* );
 
 // Funciones que complementan a la serializacion
 t_paquete* crear_paquete(void);

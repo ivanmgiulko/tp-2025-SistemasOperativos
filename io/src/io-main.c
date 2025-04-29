@@ -1,22 +1,18 @@
-#include <utils/cliente/client.h>
-#include <utils/server/server.h>
-#include <utils/serializacion/serializacion.h>
-#include <utils/proceso/process.h>
+#include "io-main.h"
 
 int main(int argc, char* argv[]) {
-	if(argc<2){
+	if(argc <= CANT_MINIMA_ARGUMENTOS){
 		fprintf(stderr, "Falta nombre de identificacion de dispositivo IO \n");
 		return EXIT_FAILURE;
 	}
+
 	char* io_nombre = argv[1];
 	char* ip_kernel;
 	char* puerto_kernel;
 
-	t_log* logger_io = iniciar_logger();
 	t_config* config_io = iniciar_config("./io.config");
     
 	/* ---------------- LOGGING ---------------- */
-
 	logger_io = log_create("io.log", "log", true, LOG_LEVEL_TRACE);
     // log_info(logger_io, "Primer log");
 	
@@ -28,12 +24,12 @@ int main(int argc, char* argv[]) {
 	log_info(logger_io, "Puerto Kernel: %s", puerto_kernel);
 	
     // Creamos una conexión hacia el servidor, en este caso el KERNEL
-	int conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
+	conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	enviar_nombreInterfaz(io_nombre, conexion_kernel_fd);
 	pthread_t hilo_cliente_io_akernel;
-    pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion, (void*) conexion_kernel_fd);
+    pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion_io, (void*) conexion_kernel_fd);
     pthread_join(hilo_cliente_io_akernel, NULL);
 	
     config_destroy(config_io);

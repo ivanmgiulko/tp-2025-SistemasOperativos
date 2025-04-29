@@ -43,10 +43,25 @@ typedef struct
     metricas_tiempo metricas_tiempo;
     p_estados estadoProceso;
 
-} process; 
+} t_pcb; 
+
+typedef struct 
+{
+    char* pathArchivoPseudocodigo;
+    int tamanioMemoria;
+    t_pcb* pcb;
+
+} t_proceso; 
+
+typedef struct {
+    pthread_mutex_t mutex;
+    int valor;
+} t_contador;
+
 
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
-process iniciarProceso(int);
+t_pcb* iniciarPCB(int pid);
+t_proceso* iniciarProceso(char* path, int tamanio, int pid);
 
 #endif // PROCESS_H_

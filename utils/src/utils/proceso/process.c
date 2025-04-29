@@ -1,14 +1,22 @@
 #include "process.h"
 
-process iniciarProceso(int pid) 
-{
-    process nuevoProceso;
-    nuevoProceso.pid = pid;
-    nuevoProceso.pc = 0;
-    nuevoProceso.estadoProceso = NEW;
-    nuevoProceso.metricas_estado = iniciarMetricasEstado();
-    nuevoProceso.metricas_tiempo = iniciarMetricasTiempo();
+t_proceso* iniciarProceso(char* path, int tamanio, int pid){
+    t_proceso* nuevoProceso = malloc(sizeof(t_proceso));
+    nuevoProceso->pathArchivoPseudocodigo = path;
+    nuevoProceso->tamanioMemoria = tamanio;
+    nuevoProceso->pcb = iniciarPCB(pid);
     return nuevoProceso;
+}
+
+t_pcb* iniciarPCB(int pid) 
+{
+    t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
+    nuevoPCB->pid = pid;
+    nuevoPCB->pc = 0;
+    nuevoPCB->estadoProceso = NEW;
+    nuevoPCB->metricas_estado = iniciarMetricasEstado();
+    nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();
+    return nuevoPCB;
 }
 
 metricas_estado iniciarMetricasEstado()
@@ -35,4 +43,19 @@ metricas_tiempo iniciarMetricasTiempo()
     tiempos.tiempoEnSuspBlocked = 0;
     tiempos.tiempoEnSuspReady = 0;
     return tiempos;
+}
+
+t_contador* inicializar_contador(){
+    t_contador* contador = malloc(sizeof(contador));
+
+    contador->valor = 0;
+    pthread_mutex_init(&(contador->mutex), NULL);
+    return contador;
+}
+
+void incrementar_contador(t_contador* contador){
+    pthread_mutex_lock(&contador->mutex);
+    contador->valor++;
+    pthread_mutex_unlock(&contador->mutex);
+
 }

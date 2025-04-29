@@ -1,16 +1,15 @@
-#include "cpu-k-interrupt.h"
-// logger
+#include "cpu-memoria.h"
 
-int manejar_conexion_kernel_interrupt(){
-    
-	while (1) {
-		int cod_op = recibir_operacion(fd_conexion_kernel_interrupt);
+
+int manejar_conexion_memoria(){
+    while (1) {
+		int cod_op = recibir_operacion(fd_conexion_memoria);
 		switch (cod_op) {
 		case MENSAJE:
-			recibir_mensaje(fd_conexion_kernel_interrupt, logger_cpu);
+			recibir_mensaje(fd_conexion_memoria, logger_cpu);
 			break;
         case INTERFAZ:
-			char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_kernel_interrupt);
+			char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_memoria);
 			log_info(logger_cpu, "Recibi la interfaz desde IO: %s", nombreInterfaz);
 		//	list_add(lista_interfaces, nombreInterfaz);
 			
@@ -19,7 +18,7 @@ int manejar_conexion_kernel_interrupt(){
 			break;
 			/*
 		case PAQUETE:
-			lista = recibir_paquete(fd_conexion_kernel_interrupt);
+			lista = recibir_paquete(fd_conexion_memoria);
 			log_info(logger_cpu, "Me llegaron los siguientes valores:\n");
 			list_iterate(lista, (void*) iterator);
 			break;
@@ -33,7 +32,6 @@ int manejar_conexion_kernel_interrupt(){
 		}
 	}
 
-	close(fd_conexion_kernel_interrupt);
+	close(fd_conexion_memoria);
 	return EXIT_SUCCESS;
 }
-// config

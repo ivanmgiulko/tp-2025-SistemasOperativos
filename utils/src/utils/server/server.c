@@ -1,9 +1,9 @@
-#include"server.h"
+#include "server.h"
 #include <utils/serializacion/serializacion.h>
-t_list* lista_interfaces; // Lista de interfaces usada por el Kernel
-t_log* logger_servidor; // logger de Kernel o de Memoria
+#include <errno.h>
+//  HACER MANEJAR CONEXION INDEPENDIENTE PARA CADA MODULO Y SUS CONEXIONES
 
-int iniciar_servidor(char* puerto)
+int iniciar_servidor(char* puerto, t_log* logger)
 {
 	int socket_servidor;
 
@@ -30,67 +30,24 @@ int iniciar_servidor(char* puerto)
 	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(server_info);
-	log_trace(logger_servidor, "Listo para escuchar a mi cliente");
+	// log_trace(logger, "Listo para escuchar a mi cliente");
 
 	return socket_servidor;
 }
 
-int esperar_cliente(int socket_servidor)
+int esperar_cliente(int socket_servidor, t_log* logger)
 { 
 	// Aceptamos un nuevo cliente
 	int socket_cliente = accept(socket_servidor, NULL, NULL);
-	log_info(logger_servidor, "Se conecto un cliente!");
+	if (socket_cliente == -1) {
+        log_error(logger, "Error al aceptar cliente: %s", strerror(errno));
+        return -1;
+    }
+	log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
 }
 
-void manejar_hilos(int server_fd){
-
-    while(1){
-        int socket_cliente = esperar_cliente(server_fd);
-        pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion, (void*)socket_cliente);
-        pthread_detach(hilo_cliente);
-    }
-
-}
-
-int manejar_conexion(int socket_cliente){
-	while (1) {
-		int cod_op = recibir_operacion(socket_cliente);
-		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(socket_cliente);
-			break;
-        case INTERFAZ:
-			char* nombreInterfaz = recibir_nommbreInterfaz(socket_cliente);
-			log_info(logger_servidor, "Recibi la interfaz desde IO: %s", nombreInterfaz);
-			list_add(lista_interfaces, nombreInterfaz);
-			
-			break;
-		case INSTRUCCION:
-			break;
-			/*
-		case PAQUETE:
-			lista = recibir_paquete(socket_cliente);
-			log_info(logger_servidor, "Me llegaron los siguientes valores:\n");
-			list_iterate(lista, (void*) iterator);
-			break;
-            */
-		case -1:
-			log_error(logger_servidor, "el cliente se desconecto.");
-			return EXIT_FAILURE;
-		default:
-			log_warning(logger_servidor, "Operacion desconocida. No quieras meter la pata");
-			break;
-		}
-	}
-
-	close(socket_cliente);
-	return EXIT_SUCCESS;
-}
-
-
-void iterator(char* value) {
-	log_info(logger_servidor,"%s", value);
+void iterator(char* value, t_log* logger) {
+	log_info(logger,"%s", value);
 }

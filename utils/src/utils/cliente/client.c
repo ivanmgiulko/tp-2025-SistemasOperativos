@@ -1,7 +1,6 @@
 #include"client.h"
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
 
-
 int crear_conexion(char *ip, char* puerto)
 {
 	struct addrinfo hints, *server_info;
