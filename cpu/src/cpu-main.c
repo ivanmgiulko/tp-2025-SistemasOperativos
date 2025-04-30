@@ -8,7 +8,7 @@ int main(int argc, char* argv[]){
 	char* valor_prueba_interrupt = "Conectado a KERNEL desde INTERRUPT";
 	char* valor_prueba_dispatch = "Conectado a KERNEL desde DISPATCH";
 	char* valor_prueba_memoria = "Conectado a MEMORIA desde CPU";
-    t_log* logger_cpu = iniciar_logger();
+   
 	t_config* config_cpu = iniciar_config("./cpu.config");
     
 	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
@@ -48,7 +48,6 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "Intentando conectarse a la MEMORIA");
 	fd_conexion_memoria = crear_conexion(ip_kernel, puerto_memoria);
 	log_info(logger_cpu, "NOS CONECTAMOS A LA MEMORIA");
-
 	// VALIDAMOS LOS FILE DESCRIPTORS DE LAS CONEXIONES AL KERNEL
 	if(fd_conexion_kernel_interrupt == -1){
 			log_error(logger_cpu, "Error al iniciar conexion de interrupt");
@@ -71,30 +70,11 @@ int main(int argc, char* argv[]){
 	enviar_mensaje(valor_prueba_memoria, fd_conexion_memoria);
 
 	//SIMULO PETICION DE INSTRUCCION A MEMORIA
-	// t_peticion_instruccion peticion = {
-    //     .pid = 1,
-    //     .pc = 0
-    // };
-
-	// int size_peticion;
-	// void* buffer_peticion = serializar_peticion_instruccion(&peticion, &size_peticion);
-
-	// send(fd_conexion_memoria, buffer_peticion, size_peticion, 0);
-	// free(buffer_peticion);
-
-	// int size_respuesta;
-	// void* buffer_respuesta = recibir_buffer(&size_respuesta, fd_conexion_memoria);
-
-	// t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(buffer_respuesta);
-	// log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
-
-	// free(respuesta->instruccion);
-	// free(respuesta);
-	// free(buffer_respuesta);
+	
 	//FIN SIMULACION PETICION DE INSTRUCCION A MEMORIA
 	
-//	while(1){
-//	};
+
+
 	pthread_t hilo_cliente_cpuInt_akernel;
     pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_cliente_cpuInt_akernel);
@@ -103,9 +83,15 @@ int main(int argc, char* argv[]){
     pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
     pthread_detach(hilo_cliente_cputDispatch_akernel);
 
+	
+
 	pthread_t hilo_cliente_cpu_amemoria;
     pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
-    pthread_join(hilo_cliente_cpu_amemoria, NULL);
+    pthread_detach(hilo_cliente_cpu_amemoria);
+
+	pthread_t hilo_peticion_instruccion;
+	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, (void*)fd_conexion_memoria);
+    pthread_join(hilo_peticion_instruccion, NULL);
 
     config_destroy(config_cpu);
 	log_destroy(logger_cpu);

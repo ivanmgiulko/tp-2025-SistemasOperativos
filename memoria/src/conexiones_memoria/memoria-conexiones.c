@@ -27,6 +27,7 @@ int manejar_conexion_cliente(int socket_cliente){
 			log_info(logger_memoria, "Tamanio de la memoria despues: %d", cantMemoria);
 			break;
 		case INSTRUCCION:
+			log_info(logger_memoria, "Recibi la instruccion desde CPU");
 			break;
 			
 		case -1:

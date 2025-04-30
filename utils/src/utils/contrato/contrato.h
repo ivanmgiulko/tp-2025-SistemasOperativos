@@ -3,6 +3,7 @@
 #include <utils/proceso/process.h>
 #include <utils/server/server.h>
 #include <utils/utils.h>
+#include <utils/serializacion/serializacion.h>
 
 
 // STRUCT DE PETICION DE INSTRUCCION A MEMORIA

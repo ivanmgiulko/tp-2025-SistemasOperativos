@@ -1,13 +1,23 @@
 #include "contrato.h"
 
 void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* bytes) {
-    *bytes = sizeof(int) * 2;
-    void* buffer = malloc(*bytes);
 
-    memcpy(buffer, &(peticion->pid), sizeof(int));
-    memcpy(buffer + sizeof(int), &(peticion->pc), sizeof(int));
+    t_paquete* paquete = crear_paquete_instruccion();
+    if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
+        return NULL;
+    }
+    agregar_a_paquete(paquete, &(peticion->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(peticion->pc), sizeof(int));
 
-    return buffer;
+
+    *bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+    void* peticion_serializada = serializar_paquete(paquete, *bytes);
+    if(peticion_serializada == NULL) {
+        return NULL;
+    }
+    
+    return peticion_serializada;
+
 }
 
 t_peticion_instruccion* deserializar_peticion_instruccion(void* stream) {

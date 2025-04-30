@@ -8,12 +8,12 @@ int manejar_conexion_memoria(){
 		case MENSAJE:
 			recibir_mensaje(fd_conexion_memoria, logger_cpu);
 			break;
-        case INTERFAZ:
-			char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_memoria);
-			log_info(logger_cpu, "Recibi la interfaz desde IO: %s", nombreInterfaz);
-		//	list_add(lista_interfaces, nombreInterfaz);
+        // case INTERFAZ:
+		// 	char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_memoria);
+		// 	log_info(logger_cpu, "Recibi la interfaz desde IO: %s", nombreInterfaz);
+		// //	list_add(lista_interfaces, nombreInterfaz);
 			
-			break;
+		// 	break;
 		case INSTRUCCION:
 			break;
 			/*

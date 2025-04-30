@@ -41,7 +41,12 @@ t_paquete* crear_paquete(void)
 	crear_buffer(paquete);
 	return paquete;
 }
-
+t_paquete* crear_paquete_instruccion(void){
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->codigo_operacion = INSTRUCCION;
+	crear_buffer(paquete);
+	return paquete;
+}
 void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 {
 	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio + sizeof(int));
@@ -55,6 +60,11 @@ void agregar_a_paquete(t_paquete* paquete, void* valor, int tamanio)
 void* serializar_paquete(t_paquete* paquete, int bytes)
 {
 	void * magic = malloc(bytes);
+	if (magic == NULL) {
+        // Manejar error de memoria
+        return NULL;
+    }
+
 	int desplazamiento = 0;
 	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(int)); 		desplazamiento+= sizeof(int);
 	memcpy(magic + desplazamiento, &(paquete->buffer->size), sizeof(int)); 			desplazamiento+= sizeof(int);

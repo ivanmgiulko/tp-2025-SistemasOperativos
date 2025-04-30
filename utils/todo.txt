@@ -24,6 +24,7 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 
 . CPU:
+    - Envio de peticion de instruccion a memoria con el pid y pc recibido del kernel.
 
 . MEMORIA:
     - Definir estructuras para manejo de archivos de pseudocódigo/instrucciones
@@ -41,3 +42,22 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 . GENERALES:
     - Chequear warnings de cada modulo. 
         UPDATE: Warnings generales corregidos, tener cuidado con los (void*), no se por que es motivo de warning
+
+
+
+
+
+CHECKPOINT 2
+
+    Módulo Kernel:
+        - Planificación de corto y largo plazo con FIFO
+        - Administración de IO
+
+    Módulo CPU:
+        - Interpretación de instrucciones y ejecución de instrucciones
+
+    Módulo Memoria:
+        - Devolver lista de instrucciones
+        - Devolver un valor fijo de espacio libre (mock)
+
+    Módulo IO: Completo 
