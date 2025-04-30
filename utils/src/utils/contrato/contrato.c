@@ -3,14 +3,14 @@
 void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* bytes) {
 
     t_paquete* paquete = crear_paquete_instruccion();
+    agregar_a_paquete(paquete, &(peticion->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(peticion->pc), sizeof(int));
     if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
         return NULL;
     }
-    agregar_a_paquete(paquete, &(peticion->pid), sizeof(int));
-    agregar_a_paquete(paquete, &(peticion->pc), sizeof(int));
 
 
-    *bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+    *bytes = sizeof(int) + sizeof(int) + (sizeof(int) * 2);
     void* peticion_serializada = serializar_paquete(paquete, *bytes);
     if(peticion_serializada == NULL) {
         return NULL;
@@ -20,10 +20,25 @@ void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* byt
 
 }
 
-t_peticion_instruccion* deserializar_peticion_instruccion(void* stream) {
+// t_peticion_instruccion* deserializar_peticion_instruccion(void* stream) {
+//     t_peticion_instruccion* peticion = malloc(sizeof(t_peticion_instruccion));
+//     memcpy(&(peticion->pid), stream, sizeof(int));
+//     memcpy(&(peticion->pc), stream + sizeof(int), sizeof(int));
+//     return peticion;
+// }
+
+t_peticion_instruccion* deserializar_peticion_instruccion(void* buffer) {
     t_peticion_instruccion* peticion = malloc(sizeof(t_peticion_instruccion));
-    memcpy(&(peticion->pid), stream, sizeof(int));
-    memcpy(&(peticion->pc), stream + sizeof(int), sizeof(int));
+    int desplazamiento = 0;
+
+    // Leer PID
+    memcpy(&(peticion->pid), buffer + desplazamiento, sizeof(int));
+    desplazamiento += sizeof(int);
+
+    // Leer PC
+    memcpy(&(peticion->pc), buffer + desplazamiento, sizeof(int));
+    desplazamiento += sizeof(int);
+
     return peticion;
 }
 

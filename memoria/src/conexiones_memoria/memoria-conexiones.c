@@ -28,6 +28,13 @@ int manejar_conexion_cliente(int socket_cliente){
 			break;
 		case INSTRUCCION:
 			log_info(logger_memoria, "Recibi la instruccion desde CPU");
+			t_paquete* paquete = recibir_paquete_instruccion(socket_cliente);
+			log_info(logger_memoria, "%d", paquete->buffer->size);
+			if (paquete == NULL) {
+				log_error(logger_memoria, "Error al recibir el paquete de instruccion");
+				return EXIT_FAILURE;
+			}
+			manejar_instruccion(socket_cliente, paquete, logger_memoria);
 			break;
 			
 		case -1:
@@ -43,3 +50,16 @@ int manejar_conexion_cliente(int socket_cliente){
 	return EXIT_SUCCESS;
 }
 
+void manejar_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) {
+    if (paquete->buffer->size < sizeof(int) * 2) {
+        log_error(logger, "El tamaño del buffer es insuficiente para deserializar la instrucción");
+        return;
+    }
+
+    t_peticion_instruccion* peticion = deserializar_peticion_instruccion(paquete->buffer->stream);
+
+    log_info(logger, "PID recibido: %d", peticion->pid);
+    log_info(logger, "PC recibido: %d", peticion->pc);
+
+    free(peticion);
+}

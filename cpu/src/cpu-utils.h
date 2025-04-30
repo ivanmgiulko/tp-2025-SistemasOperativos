@@ -2,6 +2,6 @@
 #define CPU_UTILS_H
 #include "./cpu-gestor.h"
 
-void pedir_instruccion_a_memoria(int);
+void pedir_instruccion_a_memoria();
 
 #endif // CPU_UTILS_H

@@ -5,6 +5,7 @@
     #include <utils/cliente/client.h>
     #include <utils/proceso/process.h>
     #include <utils/serializacion/serializacion.h>
+    #include <utils/contrato/contrato.h>
     #include <utils/utils.h>
 
     /**

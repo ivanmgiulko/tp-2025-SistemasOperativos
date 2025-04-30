@@ -22,5 +22,10 @@
 	* @returns 0 (finalizando la conexion previamente) en caso de que se termine de manejar la conexion dada entre la Memo y Kernel o CPU
 	*/
     int manejar_conexion_cliente(int socket_cliente);
+
+	
+	void manejar_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
+
+	
     
 #endif // MEMORIA_CONEXIONES_H_

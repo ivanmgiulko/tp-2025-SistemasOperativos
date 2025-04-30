@@ -147,3 +147,31 @@ t_list* recibir_paquete(int socket_cliente)
 	free(buffer);
 	return valores;
 }
+t_paquete* recibir_paquete_instruccion(int socket) {
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    
+    // Leer código de operación
+    if (recv(socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL) <= 0) {
+        free(paquete);
+        return NULL; // Error al recibir
+    }
+    
+    // Leer tamaño del buffer
+    paquete->buffer = malloc(sizeof(t_buffer));
+    if (recv(socket, &(paquete->buffer->size), sizeof(int), MSG_WAITALL) <= 0) {
+        free(paquete->buffer);
+        free(paquete);
+        return NULL; // Error al recibir
+    }
+    
+    // Leer contenido del buffer
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    if (recv(socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL) <= 0) {
+        free(paquete->buffer->stream);
+        free(paquete->buffer);
+        free(paquete);
+        return NULL; // Error al recibir
+    }
+
+    return paquete;
+}

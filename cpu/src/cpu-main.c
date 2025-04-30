@@ -90,7 +90,7 @@ int main(int argc, char* argv[]){
     pthread_detach(hilo_cliente_cpu_amemoria);
 
 	pthread_t hilo_peticion_instruccion;
-	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, (void*)fd_conexion_memoria);
+	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
     pthread_join(hilo_peticion_instruccion, NULL);
 
     config_destroy(config_cpu);

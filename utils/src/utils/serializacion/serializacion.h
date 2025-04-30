@@ -23,6 +23,7 @@ void* serializar_paquete(t_paquete*, int);
 // Funciones que complementan a la deserializacion
 void* recibir_buffer(int*, int);
 t_list* recibir_paquete(int);
+t_paquete* recibir_paquete_instruccion(int);
 int recibir_operacion(int);
 
 #endif // SERIALIZACION_H_
