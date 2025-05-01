@@ -24,7 +24,12 @@ typedef enum
 {
 	MENSAJE,
 	PAQUETE,
+
 	INSTRUCCION,
+	RESPUESTA_MEMORIA, 
+	PROCESO_MEMORIA,
+	
+	
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ
 } op_code;

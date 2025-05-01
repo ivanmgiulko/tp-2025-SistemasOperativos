@@ -1,20 +1,14 @@
 #include "kernel-main.h"
 
 int main(int argc, char* argv[]) {
-	// if(argc <= CANT_MINIMA_ARGUMENTOS){
-	// 	fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
-	// 	return EXIT_FAILURE;
-	// }
-
+	if(argc <= CANT_MINIMA_ARGUMENTOS){
+		fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
+		return EXIT_FAILURE;
+	}
 
 	logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); // Crea el logger del Kernel
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
-
-	// CONEXION DE KERNEL A MEMORIA Y MENSAJE DE PRUEBA
-	char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-	char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-	fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
 	// INICIO SERVER KERNEL PARA RECIBIR A CPU
 	char* puerto_kernel_interrupt = configuracion_kernel->PUERTO_ESCUCHA_INTERRUPT;
@@ -27,30 +21,30 @@ int main(int argc, char* argv[]) {
         log_error(logger_kernel, "Error al iniciar servidor de CPU-interrupt");
         abort();
     }
-	log_info(logger_kernel, "KERNEL listo para recibir al cliente CPU-Interrupt");
+	log_trace(logger_kernel, "KERNEL listo para recibir al cliente CPU-Interrupt");
 
 	fd_server_kernel_dispatch = iniciar_servidor(puerto_kernel_dispatch, logger_kernel);
 	if(fd_server_kernel_dispatch == -1){
         log_error(logger_kernel, "Error al iniciar servidor de CPU-dispatch");
         abort();
     }
-	log_info(logger_kernel, "KERNEL listo para recibir al cliente CPU-Dispatch");
+	log_trace(logger_kernel, "KERNEL listo para recibir al cliente CPU-Dispatch");
 
 	fd_server_io = iniciar_servidor(puerto_io, logger_kernel);
 	if(fd_server_io == -1){
         log_error(logger_kernel, "Error al iniciar servidor de IO");
         abort();
     }
-	log_info(logger_kernel, "KERNEL listo para recibir al cliente IO");
+	log_trace(logger_kernel, "KERNEL listo para recibir al cliente IO");
 
 	// decir_algoritmo();
 
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	int pid = 0;
-	t_proceso* proceso_ejemplo = iniciarProceso("argv[1]", "atoi(argv[2])", pid);
-	log_obligatorio(logger_kernel, proceso_ejemplo->pcb->pid, " Se crea el proceso - Estado: NEW");
-	lista_interfaces = list_create();
-
+	// argv[1] = "proceso1";
+	// argv[2] = "12345";
+	t_pcb* proceso_ejemplo = iniciarPCB(argv[1], atoi(argv[2]), pid);
+	log_obligatorio(logger_kernel, proceso_ejemplo->pid, " Se crea el proceso - Estado: NEW");
 
 	// HILOS PARA MANEJAR LAS PETICIONES
 	pthread_t hilo_servidor_io;
@@ -61,12 +55,8 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_servidor_kernel_interrupt, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_servidor_kernel_interrupt);
 
-	pthread_t hilo_cliente_kernel_memoria;
-    pthread_create(&hilo_cliente_kernel_memoria, NULL, (void*)manejar_conexion_kernel_memoria, NULL);
-    pthread_detach(hilo_cliente_kernel_memoria);
-
 	pthread_t hilo_planificador_largo_plazo;
- 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, NULL);
+ 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)proceso_ejemplo);
 	pthread_detach(hilo_servidor_kernel_interrupt);
 
 	pthread_t hilo_servidor_kernel_dispatch;

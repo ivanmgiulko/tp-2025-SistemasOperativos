@@ -20,17 +20,33 @@ void enviar_tamanioProceso(char* tam_proceso, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-int manejar_conexion_kernel_memoria(){
+char* recibir_respuestaMemoria(int socket_cliente) { 
+    int size;
+	char* buffer = recibir_buffer(&size, socket_cliente);
+	return buffer;
+}
+
+int manejar_conexion_kernel_memoria(int socket_cliente){
 	while (1) {
-		int cod_op = recibir_operacion(fd_conexion_memoria);
+		int cod_op = recibir_operacion(socket_cliente);
 		switch (cod_op) {
 		case MENSAJE:
-			recibir_mensaje(fd_conexion_memoria, logger_kernel);
+			recibir_mensaje(socket_cliente, logger_kernel);
 			break;
-		case INSTRUCCION:
+
+		case PROCESO_MEMORIA:
+			char* validacionMemo = recibir_respuestaMemoria(socket_cliente);
+			if(strcmp(validacionMemo, "No hay espacio en memoria") == 0) {
+				// El proceso sigue en la cola NEW
+				return 0;
+			} else {
+				// El proceso pasa a la cola de Ready
+				return 1;
+			}
 			break;
+
 		case -1:
-			log_error(logger_kernel, "el cliente [MEMEORIA] se desconecto .");
+			log_error(logger_kernel, "el cliente [MEMORIA] se desconecto .");
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");

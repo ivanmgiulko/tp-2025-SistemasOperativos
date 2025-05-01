@@ -15,43 +15,49 @@ typedef enum {
 
 typedef struct metricas_estado
 {
-    int cantVecesNew;
-    int cantVecesReady;
-    int cantVecesExec;
-    int cantVecesBlocked;
-    int cantVecesSuspReady;
-    int cantVecesSuspBlocked;
-    int cantVecesExit;
+    uint8_t cantVecesNew;
+    uint8_t cantVecesReady;
+    uint8_t cantVecesExec;
+    uint8_t cantVecesBlocked;
+    uint8_t cantVecesSuspReady;
+    uint8_t cantVecesSuspBlocked;
+    uint8_t cantVecesExit;
 } metricas_estado;
 
-typedef struct metricas_tiempo
+typedef struct metricas_tiempo // Los tiempos son devueltos en milisegundos. Revisar commons para esto
 {
-    float tiempoEnNew;
-    float tiempoEnReady;
-    float tiempoEnExec;
-    float tiempoEnBlocked;
-    float tiempoEnSuspReady;
-    float tiempoEnSuspBlocked;
-    float tiempoEnExit;
+    int64_t tiempoEnNew;
+    int64_t tiempoEnReady;
+    int64_t tiempoEnExec;
+    int64_t tiempoEnBlocked;
+    int64_t tiempoEnSuspReady;
+    int64_t tiempoEnSuspBlocked;
+    int64_t tiempoEnExit;
 } metricas_tiempo;
 
 typedef struct 
 {
-    int pid;
-    int pc;
+    uint8_t pid;
+    uint16_t pc;
     metricas_estado metricas_estado;
     metricas_tiempo metricas_tiempo;
     p_estados estadoProceso;
+
+    char* pathArchivoPseudocodigo;
+    uint32_t path_length;
+    uint32_t tamanioMemoria;
 
 } t_pcb; 
 
 typedef struct 
 {
+    uint8_t pid;
     char* pathArchivoPseudocodigo;
-    int tamanioMemoria;
-    t_pcb* pcb;
+    uint32_t path_length;
+    uint32_t tamanioMemoria;
 
-} t_proceso; 
+} t_pcbMemoria; // Esto es lo que Memoria debe saber del PCB que es enviado desde Kernel
+
 
 typedef struct {
     pthread_mutex_t mutex;
@@ -61,7 +67,10 @@ typedef struct {
 
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
-t_pcb* iniciarPCB(int pid);
-t_proceso* iniciarProceso(char* path, int tamanio, int pid);
+t_pcb* iniciarPCB(char* path, int tamanio, int pid);
+
+void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente);
+t_pcbMemoria* deserializarProceso(t_buffer* buffer);
+
 
 #endif // PROCESS_H_

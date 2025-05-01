@@ -62,5 +62,7 @@
 	*/
     void decir_algoritmo();
 
+    void encolar_pcb(t_estado* estado , t_pcb* pcb);
+
 #endif
 

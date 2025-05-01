@@ -10,9 +10,10 @@
 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde la memoria
+	* @param socket_cliente socket del cliente que se conecta a Kernel 
 	* @returns 0 (finalizando la conexion previ) en caso de que se termine de manejar la conexion dada entre Kernel y Memoria
 	*/
-    int manejar_conexion_kernel_memoria();
+    int manejar_conexion_kernel_memoria(int socket_cliente);
 
 	/**
 	* @brief envia el tamanio del proceso a la memoria 

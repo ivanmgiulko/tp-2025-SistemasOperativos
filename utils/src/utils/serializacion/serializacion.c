@@ -1,12 +1,6 @@
 #include "serializacion.h"
 
 // Funciones utilizadas desde el lado del cliente (para serializar)
-char* recibir_tamProceso(int socket_cliente) { 
-    int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	return buffer;
-}
-
 void enviar_mensaje(char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));

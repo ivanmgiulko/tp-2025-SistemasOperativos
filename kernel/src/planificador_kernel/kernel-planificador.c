@@ -50,33 +50,34 @@ void iniciar_planificacion_largoPlazo(t_pcb* pcb){
 
     inicializar_estructuras();
 
-    log_info(logger_kernel, "Inicia el planificador a largoplazo");
-
-    // 1) Verificar si cola esta vacia
-    //      2.1) Cola vacia = preguntar espacio a memoria
-    //          3.1) Memoria con espacio = pasar de new a ready
-    //          3.2) Memoria sin espacio = queda proceso en new
-    //      2.2) Cola con procesos = se pasa de new a ready (o no) segun algoritmo de planificacion 
-
+    log_trace(logger_kernel, "Inicia el planificador a largoplazo");
 
     bool cola_vacia = queue_is_empty(estado_new->cola);
     if(cola_vacia){
+        // Creo conexion a memo y le envio el tamanio del proceso
         char* ip_memoria = configuracion_kernel->IP_MEMORIA;
 	    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
 	    fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-        char* tam_proceso = string_itoa(sizeof(pcb));
-        enviar_tamanioProceso(tam_proceso, fd_conexion_memoria);
 
-    //     if("hay espacio en memoria"){
-    //         encolar_pcb(&estado_new, pcb);
-    //         sem_post(&sem_cantidad_pcbs_en_new);
-    //     } else {
+        // enviar_tamanioProceso(tam_proceso, fd_conexion_memoria);
+        enviarProceso_A_Memoria(*pcb, fd_conexion_memoria);
 
-    //     }
-    // } else {
-    //     encolar_pcb(&estado_new, pcb);
-    //     sem_post(&sem_cantidad_pcbs_en_new);
-    // }
+        // Recibo respuesta por parte de memo si es que hay memoria
+        if(manejar_conexion_kernel_memoria(fd_conexion_memoria) == true) { 
+            encolar_pcb(estado_ready, pcb);
+            log_info(logger_kernel, "%d Pasa del estado NEW al estado READY", pcb->pid);
+            sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
+        } else { 
+            log_trace(logger_kernel, "El proceso %d sigue en READY porque no hay espacio en memo", pcb->pid);
+            // El proceso sigue en la cola de New
+        }
+
+    } else {
+        if(configuracion_kernel->ALGORITMO_INGRESO_A_READY == FIFO) { 
+            
+        }
+        // La cola no estaba vacia cuando llego el proceso
+        // En base al algoritmo elegimos el siguiente proceso
     }
 }
 

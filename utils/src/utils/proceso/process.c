@@ -1,16 +1,11 @@
 #include "process.h"
 
-t_proceso* iniciarProceso(char* path, int tamanio, int pid){
-    t_proceso* nuevoProceso = malloc(sizeof(t_proceso));
-    nuevoProceso->pathArchivoPseudocodigo = path;
-    nuevoProceso->tamanioMemoria = tamanio;
-    nuevoProceso->pcb = iniciarPCB(pid);
-    return nuevoProceso;
-}
-
-t_pcb* iniciarPCB(int pid) 
+t_pcb* iniciarPCB(char* path, int tamanio, int pid) 
 {
     t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
+    nuevoPCB->pathArchivoPseudocodigo = path;
+    nuevoPCB->tamanioMemoria = tamanio;
+
     nuevoPCB->pid = pid;
     nuevoPCB->pc = 0;
     nuevoPCB->estadoProceso = NEW;
@@ -58,4 +53,45 @@ void incrementar_contador(t_contador* contador){
     contador->valor++;
     pthread_mutex_unlock(&contador->mutex);
 
+}
+
+void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente){
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &proceso.pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &proceso.tamanioMemoria, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, &proceso.path_length, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, proceso.pathArchivoPseudocodigo, proceso.path_length);
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_MEMORIA;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(uint8_t) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(uint8_t) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_pcbMemoria* deserializarProceso(t_buffer* buffer) { 
+    t_pcbMemoria* procesoMemo = malloc(sizeof(t_pcbMemoria));
+    void* stream = buffer->stream;
+
+    memcpy(&(procesoMemo->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+    memcpy(&(procesoMemo->tamanioMemoria), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    memcpy(&(procesoMemo->path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    procesoMemo->pathArchivoPseudocodigo = malloc(procesoMemo->path_length);
+    memcpy(procesoMemo->pathArchivoPseudocodigo, stream, procesoMemo->path_length);
+
+    return procesoMemo;
 }

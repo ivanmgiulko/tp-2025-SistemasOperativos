@@ -24,5 +24,4 @@ void log_obligatorio(t_log* log, int pid, char* texto) {
 	string_append(&msgPrueba, texto);
 	log_info(log, "%s", msgPrueba);
 	free(msgPrueba);
-
 }
