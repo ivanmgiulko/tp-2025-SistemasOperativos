@@ -28,7 +28,7 @@ typedef enum
 	INSTRUCCION,
 	RESPUESTA_MEMORIA, 
 	PROCESO_MEMORIA,
-	LINUS_TORVALDS = 4294967295,
+	LINUS_TORVALDS = -1,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ
 } op_code;
@@ -36,7 +36,7 @@ typedef enum
 
 typedef struct
 {
-	int size;
+	uint32_t size;
 	void* stream;
 } t_buffer;
 

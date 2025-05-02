@@ -14,20 +14,22 @@ void manejar_hilos_clientes(int server_fd){
 
 int manejar_conexion_cliente(int socket_cliente){
 	
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->buffer = malloc(sizeof(t_buffer));
-
-	// Primero recibimos el codigo de operacion
-	recv(socket_cliente, &(paquete->codigo_operacion), sizeof(uint8_t), 0);
-
-	// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
-	recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
-
-	while (1) {
 	
-		// int cod_op = recibir_operacion(socket_cliente);
+	// Primero recibimos el codigo de operacion
+	
+	while (1) {
+		t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+
+		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+	
+		// Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
+		// recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+		// log_debug(logger_memoria, "Tamaño del buffer recibido: %d", (int)paquete->buffer->size);
+		// paquete->buffer->stream = malloc(paquete->buffer->size);
+		// recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+		// log_debug(logger_memoria, "valor codop: %d", cod_op);
+		
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
 				recibir_mensaje(socket_cliente, logger_memoria);
@@ -51,20 +53,17 @@ int manejar_conexion_cliente(int socket_cliente){
 				break; 
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la instruccion desde CPU");
-				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete->buffer->size);				if (paquete == NULL){
-					log_error(logger_memoria, "Error al recibir el paquete de instruccion");
-					return EXIT_FAILURE;
-				}
+				paquete = recibir_paquete_instruccion(socket_cliente);
+				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete->buffer->size);				
 				manejar_instruccion(socket_cliente, paquete, logger_memoria);
 				break;
 			
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
-				break;
-			case -1:
 				log_error(logger_memoria, "el cliente se desconecto.");
 				return EXIT_FAILURE;
 				break;
+	
 			default:
 				log_warning(logger_memoria, "Operacion desconocida. No quieras meter la pata");
 				break;
