@@ -76,9 +76,9 @@ void iniciar_planificacion_largoPlazo(t_pcb* pcb){
 
     log_trace(logger_kernel, "Inicia el planificador a largoplazo");
     // Habria que poner un while(1) para que esto siempre este ejecutandose?
-    // sem_post(&sem_cantidad_pcbs_en_new);
+    sem_post(&sem_cantidad_pcbs_en_new);
     while(1){
-        // sem_wait(&sem_cantidad_pcbs_en_ready);
+        sem_wait(&sem_cantidad_pcbs_en_new);
         bool cola_vacia = queue_is_empty(estado_new->cola);
         if(cola_vacia){
             // Creo conexion a memo y le envio el tamanio del proceso
