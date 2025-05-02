@@ -59,9 +59,10 @@ typedef struct
 } t_pcbMemoria; // Esto es lo que Memoria debe saber del PCB que es enviado desde Kernel
 
 
-typedef struct {
-    pthread_mutex_t mutex;
+typedef struct 
+{
     int valor;
+    pthread_mutex_t mutex;
 } t_contador;
 
 
@@ -72,5 +73,6 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid);
 void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente);
 t_pcbMemoria* deserializarProceso(t_buffer* buffer);
 
+t_contador* inicializar_contador();
 
 #endif // PROCESS_H_

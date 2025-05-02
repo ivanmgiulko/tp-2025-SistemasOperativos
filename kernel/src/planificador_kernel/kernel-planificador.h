@@ -64,5 +64,8 @@
 
     void encolar_pcb(t_estado* estado , t_pcb* pcb);
 
+    t_pcb* crear_proceso_cero(char*, int);
+
+
 #endif
 

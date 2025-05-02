@@ -40,12 +40,9 @@ int main(int argc, char* argv[]) {
 	// decir_algoritmo();
 
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
-	int pid = 0;
-	// argv[1] = "proceso1";
-	// argv[2] = "12345";
-	t_pcb* proceso_ejemplo = iniciarPCB(argv[1], atoi(argv[2]), pid);
-	log_obligatorio(logger_kernel, proceso_ejemplo->pid, " Se crea el proceso - Estado: NEW");
-
+	// Le borramos system32 por pescado.-S
+	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
+	
 	// HILOS PARA MANEJAR LAS PETICIONES
 	pthread_t hilo_servidor_io;
     pthread_create(&hilo_servidor_io, NULL, (void*)manejar_conexion_kernel_io, NULL);
@@ -56,7 +53,7 @@ int main(int argc, char* argv[]) {
     pthread_detach(hilo_servidor_kernel_interrupt);
 
 	pthread_t hilo_planificador_largo_plazo;
- 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)proceso_ejemplo);
+ 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)pcb_proceso_cero);
 	pthread_detach(hilo_servidor_kernel_interrupt);
 
 	pthread_t hilo_servidor_kernel_dispatch;

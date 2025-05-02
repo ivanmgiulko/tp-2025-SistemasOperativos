@@ -12,8 +12,31 @@ t_estado* estado_blocked;
 t_estado* estado_susp_blocked;
 t_estado* estado_exit;
 
-pthread_mutex_t mutex_pid;
+t_contador* pid;
+
 sem_t sem_cantidad_pcbs_en_new;
+
+t_pcb* crear_proceso_cero(char* path, int tamanio){
+    inicializar_pid();
+    int nuevo_pid = asignar_pid();
+  
+    printf("Creando proceso cero con path %s, tamanio %d y pid %d\n", path, tamanio, nuevo_pid);
+
+  	t_pcb* proceso_ejemplo = iniciarPCB(path,tamanio, asignar_pid());
+	log_obligatorio(logger_kernel, proceso_ejemplo->pid, " Se crea el proceso - Estado: NEW");
+    return proceso_ejemplo;
+}
+
+void inicializar_pid(){
+   pid = inicializar_contador();
+}
+
+int asignar_pid(){
+    pthread_mutex_lock(&pid->mutex);
+    int valor_pid = pid->valor++;
+    pthread_mutex_unlock(&pid->mutex);
+    return valor_pid;
+}
 
 void inicializar_estructuras(){
     estado_new = inicializar_estado();

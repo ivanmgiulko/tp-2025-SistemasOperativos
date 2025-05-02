@@ -41,7 +41,7 @@ metricas_tiempo iniciarMetricasTiempo()
 }
 
 t_contador* inicializar_contador(){
-    t_contador* contador = malloc(sizeof(contador));
+    t_contador* contador = malloc(sizeof(t_contador));
 
     contador->valor = 0;
     pthread_mutex_init(&(contador->mutex), NULL);
