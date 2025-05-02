@@ -10,7 +10,7 @@ void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* byt
     }
 
 
-    *bytes = sizeof(int) + sizeof(int) + (sizeof(int) * 2);
+    *bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
     void* peticion_serializada = serializar_paquete(paquete, *bytes);
     if(peticion_serializada == NULL) {
         return NULL;
@@ -30,18 +30,26 @@ void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* byt
 t_peticion_instruccion* deserializar_peticion_instruccion(void* buffer) {
     t_peticion_instruccion* peticion = malloc(sizeof(t_peticion_instruccion));
     int desplazamiento = 0;
+    int tamanio;
+
+    // Leer tamaño del PID (y descartarlo)
+    memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
+    desplazamiento += sizeof(int);
 
     // Leer PID
-    memcpy(&(peticion->pid), buffer + desplazamiento, sizeof(int));
+    memcpy(&(peticion->pid), buffer + desplazamiento, tamanio);
+    desplazamiento += tamanio;
+
+    // Leer tamaño del PC
+    memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
     desplazamiento += sizeof(int);
 
     // Leer PC
-    memcpy(&(peticion->pc), buffer + desplazamiento, sizeof(int));
-    desplazamiento += sizeof(int);
+    memcpy(&(peticion->pc), buffer + desplazamiento, tamanio);
+    desplazamiento += tamanio;
 
     return peticion;
 }
-
 void* serializar_respuesta_instruccion(t_respuesta_instruccion* respuesta, int* bytes) {
     int longitud = strlen(respuesta->instruccion) + 1;
     *bytes = sizeof(int) + longitud;

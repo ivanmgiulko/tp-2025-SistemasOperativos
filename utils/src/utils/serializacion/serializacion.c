@@ -21,12 +21,6 @@ void enviar_mensaje(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-void crear_buffer(t_paquete* paquete)
-{
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = 0;
-	paquete->buffer->stream = NULL;
-}
 
 t_paquete* crear_paquete(void)
 {
@@ -34,6 +28,12 @@ t_paquete* crear_paquete(void)
 	paquete->codigo_operacion = PAQUETE;
 	crear_buffer(paquete);
 	return paquete;
+}
+void crear_buffer(t_paquete* paquete)
+{
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = 0;
+	paquete->buffer->stream = NULL;
 }
 t_paquete* crear_paquete_instruccion(void){
 	t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -143,15 +143,14 @@ t_list* recibir_paquete(int socket_cliente)
 }
 t_paquete* recibir_paquete_instruccion(int socket) {
     t_paquete* paquete = malloc(sizeof(t_paquete));
-    
+    crear_buffer(paquete);
     // Leer código de operación
-    if (recv(socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL) <= 0) {
-        free(paquete);
-        return NULL; // Error al recibir
-    }
+    // if (recv(socket, &(paquete->codigo_operacion), sizeof(int), MSG_WAITALL) <= 0) {
+    //     free(paquete);
+    //     return NULL; // Error al recibir
+    // }
     
     // Leer tamaño del buffer
-    paquete->buffer = malloc(sizeof(t_buffer));
     if (recv(socket, &(paquete->buffer->size), sizeof(int), MSG_WAITALL) <= 0) {
         free(paquete->buffer);
         free(paquete);

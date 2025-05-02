@@ -19,7 +19,7 @@ void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);
 void eliminar_paquete(t_paquete*);
 void* serializar_paquete(t_paquete*, int);
-
+void crear_buffer(t_paquete*);
 // Funciones que complementan a la deserializacion
 void* recibir_buffer(int*, int);
 t_list* recibir_paquete(int);

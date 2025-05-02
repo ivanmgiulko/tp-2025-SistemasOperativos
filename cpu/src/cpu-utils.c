@@ -3,8 +3,8 @@
 void pedir_instruccion_a_memoria(){
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
     t_peticion_instruccion peticion = {
-        .pid = 15,
-        .pc = 10
+        .pid = 1,
+        .pc = 3
     };
 
 	int size_peticion = 0;
@@ -13,7 +13,8 @@ void pedir_instruccion_a_memoria(){
         log_warning(logger_cpu, "Error al serializar la peticion de instruccion");
         return;
 	}
-	log_info(logger_cpu, "Peticion serializada de instruccion: %d", size_peticion);
+	
+	log_info(logger_cpu, "Size_peticion= %d", size_peticion);
 	send(fd_conexion_memoria, peticion_serializada, size_peticion, 0);
 	free(peticion_serializada);
 

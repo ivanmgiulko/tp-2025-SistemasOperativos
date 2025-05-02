@@ -49,21 +49,22 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 				return EXIT_SUCCESS;
 				break; 
-				
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la instruccion desde CPU");
-				t_paquete* paquete = recibir_paquete_instruccion(socket_cliente);
-				log_info(logger_memoria, "%d", paquete->buffer->size);
-				if (paquete == NULL){
+				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete->buffer->size);				if (paquete == NULL){
 					log_error(logger_memoria, "Error al recibir el paquete de instruccion");
 					return EXIT_FAILURE;
 				}
 				manejar_instruccion(socket_cliente, paquete, logger_memoria);
 				break;
 			
+			case LINUS_TORVALDS:
+				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
+				break;
 			case -1:
 				log_error(logger_memoria, "el cliente se desconecto.");
 				return EXIT_FAILURE;
+				break;
 			default:
 				log_warning(logger_memoria, "Operacion desconocida. No quieras meter la pata");
 				break;
