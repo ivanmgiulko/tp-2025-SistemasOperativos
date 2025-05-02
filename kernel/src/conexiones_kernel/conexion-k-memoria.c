@@ -55,5 +55,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 	}
 
 	close(fd_conexion_memoria);
+	log_trace(logger_kernel, "Se cierra la conexion con Memoria");
 	return EXIT_SUCCESS;
 }

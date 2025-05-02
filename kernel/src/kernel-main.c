@@ -1,10 +1,10 @@
 #include "kernel-main.h"
 
 int main(int argc, char* argv[]) {
-	if(argc <= CANT_MINIMA_ARGUMENTOS){
-		fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
-		return EXIT_FAILURE;
-	}
+	// if(argc <= CANT_MINIMA_ARGUMENTOS){
+	// 	fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
+	// 	return EXIT_FAILURE;
+	// }
 
 	logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); // Crea el logger del Kernel
 
@@ -41,6 +41,8 @@ int main(int argc, char* argv[]) {
 
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
+	argv[1] = "proceso1";
+	argv[2] = "1234";
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES
@@ -55,6 +57,14 @@ int main(int argc, char* argv[]) {
 	pthread_t hilo_planificador_largo_plazo;
  	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)pcb_proceso_cero);
 	pthread_detach(hilo_servidor_kernel_interrupt);
+
+	// pthread_t hilo_planificador_mediano_plazo;
+ 	// pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_medianoPlazo, NULL);
+	// pthread_detach(hilo_planificador_mediano_plazo);
+
+	pthread_t hilo_planificador_corto_plazo;
+ 	pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_cortoPlazo, NULL);
+	pthread_detach(hilo_planificador_corto_plazo);
 
 	pthread_t hilo_servidor_kernel_dispatch;
     pthread_create(&hilo_servidor_kernel_dispatch, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);

@@ -24,6 +24,7 @@
     typedef enum{
         FIFO,
         SJF,
+        PMCP,
         SJF_SIN_DESALOJO
     }p_algoritmos;
 
@@ -55,6 +56,18 @@
     * 
 	*/
     void iniciar_planificador_largoPlazo(t_pcb* pcb_inicial);
+
+    /**
+	* @brief Inicia el planificador de mediano plazo poniendo un "" en la consola (sacandolo del estado STOP)
+    * 
+	*/
+    void iniciar_planificador_medianoPlazo();
+
+    /**
+	* @brief Inicia el planificador de corto plazo poniendo un "" en la consola (sacandolo del estado STOP)
+    * 
+	*/
+    void iniciar_planificador_cortoPlazo();
 
     /**
 	* @brief Indica el algortimo que se utiliza a la hora de ejecutar el planificador de largo plazo
