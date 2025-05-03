@@ -2,19 +2,29 @@
 int manejar_conexion_kernel_io(){
     int socket_io = esperar_cliente(fd_server_io, logger_kernel);
 	
-	// Prueba de HS para recibir nombre de interfaz
-	size_t bytes;
+	size_t tamanio_interfaz;
+	int32_t resultado_handshake_exitoso = 1;
+	if(recv(socket_io, &tamanio_interfaz, sizeof(size_t), 0) != sizeof(size_t)){
+		log_error(logger_kernel, "Error al recibir el tamanio de la interfaz");
+		return EXIT_FAILURE;
+	}
 
-	int32_t handshake;
-	int32_t resultOk = 0;
-	int32_t resultError = -1;
+	void* stream = malloc(tamanio_interfaz);
+	if(recv(socket_io, stream, tamanio_interfaz, 0) != tamanio_interfaz){
+		log_error(logger_kernel, "Error al recibir el nombre de la interfaz");
+		return EXIT_FAILURE;
+	}
+	// Enviar respuesta al cliente
+	send(socket_io, &resultado_handshake_exitoso, sizeof(int32_t), 0);
+	
+	if(lista_de_io == NULL){
+		inicializar_lista_io();
+	}
 
-	bytes = recv(socket_io, &handshake, sizeof(int32_t), MSG_WAITALL);
-		if (handshake == 9) { // Habria que mandarle antes 
-    		bytes = send(socket_io, &resultOk, sizeof(int32_t), 0);
-		} else {
-    		bytes = send(socket_io, &resultError, sizeof(int32_t), 0);
-		}
+	inicializar_io(stream, socket_io);
+
+	free(stream);
+
 		
 	while (1) {
 		int cod_op = recibir_operacion(socket_io);

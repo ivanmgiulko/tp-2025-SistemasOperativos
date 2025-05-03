@@ -1,33 +1,31 @@
 #include "conexion-io-kernel.h"
 
-void enviar_nombreInterfaz(char* mensaje, int socket_cliente) {
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-	paquete->codigo_operacion = INTERFAZ;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+void enviar_nombre_interfaz(char* mensaje, int socket_cliente) {
 
-	int bytes = paquete->buffer->size + 2*sizeof(int);
+	// HANDSHAKE
+	// DEFINIR TAMANIO DEL NOMBRE DE LA INTERFAZ
+	size_t tamanio_interfaz = strlen(mensaje) + 1;
+	// DEFINIR TAMANIO TOTAL DEL MENSAJE (TAMANIO DE SIZE_T + TAMANIO NOMBRE DE LA INTERFAZ)
+	size_t tamanio_total = sizeof(size_t) + tamanio_interfaz;
+	// DEFINIR UNA VARIABLE PARA EL RESULTADO DEL HANDSHAKE
+	int32_t result = -1;
+	// RESERVAR ESPACIO PARA EL MENSAJE DEL HANDSHAKE
+	void* mensaje_handshake = malloc(tamanio_total);
+	// COPIAR EL MENSAJE DEL HANDSHAKE EN LA VARIABLE
+	memcpy(mensaje_handshake, &tamanio_interfaz, sizeof(size_t));
+	memcpy(mensaje_handshake + sizeof(size_t), mensaje, tamanio_interfaz);
+	// ENVIAR EL MENSAJE DEL HANDSHAKE
+	send(socket_cliente, mensaje_handshake, tamanio_total, 0);
 
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	// Prueba de HandShake
-	size_t bytesHS;
-	int32_t handshake = strlen(mensaje) + 1;
-	int32_t result;
-	bytesHS = send(socket_cliente, &handshake, sizeof(int32_t), 0);
-	bytesHS = recv(socket_cliente, &result, sizeof(int32_t), MSG_WAITALL);
-	if (result == 0) {
-		log_info(logger_io, "El Handshake esta bien desde el lado de IO!");
-    	// Handshake OK
-		send(socket_cliente, a_enviar, bytes, 0); 
+	recv(socket_cliente, &result, sizeof(int32_t), 0);
+	if (result == 1) {
+		log_info(logger_io, "Handshake con [KERNEL] exitoso!");
 	} else {
-    	// Handshake ERROR
+		log_error(logger_io, "Handshake con [KERNEL] fallido!");
+		free(mensaje_handshake);
+		return EXIT_FAILURE;
 	}
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
+	free(mensaje_handshake);
 }
 
 int manejar_conexion_io(int socket_cliente){

@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 	conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
-	enviar_nombreInterfaz(io_nombre, conexion_kernel_fd);
+	enviar_nombre_interfaz(io_nombre, conexion_kernel_fd);
 	
 	pthread_t hilo_cliente_io_akernel;
     pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion_io, (void*) conexion_kernel_fd);

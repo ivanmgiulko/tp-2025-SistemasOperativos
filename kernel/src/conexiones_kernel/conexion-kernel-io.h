@@ -2,7 +2,7 @@
 #define CONEXION_KERNEL_IO_
     
     #include "kernel-gestor.h"
-
+	#include "io_kernel/kernel-io.h"
     /**
 	 * @file
 	 * @brief #include "conexiones_kernel/conexion-kernel-io.h"
