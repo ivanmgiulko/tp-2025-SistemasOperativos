@@ -8,21 +8,14 @@ int manejar_conexion_kernel_dispatch(){
 		case MENSAJE:
 			recibir_mensaje(fd_conexion_kernel_dispatch, logger_cpu);
 			break;
-        // case INTERFAZ:
-		// 	char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_kernel_dispatch);
-		// 	log_info(logger_cpu, "Recibi la interfaz desde IO: %s", nombreInterfaz);
-		// //	list_add(lista_interfaces, nombreInterfaz);
+		case INFO_PROC_EXEC:
 			
-		// 	break;
+
+			break;
+
 		case INSTRUCCION:
 			break;
-			/*
-		case PAQUETE:
-			lista = recibir_paquete(fd_conexion_kernel_dispatch);
-			log_info(logger_cpu, "Me llegaron los siguientes valores:\n");
-			list_iterate(lista, (void*) iterator);
-			break;
-            */
+			
 		case -1:
 			log_error(logger_cpu, "el cliente se desconecto.");
 			return EXIT_FAILURE;

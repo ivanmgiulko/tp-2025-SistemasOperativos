@@ -79,6 +79,9 @@
 
     t_pcb* crear_proceso_cero(char*, int);
 
+    void inicializar_pid();
+
+    int asignar_pid();
 
 #endif
 

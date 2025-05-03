@@ -10,7 +10,7 @@ int manejar_conexion_kernel_io(){
 	int32_t resultError = -1;
 
 	bytes = recv(socket_io, &handshake, sizeof(int32_t), MSG_WAITALL);
-		if (handshake == 9) {
+		if (handshake == 9) { // Habria que mandarle antes 
     		bytes = send(socket_io, &resultOk, sizeof(int32_t), 0);
 		} else {
     		bytes = send(socket_io, &resultError, sizeof(int32_t), 0);

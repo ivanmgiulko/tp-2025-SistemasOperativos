@@ -1,5 +1,6 @@
 #include "process.h"
 
+
 t_pcb* iniciarPCB(char* path, int tamanio, int pid) 
 {
     t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
@@ -55,6 +56,34 @@ void incrementar_contador(t_contador* contador){
 
 }
 
+void enviarProcReady_A_CPU_Dispatch(t_peticion_instruccion pcbInfo, int socket_cliente) { 
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(int) * 2;
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = INFO_PROC_EXEC;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(uint8_t) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(uint8_t) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+
+
+}
+
 void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente){
     t_buffer* buffer = malloc(sizeof(t_buffer));
     buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length);
@@ -95,3 +124,4 @@ t_pcbMemoria* deserializarProceso(t_buffer* buffer) {
 
     return procesoMemo;
 }
+

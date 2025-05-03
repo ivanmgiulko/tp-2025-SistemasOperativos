@@ -6,6 +6,7 @@
     #include <utils/serializacion/serializacion.h>
     #include <utils/cliente/client.h>
     #include <utils/server/server.h>
+    #include <utils/contrato/contrato.h>
 
     #include "config_kernel/kernel-config.h"
     #include "conexiones_kernel/conexion-k-memoria.h"

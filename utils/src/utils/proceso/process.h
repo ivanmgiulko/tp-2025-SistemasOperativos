@@ -1,7 +1,8 @@
 #ifndef PROCESS_H_
 #define PROCESS_H_
 
-#include <./utils/utils.h>
+    #include <./utils/utils.h>
+    #include <./utils/contrato/contrato.h>
 
 typedef enum {
     NEW, 

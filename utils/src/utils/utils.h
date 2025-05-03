@@ -29,6 +29,7 @@ typedef enum
 	RESPUESTA_MEMORIA, 
 	PROCESO_MEMORIA,
 	LINUS_TORVALDS = -1,
+	INFO_PROC_EXEC,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ
 } op_code;
