@@ -20,6 +20,6 @@
 	* @param tam_proceso tamanio del proceso a serializar
 	* @param socket_cliente socket de a quien le enviamos el paquete serializado
 	*/
-	void enviar_tamanioProceso(char* tam_proceso, int socket_cliente);
+	void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente);
 
 #endif // CONEXIONES_K_MEMORIA_H_

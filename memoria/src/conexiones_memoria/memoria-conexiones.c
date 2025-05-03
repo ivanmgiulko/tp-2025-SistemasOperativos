@@ -14,40 +14,33 @@ void manejar_hilos_clientes(int server_fd){
 
 int manejar_conexion_cliente(int socket_cliente){
 	
-	
-	// Primero recibimos el codigo de operacion
-	
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_cliente);
 
-		// paquete->buffer = malloc(sizeof(t_buffer));
-		// // Primero recibimos el codigo de operacion
-		// recv(socket_cliente, &(paquete->codigo_operacion), sizeof(uint8_t), 0);
-		// // Después ya podemos recibir el buffer. Primero su tamaño seguido del contenido
-		// recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-		// paquete->buffer->stream = malloc(paquete->buffer->size);
-		// recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
-		
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
 				recibir_mensaje(socket_cliente, logger_memoria);
 				break;
-
         	case PROCESO_MEMORIA:
+				
+				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+				paquete->buffer->stream = malloc(paquete->buffer->size);
+				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+
 				t_pcbMemoria* proceso_A_inicializar = deserializarProceso(paquete->buffer);
 				cantMemoria -= proceso_A_inicializar->tamanioMemoria;
 				if(cantMemoria < 0) {
 					// NO hay memoria para este proceso
 					// enviar a Kernel que no se pudo
 					cantMemoria += proceso_A_inicializar->tamanioMemoria;
-					enviar_respuestaKernel("No hay espacio en memoria", socket_cliente);
+					enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
 				} else {
 					// Hay memoria para este proceso
 					// le mandamos a Kernel el num de tabla de primer nivel
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_A_inicializar->pid, proceso_A_inicializar->tamanioMemoria);
-					enviar_respuestaKernel("Hay espacio en memoria", socket_cliente);
+					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
 				return EXIT_SUCCESS;
 				break; 
@@ -90,7 +83,7 @@ void manejar_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) 
     free(peticion);
 }
 
-void enviar_respuestaKernel(char* mensaje, int socket_cliente)
+void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 

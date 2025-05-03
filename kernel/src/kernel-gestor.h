@@ -10,6 +10,8 @@
 
     #include "config_kernel/kernel-config.h"
     #include "conexiones_kernel/conexion-k-memoria.h"
+    #include "conexiones_kernel/conexion-kernel-cpu.h"
+
 
     /**
 	 * @file

@@ -22,16 +22,17 @@
 
 typedef enum
 {
-	MENSAJE,
-	PAQUETE,
+	MENSAJE = 0,
+	PAQUETE = 1,
 
 	INSTRUCCION,
 	RESPUESTA_MEMORIA, 
 	PROCESO_MEMORIA,
-	LINUS_TORVALDS = -1,
 	INFO_PROC_EXEC,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
-	INTERFAZ
+	INTERFAZ,
+
+	LINUS_TORVALDS = -1
 } op_code;
 
 

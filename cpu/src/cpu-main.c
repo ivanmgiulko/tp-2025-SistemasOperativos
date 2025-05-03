@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "Puerto Kernel Interrupt: %s",puerto_kernel_interrupt);
 	log_info(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
-	log_info(logger_cpu,"Puerto Memoria: %s", puerto_memoria);
+	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
 //	IP_MEMORIA=127.0.0.4
 //	PUERTO_MEMORIA=40074
     // CREAMOS CONEXIONES DE DISPATCH E INTERRUPT HACIA EL KERNEL y asia memoria
@@ -41,9 +41,9 @@ int main(int argc, char* argv[]){
 	fd_conexion_kernel_interrupt = crear_conexion(ip_kernel, puerto_kernel_interrupt);
 	log_info(logger_cpu, "NOS CONECTAMOS AL KERNEL DESDE INTERRUPT!");
 
-	log_info(logger_cpu, "Intentando conectarse al PUERTO DISPATCH del KERNEL");
+	log_trace(logger_cpu, "Intentando conectarse al PUERTO DISPATCH del KERNEL");
 	fd_conexion_kernel_dispatch = crear_conexion(ip_kernel, puerto_kernel_dispatch);
-	log_info(logger_cpu, "NOS CONECTAMOS AL KERNEL DESDE DISPATCH!");
+	log_trace(logger_cpu, "NOS CONECTAMOS AL KERNEL DESDE DISPATCH!");
 
 	log_info(logger_cpu, "Intentando conectarse a la MEMORIA");
 	fd_conexion_memoria = crear_conexion(ip_kernel, puerto_memoria);
@@ -82,9 +82,7 @@ int main(int argc, char* argv[]){
 	pthread_t hilo_cliente_cputDispatch_akernel;
     pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
     pthread_detach(hilo_cliente_cputDispatch_akernel);
-
 	
-
 	pthread_t hilo_cliente_cpu_amemoria;
     pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
     pthread_detach(hilo_cliente_cpu_amemoria);

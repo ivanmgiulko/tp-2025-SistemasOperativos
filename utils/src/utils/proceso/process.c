@@ -55,35 +55,6 @@ void incrementar_contador(t_contador* contador){
     pthread_mutex_unlock(&contador->mutex);
 
 }
-
-void enviarProcReady_A_CPU_Dispatch(t_peticion_instruccion pcbInfo, int socket_cliente) { 
-    t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(int) * 2;
-    buffer->stream = malloc(buffer->size);
-    uint32_t offset = 0;
-
-    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
-    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
-    
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = INFO_PROC_EXEC;
-    paquete->buffer = buffer;
-    void* a_enviar = malloc(buffer->size + sizeof(uint8_t) + sizeof(uint32_t));
-    offset = 0;
-
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t)); offset += sizeof(uint8_t);
-    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
-    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-    send(socket_cliente, a_enviar, buffer->size + sizeof(uint8_t) + sizeof(uint32_t), 0);
-
-    free(a_enviar);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
-
-
-}
-
 void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente){
     t_buffer* buffer = malloc(sizeof(t_buffer));
     buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length);
@@ -98,13 +69,13 @@ void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente){
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = PROCESO_MEMORIA;
     paquete->buffer = buffer;
-    void* a_enviar = malloc(buffer->size + sizeof(uint8_t) + sizeof(uint32_t));
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
     offset = 0;
 
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-    send(socket_cliente, a_enviar, buffer->size + sizeof(uint8_t) + sizeof(uint32_t), 0);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
 
     free(a_enviar);
     free(paquete->buffer->stream);

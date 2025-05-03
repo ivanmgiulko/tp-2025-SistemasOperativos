@@ -35,4 +35,6 @@
 	*/
     int manejar_cliente_dispatch(void*);
 
+	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
+
 #endif // CONEXION_KERNEL_CPU_H_

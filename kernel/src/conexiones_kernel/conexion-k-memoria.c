@@ -1,6 +1,6 @@
 #include "conexion-k-memoria.h"
 
-void enviar_tamanioProceso(char* tam_proceso, int socket_cliente)
+void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente)
 {
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 

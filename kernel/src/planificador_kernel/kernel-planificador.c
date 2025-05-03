@@ -122,36 +122,15 @@ void iniciar_planificador_cortoPlazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
-        
-    if (configuracion_kernel->ALGORITMO_CORTO_PLAZO == FIFO){
-        t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
-        log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
-        t_peticion_instruccion* infoProceso;
-        infoProceso->pc = pcbEnReady->pc;
-        infoProceso->pid = pcbEnReady->pid;
-        enviarProcReady_A_CPU_Dispatch(*infoProceso, fd_conexion_memoria);
-
-
-    }
-
-
-        // switch (configuracion_kernel->ALGORITMO_CORTO_PLAZO) {
-        // case FIFO:
-        //     t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
-        //     log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
-        //     t_peticion_instruccion* infoProceso;
-        //     infoProceso->pc = pcbEnReady->pc;
-        //     infoProceso->pid = pcbEnReady->pid;
-
-        //     break;
-        // case SJF:
-        //     break;
-        // case SJF_SIN_DESALOJO:
-        //     break;
-        // default:
-        // log_warning(logger_kernel, "El algortimo de planificacion corto plazo no es admitido");
-        //     break;
-        // }
+        if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
+            t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
+            log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
+            infoProceso->pc = pcbEnReady->pc;
+            infoProceso->pid = pcbEnReady->pid;
+            enviar_mensaje("Hola sdesde Kernel!!!", fd_server_kernel_dispatch);
+            // enviar_proc_cpu(*infoProceso, fd_server_kernel_dispatch);
+        }
     }
 }
 

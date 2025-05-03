@@ -26,7 +26,7 @@
 	
 	void manejar_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
 
-	void enviar_respuestaKernel(char* mensaje, int socket_cliente);
+	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 	
     
 #endif // MEMORIA_CONEXIONES_H_

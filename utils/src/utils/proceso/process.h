@@ -2,7 +2,6 @@
 #define PROCESS_H_
 
     #include <./utils/utils.h>
-    #include <./utils/contrato/contrato.h>
 
 typedef enum {
     NEW, 
@@ -60,17 +59,14 @@ typedef struct
 } t_pcbMemoria; // Esto es lo que Memoria debe saber del PCB que es enviado desde Kernel
 
 
-typedef struct 
-{
+typedef struct  {
     int valor;
     pthread_mutex_t mutex;
 } t_contador;
 
-
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
 t_pcb* iniciarPCB(char* path, int tamanio, int pid);
-
 void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente);
 t_pcbMemoria* deserializarProceso(t_buffer* buffer);
 

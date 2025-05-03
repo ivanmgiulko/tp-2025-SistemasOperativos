@@ -3,15 +3,22 @@
 int manejar_conexion_kernel_dispatch(){
 
 	while (1) {
-		int cod_op = recibir_operacion(fd_conexion_kernel_dispatch);
-		switch (cod_op) {
-		case MENSAJE:
-			recibir_mensaje(fd_conexion_kernel_dispatch, logger_cpu);
-			break;
-		case INFO_PROC_EXEC:
-			
+		t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+		paquete->codigo_operacion = recibir_operacion(fd_conexion_kernel_dispatch);
 
-			break;
+		switch (paquete->codigo_operacion) {
+
+			case MENSAJE:
+				recibir_mensaje(fd_conexion_kernel_interrupt, logger_cpu);
+				break;
+				
+			case INFO_PROC_EXEC:
+				recv(fd_conexion_kernel_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
+				paquete->buffer->stream = malloc(paquete->buffer->size);
+				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+				log_trace(logger_cpu, "llegue desde Kernel");
+				break;
 
 		case INSTRUCCION:
 			break;
