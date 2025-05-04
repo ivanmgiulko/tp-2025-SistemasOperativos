@@ -29,6 +29,7 @@ int main(int argc, char* argv[]) {
         abort();
     }
 	log_trace(logger_kernel, "KERNEL listo para recibir al cliente CPU-Dispatch");
+	
 
 	fd_server_io = iniciar_servidor(puerto_io, logger_kernel);
 	if(fd_server_io == -1){

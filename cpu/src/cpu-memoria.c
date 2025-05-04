@@ -8,21 +8,10 @@ int manejar_conexion_memoria(){
 		case MENSAJE:
 			recibir_mensaje(fd_conexion_memoria, logger_cpu);
 			break;
-        // case INTERFAZ:
-		// 	char* nombreInterfaz = recibir_nommbreInterfaz(fd_conexion_memoria);
-		// 	log_info(logger_cpu, "Recibi la interfaz desde IO: %s", nombreInterfaz);
-		// //	list_add(lista_interfaces, nombreInterfaz);
-			
-		// 	break;
+        
 		case INSTRUCCION:
 			break;
-			/*
-		case PAQUETE:
-			lista = recibir_paquete(fd_conexion_memoria);
-			log_info(logger_cpu, "Me llegaron los siguientes valores:\n");
-			list_iterate(lista, (void*) iterator);
-			break;
-            */
+		
 		case -1:
 			log_error(logger_cpu, "el cliente se desconecto.");
 			return EXIT_FAILURE;

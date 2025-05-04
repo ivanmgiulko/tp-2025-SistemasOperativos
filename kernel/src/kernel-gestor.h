@@ -46,5 +46,6 @@
     extern int fd_conexion_memoria;
     extern int fd_server_kernel_interrupt;
     extern int fd_server_kernel_dispatch;
+    extern int socket_dispatch;
 
 #endif // KERNEL_GESTOR_H_

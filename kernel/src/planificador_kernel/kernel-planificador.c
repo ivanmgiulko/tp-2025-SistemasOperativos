@@ -104,7 +104,7 @@ void iniciar_planificacion_largoPlazo(t_pcb* pcb){
             }
         } else {
             if(configuracion_kernel->ALGORITMO_INGRESO_A_READY == FIFO) { 
-                // La cola no estaba vacia cuando llego el proceso
+                // La cola no estaba vacia cusando llego el proceso
                 // En base al algoritmo elegimos el siguiente proceso
             }
 
@@ -128,27 +128,12 @@ void iniciar_planificador_cortoPlazo(){
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
             infoProceso->pc = pcbEnReady->pc;
             infoProceso->pid = pcbEnReady->pid;
-            enviar_mensaje("Hola sdesde Kernel!!!", fd_server_kernel_dispatch);
-            // enviar_proc_cpu(*infoProceso, fd_server_kernel_dispatch);
+            enviar_proc_cpu(*infoProceso, socket_dispatch);
+
+            // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
+            
         }
     }
-}
-
-// PRODUCTOR
-void pasar_a_new(t_pcb* pcb){
-    bool cola_vacia = queue_is_empty(estado_new->cola);
-    if(cola_vacia){
-            if("hay espacio en memoria"){
-                encolar_pcb(&estado_new, pcb);
-                sem_post(&sem_cantidad_pcbs_en_new);
-            }else{
-
-            }
-    }else{
-        encolar_pcb(&estado_new, pcb);
-        sem_post(&sem_cantidad_pcbs_en_new);
-    }
-
 }
 
 void encolar_pcb(t_estado* estado , t_pcb* pcb) {
@@ -171,3 +156,4 @@ t_pcb* pop_cola_mutex(t_estado* cola_mutex) {
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
+

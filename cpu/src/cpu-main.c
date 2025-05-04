@@ -73,8 +73,6 @@ int main(int argc, char* argv[]){
 	
 	//FIN SIMULACION PETICION DE INSTRUCCION A MEMORIA
 	
-
-
 	pthread_t hilo_cliente_cpuInt_akernel;
     pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_cliente_cpuInt_akernel);

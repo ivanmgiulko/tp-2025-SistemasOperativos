@@ -18,7 +18,7 @@ void manejar_conexion_kernel_interrupt() {
 
 void manejar_conexion_kernel_dispatch() {
     while (1) {
-        int socket_dispatch = esperar_cliente(fd_server_kernel_dispatch, logger_kernel);
+        socket_dispatch = esperar_cliente(fd_server_kernel_dispatch, logger_kernel);
         if (socket_dispatch == -1) {
             log_error(logger_kernel, "Error al aceptar cliente en dispatch");
             continue;
@@ -58,11 +58,29 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 int manejar_cliente_dispatch(void* socket_cliente_ptr){
 	int socket_dispatch = *(int*)socket_cliente_ptr;
 	while (1) {
-		int cod_op = recibir_operacion(socket_dispatch);
-		switch (cod_op) {
+        t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+		paquete->codigo_operacion = recibir_operacion(socket_dispatch);
+		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_dispatch, logger_kernel);
 			break;
+
+        case SYSCALL_IO:
+            
+            recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+            t_param_io* pruebaIO = deserializar_syscall_io(paquete->buffer);
+            
+            t_io* ioenlista = list_get(lista_de_io, 0);
+            t_io* io_buscada = buscar_io(lista_de_io, pruebaIO->dispositivo);
+            if(io_buscada == NULL) {
+                log_trace(logger_kernel, "No existe la interfaz MOUSE");
+            }
+
+            break;  
+
 		case INSTRUCCION:
 			break;
 		case -1:
@@ -102,4 +120,16 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
+}
+
+t_param_io* deserializar_syscall_io(t_buffer* buffer) { 
+    t_param_io* pruebaIO = malloc(sizeof(t_param_io));
+    void* stream = buffer->stream;
+
+    memcpy(&(pruebaIO->tiempo), stream, sizeof(int64_t)); stream += sizeof(int64_t);
+    memcpy(&(pruebaIO->dispositivo_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    pruebaIO->dispositivo = malloc(pruebaIO->dispositivo_length);
+    memcpy(pruebaIO->dispositivo , stream, pruebaIO->dispositivo_length);
+
+    return pruebaIO;
 }

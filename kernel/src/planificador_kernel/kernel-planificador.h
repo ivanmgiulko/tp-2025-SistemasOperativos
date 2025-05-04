@@ -28,6 +28,10 @@
         SJF_SIN_DESALOJO
     }p_algoritmos;
 
+
+    
+
+
     extern pthread_mutex_t mutex_pid;
     extern sem_t sem_cantidad_pcbs_en_new;
 
@@ -75,6 +79,11 @@
 	*/
     void decir_algoritmo();
 
+    /**
+	* @brief encola el proceso en la cola (dentro del struct t_estado) que nosotros le pasemos.
+    * @param estado struct que contiene la cola en cuestion y un semaforo
+    * @param pcb proceso para ser encolado en la cola que le pasamos
+	*/
     void encolar_pcb(t_estado* estado , t_pcb* pcb);
 
     t_pcb* crear_proceso_cero(char*, int);

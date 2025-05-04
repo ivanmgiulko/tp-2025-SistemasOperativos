@@ -32,8 +32,6 @@ int manejar_conexion_kernel_io(){
 		case MENSAJE:
 			recibir_mensaje(socket_io, logger_kernel);
 			break;
-		case INSTRUCCION:
-			break;
 		case -1:
 			log_error(logger_kernel, "el cliente [IO] se desconecto.");
 			return EXIT_FAILURE;

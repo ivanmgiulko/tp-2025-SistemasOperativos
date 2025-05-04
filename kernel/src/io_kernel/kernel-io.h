@@ -19,7 +19,10 @@
     } t_io;
 
     extern t_list* lista_de_io;
+
     void inicializar_io(void*, int);
-    t_io* buscar_io(char*);
+    void inicializar_lista_io();
+    t_io* buscar_io(t_list* lista_de_io, char* nombre_io);
+    
 #endif
 

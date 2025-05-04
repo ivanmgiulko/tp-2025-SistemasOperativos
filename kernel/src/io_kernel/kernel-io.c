@@ -18,7 +18,12 @@ void inicializar_io(void* nombre_io, int socket_io) {
     log_info(logger_kernel, "Nombre %s", io_encontrado->nombre);
 }
 
-t_io* buscar_io(char* nombre_io) {
-   
+t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
+    bool _es_el_io(void* elemento) {
+        t_io* io = (t_io*) elemento;
+        return string_contains(io->nombre, nombre_io);
+    }
+
+    return list_find(lista_de_io, _es_el_io);
 }
 

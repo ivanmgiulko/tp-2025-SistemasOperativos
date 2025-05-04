@@ -31,6 +31,7 @@ typedef enum
 	INFO_PROC_EXEC,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ,
+	SYSCALL_IO,
 
 	LINUS_TORVALDS = -1
 } op_code;
