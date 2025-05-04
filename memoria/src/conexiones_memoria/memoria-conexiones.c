@@ -46,13 +46,20 @@ int manejar_conexion_cliente(int socket_cliente){
 				break; 
 
 			case INSTRUCCION:
+				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
+				t_paquete* paquete_tmp = recibir_paquete_instruccion(socket_cliente);
+				if (paquete_tmp == NULL) {
+					log_error(logger_memoria, "Fallo al recibir paquete de instrucción");
+					break;
+				}
+				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
+				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
 
-				log_info(logger_memoria, "Recibi la instruccion desde CPU");
-				paquete = recibir_paquete_instruccion(socket_cliente);
-				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete->buffer->size);				
-				manejar_instruccion(socket_cliente, paquete, logger_memoria);
+				// Libera el paquete
+				free(paquete_tmp->buffer->stream);
+				free(paquete_tmp->buffer);
+				free(paquete_tmp);
 				break;
-			
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
 				log_error(logger_memoria, "el cliente se desconecto.");
@@ -69,7 +76,7 @@ int manejar_conexion_cliente(int socket_cliente){
 	return EXIT_SUCCESS;
 }
 
-void manejar_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) {
+void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) {
     if (paquete->buffer->size < sizeof(int) * 2) {
         log_error(logger, "El tamaño del buffer es insuficiente para deserializar la instrucción");
         return;
@@ -80,7 +87,34 @@ void manejar_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) 
     log_info(logger, "PID recibido: %d", peticion->pid);
     log_info(logger, "PC recibido: %d", peticion->pc);
 
+	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
+	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
+	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc, "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/memoria/PATH_INSTRUCCIONES.txt",logger);
+	log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);
+
+	//Serializo la respuesta
+	int size_respuesta;
+	void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
+	if(respuesta_serializada == NULL) {
+        log_warning(logger, "Error al serializar la respuesta de instruccion");
+        return;
+	}
+	log_debug(logger, "Serializando paquete:");
+	log_debug(logger, "  Código de operación: %d", INSTRUCCION);
+	log_debug(logger, "  Tamaño del buffer: %d", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
+	log_debug(logger, "  Instrucción: %s", respuesta->instruccion);
+
+	//Envio la instruccion serializada envio a CPU 
+	//log_info(logger, "Size_respuesta= %d", size_respuesta);
+	log_info(logger, "Enviando Instrucción a CPU");
+	int bytes_enviados = send(socket_cliente, respuesta_serializada, size_respuesta, 0);
+	if (bytes_enviados <= 0) {
+		log_error(logger, "Fallo al enviar la instrucción al CPU");
+	}
+	//Libero memoria
     free(peticion);
+	free(respuesta->instruccion);
+	free(respuesta);
 }
 
 void enviar_respuesta_kernel(char* mensaje, int socket_cliente)

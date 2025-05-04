@@ -24,6 +24,7 @@
         char *RETARDO_SWAP;
         char *LOG_LEVEL;
         char *DUMP_PATH;
+        char *PATH_INSTRUCCIONES;
     }t_memoria_config;
 
     /**

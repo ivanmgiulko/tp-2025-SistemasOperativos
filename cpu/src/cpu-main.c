@@ -69,10 +69,25 @@ int main(int argc, char* argv[]){
 	enviar_mensaje(cpu_id, fd_conexion_kernel_dispatch);
 	enviar_mensaje(valor_prueba_memoria, fd_conexion_memoria);
 
-	//SIMULO PETICION DE INSTRUCCION A MEMORIA
+	//HILOS PARA QUE FUNCIONE LO DE INSTRUCCION:
 	
-	//FIN SIMULACION PETICION DE INSTRUCCION A MEMORIA
-	
+	/* pthread_t hilo_cliente_cpu_amemoria;
+	pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
+
+	// No lo detachés, usá join
+	// pthread_detach(hilo_cliente_cpu_amemoria);
+
+	pthread_t hilo_peticion_instruccion;
+	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
+
+	// Esperás a que termine la petición
+	pthread_join(hilo_peticion_instruccion, NULL);
+
+	// Esperás también a que termine el hilo que recibe
+	pthread_join(hilo_cliente_cpu_amemoria, NULL);
+ 	*/
+
+ 	//HILOS QUE ESTABAN HASTA AHORA:
 	pthread_t hilo_cliente_cpuInt_akernel;
     pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_cliente_cpuInt_akernel);
@@ -89,6 +104,8 @@ int main(int argc, char* argv[]){
 	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
     pthread_join(hilo_peticion_instruccion, NULL);
 
+
+	//Libera config y logger
     config_destroy(config_cpu);
 	log_destroy(logger_cpu);
 

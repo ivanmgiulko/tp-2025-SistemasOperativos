@@ -2,11 +2,14 @@
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
 void pedir_instruccion_a_memoria(){
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
+
+	//crea la peticion
     t_peticion_instruccion peticion = {
-        .pid = 1,
+        .pid = 6,
         .pc = 3
     };
 
+	//Serializa la petición
 	int size_peticion = 0;
 	void* peticion_serializada = serializar_peticion_instruccion(&peticion, &size_peticion);
     if(peticion_serializada == NULL) {
@@ -14,19 +17,37 @@ void pedir_instruccion_a_memoria(){
         return;
 	}
 	
+	//Envía la peticion serializada a MEMORIA
 	log_info(logger_cpu, "Size_peticion= %d", size_peticion);
+	log_debug(logger_cpu, "Petición envíada, aguardo respuesta");
 	send(fd_conexion_memoria, peticion_serializada, size_peticion, 0);
 	free(peticion_serializada);
 
+	/* //Recibe la instruccion serializada desde MEMORIA
 	int size_respuesta;
 	log_info(logger_cpu, "Esperando respuesta de memoria");
 	void* buffer_respuesta = recibir_buffer(&size_respuesta, fd_conexion_memoria);
-	log_info(logger_cpu, "pedilo lean");
-
+	
 	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(buffer_respuesta);
+ 	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
+ 
+ 	free(respuesta->instruccion);
+ 	free(respuesta);
+ 	free(buffer_respuesta); */
+}	
+	
+
+void manejar_respuesta_de_instruccion(t_paquete* paquete){
+    log_info(logger_cpu, "Iniciando deserializacion del paquete de instruccion");
+
+	//Deserializa la instrucción recibida
+	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(paquete->buffer->stream);
 	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
 
+	//Libera memoria
+	free(paquete->buffer->stream);
+	free(paquete->buffer);
+	free(paquete);
 	free(respuesta->instruccion);
 	free(respuesta);
-	free(buffer_respuesta);
 }

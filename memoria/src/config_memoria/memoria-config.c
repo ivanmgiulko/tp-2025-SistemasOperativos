@@ -13,6 +13,7 @@ t_memoria_config* inicializar_config_kernel(t_config* config_memoria_estructurad
     config_memoria->RETARDO_SWAP = config_get_string_value(config_memoria_estructurada, "RETARDO_SWAP");
     config_memoria->LOG_LEVEL = config_get_string_value(config_memoria_estructurada, "LOG_LEVEL");
     config_memoria->DUMP_PATH = config_get_string_value(config_memoria_estructurada, "DUMP_PATH");
+    config_memoria->PATH_INSTRUCCIONES = config_get_string_value(config_memoria_estructurada, "PATH_INSTRUCCIONES");
     return config_memoria;
 }
 

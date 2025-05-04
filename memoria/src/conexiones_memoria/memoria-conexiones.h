@@ -24,7 +24,7 @@
     int manejar_conexion_cliente(int socket_cliente);
 
 	
-	void manejar_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
+	void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
 
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 	

@@ -10,8 +10,15 @@ int manejar_conexion_memoria(){
 			break;
         
 		case INSTRUCCION:
-			break;
-		
+				log_info(logger_cpu, "Recibi la instrucción solicitada a MEMORIA");
+				t_paquete* paquete = recibir_paquete_instruccion(fd_conexion_memoria);
+				if (paquete == NULL) {
+        			log_error(logger_cpu, "Error al recibir el paquete de instrucción");
+        			break;
+    			}
+				log_info(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);				
+				manejar_respuesta_de_instruccion(paquete);
+				break;
 		case -1:
 			log_error(logger_cpu, "el cliente se desconecto.");
 			return EXIT_FAILURE;
