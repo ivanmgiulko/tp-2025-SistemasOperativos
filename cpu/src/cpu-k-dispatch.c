@@ -10,7 +10,7 @@ int manejar_conexion_kernel_dispatch(){
 		switch (paquete->codigo_operacion) {
 
 			case MENSAJE:
-				recibir_mensaje(fd_conexion_kernel_interrupt, logger_cpu);
+				recibir_mensaje(fd_conexion_kernel_dispatch, logger_cpu);
 				break;
 				
 			case INFO_PROC_EXEC:
@@ -18,14 +18,14 @@ int manejar_conexion_kernel_dispatch(){
 				recv(fd_conexion_kernel_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
-				t_peticion_instruccion* infoPCB = deserializar_peticion_instruccion(paquete->buffer->stream);
+				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
 				log_trace(logger_cpu, "PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 
 				// 
 
 				// El proceso debe realizar una IO ahora:
 				t_param_io* pruebaIO = malloc(sizeof(t_param_io));
-				pruebaIO->dispositivo = "MOUSE";
+				pruebaIO->dispositivo = string_duplicate("MOUSE");
 				pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
 				pruebaIO->tiempo = 25000;
 				enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
