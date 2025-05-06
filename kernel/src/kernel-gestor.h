@@ -39,7 +39,7 @@
     extern t_log* logger_kernel;
 
     // LISTAS
-    extern t_list* lista_interfaces;
+    extern t_list* lista_de_io;
 
     //CONEXIONES
     extern int fd_server_io;

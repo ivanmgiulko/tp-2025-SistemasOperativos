@@ -77,6 +77,8 @@ int manejar_cliente_dispatch(void* socket_cliente_ptr){
             t_io* io_buscada = buscar_io(lista_de_io, pruebaIO->dispositivo);
             if(io_buscada == NULL) {
                 log_trace(logger_kernel, "No existe la interfaz MOUSE");
+            } else {
+                log_trace(logger_kernel, "existe la interfaz MOUSE");
             }
 
             break;  

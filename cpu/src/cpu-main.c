@@ -94,15 +94,15 @@ int main(int argc, char* argv[]){
 
 	pthread_t hilo_cliente_cputDispatch_akernel;
     pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
-    pthread_detach(hilo_cliente_cputDispatch_akernel);
+    pthread_join(hilo_cliente_cputDispatch_akernel, NULL);
 	
-	pthread_t hilo_cliente_cpu_amemoria;
-    pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
-    pthread_detach(hilo_cliente_cpu_amemoria);
+	// pthread_t hilo_cliente_cpu_amemoria;
+    // pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
+    // pthread_detach(hilo_cliente_cpu_amemoria);
 
-	pthread_t hilo_peticion_instruccion;
-	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
-    pthread_join(hilo_peticion_instruccion, NULL);
+	// pthread_t hilo_peticion_instruccion;
+	// pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
+    // pthread_join(hilo_peticion_instruccion, NULL);
 
 
 	//Libera config y logger

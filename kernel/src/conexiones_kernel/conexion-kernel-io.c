@@ -21,11 +21,14 @@ int manejar_conexion_kernel_io(){
 		inicializar_lista_io();
 	}
 
-	inicializar_io(stream, socket_io);
+	char* nombre_io = malloc(tamanio_interfaz + 1);
+	memcpy(nombre_io, stream, tamanio_interfaz);
+	nombre_io[tamanio_interfaz] = '\0';  // Asegurarse de que termine en \0
+
+	inicializar_io(nombre_io, socket_io);
 
 	free(stream);
 
-		
 	while (1) {
 		int cod_op = recibir_operacion(socket_io);
 		switch (cod_op) {
