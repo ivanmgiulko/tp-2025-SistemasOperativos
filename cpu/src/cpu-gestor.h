@@ -10,6 +10,7 @@
 
 extern t_log* logger_cpu;
 
+extern sem_t sem_cpu;
 
 //conexiones
 extern int fd_conexion_kernel_interrupt;

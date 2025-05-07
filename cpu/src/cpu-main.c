@@ -69,40 +69,24 @@ int main(int argc, char* argv[]){
 	enviar_mensaje(cpu_id, fd_conexion_kernel_dispatch);
 	enviar_mensaje(valor_prueba_memoria, fd_conexion_memoria);
 
-	//HILOS PARA QUE FUNCIONE LO DE INSTRUCCION:
+	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	
-	/* pthread_t hilo_cliente_cpu_amemoria;
-	pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
-
-	// No lo detachés, usá join
-	// pthread_detach(hilo_cliente_cpu_amemoria);
-
-	pthread_t hilo_peticion_instruccion;
-	pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
-
-	// Esperás a que termine la petición
-	pthread_join(hilo_peticion_instruccion, NULL);
-
-	// Esperás también a que termine el hilo que recibe
-	pthread_join(hilo_cliente_cpu_amemoria, NULL);
- 	*/
-
- 	//HILOS QUE ESTABAN HASTA AHORA:
+	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
+	//sem_post(&sem_cpu);
+	
 	pthread_t hilo_cliente_cpuInt_akernel;
     pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_cliente_cpuInt_akernel);
-
+	
 	pthread_t hilo_cliente_cputDispatch_akernel;
     pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
-    pthread_join(hilo_cliente_cputDispatch_akernel, NULL);
+    pthread_detach(hilo_cliente_cputDispatch_akernel);
 	
-	// pthread_t hilo_cliente_cpu_amemoria;
-    // pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
-    // pthread_detach(hilo_cliente_cpu_amemoria);
 
-	// pthread_t hilo_peticion_instruccion;
-	// pthread_create(&hilo_peticion_instruccion, NULL, (void*)pedir_instruccion_a_memoria, NULL);
-    // pthread_join(hilo_peticion_instruccion, NULL);
+	pthread_t hilo_cliente_cpu_amemoria;
+    pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
+	pthread_join(hilo_cliente_cpu_amemoria, NULL);
+
 
 
 	//Libera config y logger

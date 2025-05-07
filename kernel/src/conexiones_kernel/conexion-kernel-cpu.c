@@ -104,8 +104,8 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
     memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = INFO_PROC_EXEC;

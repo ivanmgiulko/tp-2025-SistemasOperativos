@@ -24,12 +24,25 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 - Se añade PATH_INSTRUCCIONES a la config de memoria, dado por el enunciado v1.2
 - Implementación de funciones para la comunicacion de una instruccion entre cpu y memoria
 
+
+#40
+- Etapas de ciclo CPU hechas y probadas menos la etapa EXECUTE.
+- Creacion de "instruccion.c" e "instruccion.h". Alli se encuentra casi todo lo de este commit.
+    La etapa decode está hecha a partir de ese archivo.
+    Fue creado con el mitico puntero a funciones para matchear el String con la linea de pseudocodigo que lee MEMORIA a partir
+    del PID Y PC que obtiene CPU desde el KERNEL.
+- Cree un switch-case en manejar_respuesta_instruccion() (cpu-utils.c linea 40) para ver que llegue todo bien luego de la funcion decode().
+
+
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 
 . CPU:
-    - realizar la peticion de instruccion al recibir el pcb con pid y pc desde kernell
-    - Identificar el tipo de instruccion recibida y ejecutarla acorde
+    - Ejecutar instruccion (ETAPA EXECUTE)
+    - Estaria bueno que la etapa EXECUTE esté en instruccion.c tambien o en otro archivo. Podria ser algo como
+    void ejecutar_instruccion(t_instruccion* instruccion) donde dentro de la misma esté el switch case para discriminar cada
+    caso, pues a los parametros solo podemos acceder sin romper nada luego de saber qué estamos ejecutando.
+    Asi tendriamos codigo mas ordenado y modularizado, mas lindo.
 
 . MEMORIA:
     - Definir correctamente el path a el/los archvivos de pseudocodigo de cada proceso
@@ -59,7 +72,7 @@ CHECKPOINT 2
         - Administración de IO
 
     Módulo CPU:
-        - Interpretación de instrucciones y ejecución de instrucciones
+        - [HECHO]Interpretación de instrucciones[HECHO] y [FALTA] ejecución de instrucciones[FALTA]
 
     Módulo Memoria:
         - Devolver lista de instrucciones

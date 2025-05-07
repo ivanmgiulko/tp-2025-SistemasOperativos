@@ -1,0 +1,64 @@
+==36497== Memcheck, a memory error detector
+==36497== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==36497== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==36497== Command: ./bin/cpu 3
+==36497== Parent PID: 10095
+==36497== 
+==36497== 
+==36497== HEAP SUMMARY:
+==36497==     in use at exit: 727 bytes in 14 blocks
+==36497==   total heap usage: 625 allocs, 611 frees, 32,570 bytes allocated
+==36497== 
+==36497== 16 bytes in 1 blocks are definitely lost in loss record 7 of 13
+==36497==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36497==    by 0x10AD8D: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:6)
+==36497==    by 0x4909AC2: start_thread (pthread_create.c:442)
+==36497==    by 0x499AA03: clone (clone.S:100)
+==36497== 
+==36497== 33 (24 direct, 9 indirect) bytes in 1 blocks are definitely lost in loss record 10 of 13
+==36497==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36497==    by 0x10B96F: parse_init_proc (instrucciones.c:127)
+==36497==    by 0x10BB97: decode (instrucciones.c:171)
+==36497==    by 0x10B32D: manejar_respuesta_de_instruccion (cpu-utils.c:47)
+==36497==    by 0x10A80E: manejar_conexion_memoria (cpu-memoria.c:20)
+==36497==    by 0x4909AC2: start_thread (pthread_create.c:442)
+==36497==    by 0x499AA03: clone (clone.S:100)
+==36497== 
+==36497== 48 (16 direct, 32 indirect) bytes in 1 blocks are definitely lost in loss record 11 of 13
+==36497==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36497==    by 0x10BE31: crear_paquete_instruccion (serializacion.c:39)
+==36497==    by 0x10C5B1: serializar_peticion_instruccion (contrato.c:5)
+==36497==    by 0x10B20B: pedir_instruccion_a_memoria (cpu-utils.c:14)
+==36497==    by 0x10AEC6: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:24)
+==36497==    by 0x4909AC2: start_thread (pthread_create.c:442)
+==36497==    by 0x499AA03: clone (clone.S:100)
+==36497== 
+==36497== 272 bytes in 1 blocks are possibly lost in loss record 12 of 13
+==36497==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36497==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==36497==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==36497==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==36497==    by 0x490A7B4: allocate_stack (allocatestack.c:430)
+==36497==    by 0x490A7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==36497==    by 0x10ACDD: main (cpu-main.c:78)
+==36497== 
+==36497== 272 bytes in 1 blocks are possibly lost in loss record 13 of 13
+==36497==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==36497==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==36497==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==36497==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==36497==    by 0x490A7B4: allocate_stack (allocatestack.c:430)
+==36497==    by 0x490A7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==36497==    by 0x10AD06: main (cpu-main.c:82)
+==36497== 
+==36497== LEAK SUMMARY:
+==36497==    definitely lost: 56 bytes in 3 blocks
+==36497==    indirectly lost: 41 bytes in 3 blocks
+==36497==      possibly lost: 544 bytes in 2 blocks
+==36497==    still reachable: 86 bytes in 6 blocks
+==36497==         suppressed: 0 bytes in 0 blocks
+==36497== Reachable blocks (those to which a pointer was found) are not shown.
+==36497== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==36497== 
+==36497== For lists of detected and suppressed errors, rerun with: -s
+==36497== ERROR SUMMARY: 5 errors from 5 contexts (suppressed: 0 from 0)

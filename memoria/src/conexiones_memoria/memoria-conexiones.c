@@ -89,7 +89,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
-	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc, "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/memoria/PATH_INSTRUCCIONES.txt",logger);
+	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc, "./PATH_INSTRUCCIONES.txt",logger);
 	log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);
 
 	//Serializo la respuesta
@@ -100,9 +100,9 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
         return;
 	}
 	log_debug(logger, "Serializando paquete:");
-	log_debug(logger, "  Código de operación: %d", INSTRUCCION);
-	log_debug(logger, "  Tamaño del buffer: %d", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
-	log_debug(logger, "  Instrucción: %s", respuesta->instruccion);
+	log_debug(logger, "Código de operación: %d", INSTRUCCION);
+	log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
+	log_debug(logger, "Instrucción: %s", respuesta->instruccion);
 
 	//Envio la instruccion serializada envio a CPU 
 	//log_info(logger, "Size_respuesta= %d", size_respuesta);

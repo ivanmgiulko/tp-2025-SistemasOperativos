@@ -19,8 +19,10 @@ int manejar_conexion_kernel_dispatch(){
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
+				sem_post(&sem_cpu);
 				log_trace(logger_cpu, "PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
-
+				pedir_instruccion_a_memoria(infoPCB);
+				free(infoPCB);
 				// 
 
 				// El proceso debe realizar una IO ahora:

@@ -126,8 +126,8 @@ void iniciar_planificador_cortoPlazo(){
             t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
             log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
-            infoProceso->pc = pcbEnReady->pc;
             infoProceso->pid = pcbEnReady->pid;
+            infoProceso->pc = pcbEnReady->pc;
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
             // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
