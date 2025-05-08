@@ -200,5 +200,55 @@ t_instruccion* decode(char* linea) {
     return instruccion;
 }
 
+void ejecutar_instruccion(t_instruccion* instruccion, int socket_memoria){
+    switch(instruccion->tipo) {
+		case INSTR_NOOP:
+			log_info(logger_cpu, "Ejecutando instrucción NOOP con parametros");
+			break;
+		case INSTR_WRITE:
+                //char* direccion = instruccion->parametros.write.direccion;
+                //char* datos = instruccion->parametros.write.datos;
 
+            log_info(logger_cpu, "Ejecutando instrucción WRITE con parametros %s %s",
+				instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
+                //t_paquete* paquete = crear_paquete(); // Averiguar si modificar crear_paquete() para que tome un OP_CODE
+                //agregar_a_paquete(paquete, direccion, strlen(direccion) + 1);
+                //agregar_a_paquete(paquete, datos, strlen(datos) + 1);
+                //enviar_paquete(paquete, socket_memoria);
+                //eliminar_paquete(paquete);
+
+                //log_info(logger_cpu, "WRITE enviado a Memoria.");
+			break;
+		case INSTR_READ:
+			log_info(logger_cpu, "Ejecutando instrucción READ con parametros %s %d",
+				instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
+			break;
+		case INSTR_GOTO:
+			log_info(logger_cpu, "Ejecutando instrucción GOTO con parametros %d",
+				instruccion->parametros.go_to.valor);
+			break;
+
+			////////////////////////////
+			/////////SYSCALLS///////////
+			////////////////////////////
+		
+		case INSTR_IO:
+			log_info(logger_cpu, "syscall detectada... parametros %s %d",
+				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
+			break;
+		case INSTR_INIT_PROC:
+			log_info(logger_cpu, "syscall detectada... parametros %s %d",
+				instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
+			break;
+		case INSTR_DUMP_MEMORY:
+			log_info(logger_cpu, "syscall detectada... parametros ");
+			break;
+		case INSTR_EXIT:
+			log_info(logger_cpu, "syscall detectada... parametros ");
+			break;
+		default:
+			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo);
+			break;
+	}
+}
 

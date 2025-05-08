@@ -57,45 +57,8 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
     }
 	log_debug(logger_cpu, "Instrucción decodificada: %d", instruccion->tipo);
 
-	switch(instruccion->tipo) {
-		case INSTR_NOOP:
-			log_info(logger_cpu, "Ejecutando instrucción NOOP con parametros");
-			break;
-		case INSTR_WRITE:
-			log_info(logger_cpu, "Ejecutando instrucción WRITE con parametros %s %s",
-				instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
-			break;
-		case INSTR_READ:
-			log_info(logger_cpu, "Ejecutando instrucción READ con parametros %s %d",
-				instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
-			break;
-		case INSTR_GOTO:
-			log_info(logger_cpu, "Ejecutando instrucción GOTO con parametros %d",
-				instruccion->parametros.go_to.valor);
-			break;
+	ejecutar_instruccion(instruccion, fd_conexion_memoria);
 
-			////////////////////////////
-			/////////SYSCALLS///////////
-			////////////////////////////
-		
-		case INSTR_IO:
-			log_info(logger_cpu, "syscall detectada... parametros %s %d",
-				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
-			break;
-		case INSTR_INIT_PROC:
-			log_info(logger_cpu, "syscall detectada... parametros %s %d",
-				instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
-			break;
-		case INSTR_DUMP_MEMORY:
-			log_info(logger_cpu, "syscall detectada... parametros ");
-			break;
-		case INSTR_EXIT:
-			log_info(logger_cpu, "syscall detectada... parametros ");
-			break;
-		default:
-			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo);
-			break;
-	}
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);

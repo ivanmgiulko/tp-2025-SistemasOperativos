@@ -33,6 +33,10 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
     del PID Y PC que obtiene CPU desde el KERNEL.
 - Cree un switch-case en manejar_respuesta_instruccion() (cpu-utils.c linea 40) para ver que llegue todo bien luego de la funcion decode().
 
+#43
+- Creación de ejecutar_instruccion() en instrucciones.c e instrucciones.h, con el switch-case que antes estaba en manejar_respuesta_instruccion() de cpu-utils.c
+- Código comentado del envío de ejecución de instrucción WRITE a memoria (en progreso)
+- "Sobrio no te puedo ni hablar, estoy perdido sin mi estupidez" tiraba esa no
 
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
@@ -42,7 +46,7 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
     - Estaria bueno que la etapa EXECUTE esté en instruccion.c tambien o en otro archivo. Podria ser algo como
     void ejecutar_instruccion(t_instruccion* instruccion) donde dentro de la misma esté el switch case para discriminar cada
     caso, pues a los parametros solo podemos acceder sin romper nada luego de saber qué estamos ejecutando.
-    Asi tendriamos codigo mas ordenado y modularizado, mas lindo.
+    Asi tendriamos codigo mas ordenado y modularizado, mas lindo. [HECHO COMMIT #43]
 
 . MEMORIA:
     - Definir correctamente el path a el/los archvivos de pseudocodigo de cada proceso
