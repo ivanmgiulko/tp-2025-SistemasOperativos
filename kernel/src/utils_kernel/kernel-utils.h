@@ -2,7 +2,6 @@
 #define KERNEL_UTILS_H_
 #include "kernel-gestor.h"
 
-
-
+    bool funcion_syscall_IO(char* nombreInterfaz, int64_t tiempo);
 
 #endif // KERNEL_UTILS_H_

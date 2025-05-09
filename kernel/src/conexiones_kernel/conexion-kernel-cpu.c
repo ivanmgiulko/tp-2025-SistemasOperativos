@@ -26,9 +26,9 @@ void manejar_conexion_kernel_dispatch() {
         log_info(logger_kernel, "Nueva conexión en dispatch: socket %d", socket_dispatch);
 
         // Crear un hilo para manejar la conexión del cliente
-        pthread_t hilo_cliente_dispatch;
-        pthread_create(&hilo_cliente_dispatch, NULL, (void*)manejar_cliente_dispatch, (void*)&socket_dispatch);
-        pthread_detach(hilo_cliente_dispatch);
+        // pthread_t hilo_cliente_dispatch;
+        // pthread_create(&hilo_cliente_dispatch, NULL, (void*)manejar_cliente_dispatch, (void*)&socket_dispatch);
+        // pthread_detach(hilo_cliente_dispatch);
     }
 }
 
@@ -55,7 +55,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
     log_info(logger_kernel, "Conexión cerrada en interrupt: socket %d", socket_interrupt);
 	return EXIT_SUCCESS;
 }
-int manejar_cliente_dispatch(void* socket_cliente_ptr){
+void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 	int socket_dispatch = *(int*)socket_cliente_ptr;
 	while (1) {
         t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -72,15 +72,7 @@ int manejar_cliente_dispatch(void* socket_cliente_ptr){
 			paquete->buffer->stream = malloc(paquete->buffer->size);
 			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
             t_param_io* pruebaIO = deserializar_syscall_io(paquete->buffer);
-            
-            t_io* ioenlista = list_get(lista_de_io, 0);
-            t_io* io_buscada = buscar_io(lista_de_io, pruebaIO->dispositivo);
-            if(io_buscada == NULL) {
-                log_trace(logger_kernel, "No existe la interfaz MOUSE");
-            } else {
-                log_trace(logger_kernel, "existe la interfaz MOUSE");
-            }
-
+            return pruebaIO;
             break;  
 
 		case INSTRUCCION:
@@ -104,8 +96,8 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
     memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = INFO_PROC_EXEC;

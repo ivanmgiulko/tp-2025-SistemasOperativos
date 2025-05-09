@@ -25,15 +25,68 @@ void enviar_nombre_interfaz(char* mensaje, int socket_cliente) {
 		free(mensaje_handshake);
 		return EXIT_FAILURE;
 	}
+	
 	free(mensaje_handshake);
 }
 
+t_info_proceso* recibir_proceso_bloqueado(t_buffer* buffer) { 
+	t_info_proceso* pruebaProceso = malloc(sizeof(t_info_proceso));
+    void* stream = buffer->stream;
+
+    memcpy(&(pruebaProceso->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+    memcpy(&(pruebaProceso->tiempo), stream, sizeof(int64_t)); stream += sizeof(int64_t);
+    
+    return pruebaProceso;
+}
+ 
+ void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid) { 
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t) + sizeof(int64_t);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_DESBLOQUEADO;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+ }
+
 int manejar_conexion_io(int socket_cliente){
 	while (1) {
-		int cod_op = recibir_operacion(socket_cliente);
-		switch (cod_op) {
+		t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente, logger_io);
+			break;
+
+		case PROCESO_BLOQUEADO:
+			recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+			t_info_proceso* proceso_bloqueado = recibir_proceso_bloqueado(paquete->buffer);
+			log_debug(logger_io, "Llego el PID: %d | El tiempo: %d", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
+
+			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %d", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
+			int dormir = usleep(proceso_bloqueado->tiempo);
+			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
+			
+			enviar_respuesta_kernel_IO(socket_cliente, proceso_bloqueado->pid);
+
 			break;
 		case -1:
 			log_error(logger_io, "el cliente se desconecto.");

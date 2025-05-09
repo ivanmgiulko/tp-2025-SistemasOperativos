@@ -35,3 +35,13 @@ t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
     return list_find(lista_de_io, _es_el_io);
 }
 
+bool funcion_syscall_IO(char* nombreInterfaz, int64_t tiempo) { 
+    t_io* io_buscada = buscar_io(lista_de_io, nombreInterfaz);
+    if(io_buscada == NULL) {
+        log_trace(logger_kernel, "No existe la interfaz MOUSE");
+        return false;
+    } else {
+        log_trace(logger_kernel, "existe la interfaz MOUSE");
+        return true;
+    }
+}

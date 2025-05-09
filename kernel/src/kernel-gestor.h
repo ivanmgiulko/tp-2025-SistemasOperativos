@@ -11,7 +11,7 @@
     #include "config_kernel/kernel-config.h"
     #include "conexiones_kernel/conexion-k-memoria.h"
     #include "conexiones_kernel/conexion-kernel-cpu.h"
-
+    #include "conexiones_kernel/conexion-kernel-io.h"
 
     /**
 	 * @file
@@ -47,5 +47,6 @@
     extern int fd_server_kernel_interrupt;
     extern int fd_server_kernel_dispatch;
     extern int socket_dispatch;
+    extern int socket_io;
 
 #endif // KERNEL_GESTOR_H_

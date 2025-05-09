@@ -28,10 +28,6 @@
         SJF_SIN_DESALOJO
     }p_algoritmos;
 
-
-    
-
-
     extern pthread_mutex_t mutex_pid;
     extern sem_t sem_cantidad_pcbs_en_new;
 
@@ -91,6 +87,8 @@
     void inicializar_pid();
 
     int asignar_pid();
+
+    void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente);
 
 #endif
 

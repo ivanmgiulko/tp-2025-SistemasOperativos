@@ -38,9 +38,9 @@
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde el CPU - Dispatch
 	* @param void*: Socket de escucha de CPU - Dispatch 
-	* @returns 0 (finalizando la conexion previ) en caso de que se termine de manejar la conexion dada entre Kernel y Memoria
+	* @returns 
 	*/
-    int manejar_cliente_dispatch(void*);
+    void* manejar_cliente_dispatch(void* socket_cliente_ptr);
 
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 

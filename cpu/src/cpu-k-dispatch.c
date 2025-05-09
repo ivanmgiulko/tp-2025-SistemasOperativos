@@ -29,7 +29,7 @@ int manejar_conexion_kernel_dispatch(){
 				t_param_io* pruebaIO = malloc(sizeof(t_param_io));
 				pruebaIO->dispositivo = string_duplicate("MOUSE");
 				pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
-				pruebaIO->tiempo = 25000;
+				pruebaIO->tiempo = 2500000;
 				enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
 				
 				break;

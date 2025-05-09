@@ -14,4 +14,8 @@
 	*/
     int manejar_conexion_kernel_io();
 
+	void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente);
+
+	uint8_t recibir_proceso_bloqueado(t_buffer* buffer);
+
 #endif  /*CONEXION_KERNEL_IO_*/  

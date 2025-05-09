@@ -46,6 +46,7 @@
     int fd_server_kernel_interrupt;
     int fd_server_kernel_dispatch;
     int socket_dispatch;
+    int socket_io;
     
     // FUNCIONES 
 

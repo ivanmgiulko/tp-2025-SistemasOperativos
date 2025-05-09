@@ -126,12 +126,20 @@ void iniciar_planificador_cortoPlazo(){
             t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
             log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
-            infoProceso->pid = pcbEnReady->pid;
             infoProceso->pc = pcbEnReady->pc;
+            infoProceso->pid = pcbEnReady->pid;
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
             // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-            
+            t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
+            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
+            if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+                log_info(logger_kernel, "%d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
+                // sacar de ready y mandar a blocked
+                enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
+            } else {
+                log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
+            }
         }
     }
 }
@@ -156,4 +164,3 @@ t_pcb* pop_cola_mutex(t_estado* cola_mutex) {
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
-

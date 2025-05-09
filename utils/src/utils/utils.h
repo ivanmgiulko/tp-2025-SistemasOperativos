@@ -32,6 +32,8 @@ typedef enum
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ,
 	SYSCALL_IO,
+	PROCESO_BLOQUEADO,
+	PROCESO_DESBLOQUEADO,
 
 	LINUS_TORVALDS = -1
 } op_code;

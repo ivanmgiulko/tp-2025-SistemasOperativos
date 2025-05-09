@@ -21,8 +21,12 @@
     extern t_list* lista_de_io;
 
     void inicializar_io(char* nombre_io, int socket_io);
+
     void inicializar_lista_io();
+
     t_io* buscar_io(t_list* lista_de_io, char* nombre_io);
+
+    bool funcion_syscall_IO(char* nombreInterfaz, int64_t tiempo);
     
 #endif
 
