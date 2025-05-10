@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) {
 	log_trace(logger_kernel, "KERNEL listo para recibir al cliente IO");
 
 	// decir_algoritmo();
-
+	inicializar_estructuras();
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
 	argv[1] = "proceso1";
-	argv[2] = "1234";
+	argv[2] = "10000000";
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     pthread_detach(hilo_servidor_kernel_interrupt);
 
 	pthread_t hilo_planificador_largo_plazo;
- 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)pcb_proceso_cero);
+ 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, NULL);
 	pthread_detach(hilo_servidor_kernel_interrupt);
 
 	pthread_t hilo_servidor_kernel_dispatch;

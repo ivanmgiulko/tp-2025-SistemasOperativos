@@ -48,14 +48,14 @@
     * @param pcb_inicial pcb del proceso inicial enviado como argumento
     * 
 	*/
-    void iniciar_planificacion_largoPlazo(t_pcb* pcb_inicial);
+    void iniciar_planificacion_largoPlazo();
 
     /**
 	* @brief Inicia el planificador de largo plazo poniendo un "" en la consola (sacandolo del estado STOP)
     * @param pcb_inicial pcb del proceso inicial enviado como argumento
     * 
 	*/
-    void iniciar_planificador_largoPlazo(t_pcb* pcb_inicial);
+    void iniciar_planificador_largoPlazo();
 
     /**
 	* @brief Inicia el planificador de mediano plazo poniendo un "" en la consola (sacandolo del estado STOP)
@@ -84,9 +84,19 @@
 
     t_pcb* crear_proceso_cero(char*, int);
 
+    void pasar_pcb_a_new(t_pcb*);
+
     void inicializar_pid();
 
     int asignar_pid();
+
+    t_pcb* pop_cola_mutex(t_estado*);
+
+    t_pcb* push_cola_mutex(t_estado* , t_pcb*);
+    
+    t_pcb* peek_pcb_en_new();
+    
+    bool verificar_cola_new_estaba_vacia();
 
     void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente);
 
