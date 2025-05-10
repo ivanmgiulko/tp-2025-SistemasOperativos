@@ -31,7 +31,13 @@ typedef enum
 	INFO_PROC_EXEC,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ,
+
+	// Syscalls que recibe Kernel desde CPU (no se si disp o inter)
 	SYSCALL_IO,
+	SYSCALL_EXIT,
+	SYSCALL_INIT_PROC,
+	SYSCALL_DUMP_MEMORY,
+
 	PROCESO_BLOQUEADO,
 	PROCESO_DESBLOQUEADO,
 

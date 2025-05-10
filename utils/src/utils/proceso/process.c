@@ -6,7 +6,7 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid)
     t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
     nuevoPCB->pathArchivoPseudocodigo = path;
     nuevoPCB->tamanioMemoria = tamanio;
-
+    nuevoPCB->path_length = strlen(path);
     nuevoPCB->pid = pid;
     nuevoPCB->pc = 1;
     nuevoPCB->estadoProceso = NEW;

@@ -26,11 +26,16 @@ int manejar_conexion_kernel_dispatch(){
 				// 
 
 				// El proceso debe realizar una IO ahora:
-				t_param_io* pruebaIO = malloc(sizeof(t_param_io));
-				pruebaIO->dispositivo = string_duplicate("MOUSE");
-				pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
-				pruebaIO->tiempo = 2500000;
-				enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
+				// t_param_io* pruebaIO = malloc(sizeof(t_param_io));
+				// pruebaIO->dispositivo = string_duplicate("MOUSE");
+				// pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
+				// pruebaIO->tiempo = 2500000;
+				// enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
+
+				t_param_init_proc* prueba_proceso_new = malloc(sizeof(t_param_init_proc));
+				prueba_proceso_new->archivo = "proceso2";
+				prueba_proceso_new->tamanio = 1000;
+				enviar_syscall_init_proc_kernel(*prueba_proceso_new, fd_conexion_kernel_dispatch);
 				
 				break;
 
@@ -72,6 +77,35 @@ void enviar_io_kernel(t_param_io pruebaIO, int socket_cliente){
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = SYSCALL_IO;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+
+}
+
+void enviar_syscall_init_proc_kernel(t_param_init_proc prueba_init_proc, int socket_cliente){
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+	uint32_t archivoLength = strlen(prueba_init_proc.archivo);
+    buffer->size = sizeof(int) + sizeof(uint32_t) + (archivoLength);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &prueba_init_proc.tamanio, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &archivoLength, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, prueba_init_proc.archivo, archivoLength);
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = SYSCALL_INIT_PROC;
     paquete->buffer = buffer;
     void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
     offset = 0;

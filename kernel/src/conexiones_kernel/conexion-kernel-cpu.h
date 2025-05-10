@@ -46,6 +46,6 @@
 
 	t_param_io* deserializar_syscall_io(t_buffer* buffer);
 
-	
+	t_pcb* proceso_syscall_prueba(t_buffer* buffer);
 
 #endif // CONEXION_KERNEL_CPU_H_

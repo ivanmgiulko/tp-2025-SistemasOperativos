@@ -100,5 +100,7 @@
 
     void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente);
 
+    bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new, int fd_conexion_memoria);
+
 #endif
 

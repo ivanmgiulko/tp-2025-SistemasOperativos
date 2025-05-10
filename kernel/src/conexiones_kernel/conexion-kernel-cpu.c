@@ -75,6 +75,25 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
             return pruebaIO;
             break;  
 
+        case SYSCALL_INIT_PROC:
+
+            recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+            log_debug(logger_kernel, "Recibi un nuevo proceso desde CPU");
+            t_pcb* proceso_prueba_syscall = proceso_syscall_prueba(paquete->buffer);
+            log_debug(logger_kernel, "somos cracks");
+
+            pasar_pcb_a_new(proceso_prueba_syscall);
+
+
+            break;
+
+        case SYSCALL_EXIT:
+            break;
+
+
+
 		case INSTRUCCION:
 			break;
 		case -1:
@@ -126,4 +145,21 @@ t_param_io* deserializar_syscall_io(t_buffer* buffer) {
     memcpy(pruebaIO->dispositivo , stream, pruebaIO->dispositivo_length);
 
     return pruebaIO;
+}
+
+t_pcb* proceso_syscall_prueba(t_buffer* buffer) { 
+    char* pathArchivoPseudocodigo;
+    uint32_t path_length;
+    int tamanioProceso;
+
+    void* stream = buffer->stream;
+
+    memcpy(&(tamanioProceso), stream, sizeof(int)); stream += sizeof(int);
+    memcpy(&(path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    pathArchivoPseudocodigo = malloc(path_length);
+    memcpy(pathArchivoPseudocodigo, stream, path_length);
+
+    t_pcb* proceso_syscall_prueba = iniciarPCB(pathArchivoPseudocodigo, tamanioProceso, asignar_pid());
+
+    return proceso_syscall_prueba;
 }

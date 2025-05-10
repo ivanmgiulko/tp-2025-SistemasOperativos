@@ -18,10 +18,13 @@ t_contador* pid;
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_hay_espacio_en_memoria;
+
 t_pcb* crear_proceso_cero(char* path, int tamanio){
+    
     inicializar_pid();
-  	t_pcb* proceso_ejemplo = iniciarPCB(path,tamanio, asignar_pid());
+  	t_pcb* proceso_ejemplo = iniciarPCB(path ,tamanio, asignar_pid());
     printf("Creando proceso cero con path %s, tamanio %d y pid %d\n", path, tamanio, proceso_ejemplo->pid);
+    
     pasar_pcb_a_new(proceso_ejemplo);
 	log_obligatorio(logger_kernel, proceso_ejemplo->pid, " Se crea el proceso - Estado: NEW");
     return proceso_ejemplo;
@@ -87,36 +90,52 @@ void iniciar_planificacion_largoPlazo(){
     while(1){
 
         t_pcb* pcb_en_new = peek_pcb_en_new();
-        sem_wait(&sem_hay_espacio_en_memoria);
+        
         bool cola_new_estaba_vacia = verificar_cola_new_estaba_vacia();  // :v
 
+        char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
+
+        log_error(logger_kernel, "TENGO UN PROCESO");
+        
         if(cola_new_estaba_vacia) {
            
-	        fd_conexion_memoria = crear_conexion(configuracion_kernel->IP_MEMORIA, configuracion_kernel->PUERTO_MEMORIA);
+            bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new, fd_conexion_memoria);
             
-
-            // enviar_tamanioProceso(tam_proceso, fd_conexion_memoria);
-            enviarProceso_A_Memoria(*pcb_en_new, fd_conexion_memoria);
-            // Recibo respuesta por parte de memo si es que hay memoria
-            bool hay_espacio_en_memoria = manejar_conexion_kernel_memoria(fd_conexion_memoria);
-
             if(hay_espacio_en_memoria) { 
                 pasar_pcb_new_a_ready(pcb_en_new);
                 log_info(logger_kernel, "%d Pasa del estado NEW al estado READY", pcb_en_new->pid);
                 sem_post(&sem_cantidad_pcbs_en_ready); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
+                
+                // Como podemos testear esta shit:
+                /*
+                . El 2do proceso que llega no tiene espacio
+                . esperamos a que finalice el primero
+                . finaliza el primero
+                . hacemos que el 2do pase a Ready
+                . dios se apiade de nosotros
+                */
+
             } else { 
                 log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
-                sem_wait(&sem_hay_espacio_en_memoria); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
                 // El proceso sigue en la cola de New
             }
+
         } else {
-            if(configuracion_kernel->ALGORITMO_INGRESO_A_READY == FIFO) { 
-                // La cola no estaba vacia cusando llego el proceso
-                // En base al algoritmo elegimos el siguiente proceso
+
+            if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
+                
+                // sem_wait(&sem_hay_espacio_en_memoria);  // Le avisa al planificador cuando no hay espacio en memo, asi evitamos la espera activa
+                
+                // hacemos peek al primero proceso
+                // vemos si hay espacio en memoria
+                // pasamos a ready
             }
 
-            if(configuracion_kernel->ALGORITMO_INGRESO_A_READY == PMCP) {
-
+            if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+                // ordenamos la cola (futura lista)
+                // hacemos peek al primero proceso
+                // vemos si hay espacio en memoria
+                // pasamos a ready
             }
         }
     }
@@ -130,6 +149,7 @@ void iniciar_planificador_cortoPlazo(){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
+            
             t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
             log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
@@ -171,11 +191,12 @@ bool verificar_cola_new_estaba_vacia() {
 void pasar_pcb_a_new(t_pcb* pcb) {
     // Encolar el PCB en la cola de NEW
     encolar_pcb(estado_new, pcb);
-    log_info(logger_kernel, "%d Pasa del estado EXIT al estado NEW", pcb->pid);
+    log_info(logger_kernel, "%d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
 }
 
 void pasar_pcb_new_a_ready(t_pcb* pcb) { // Por ahora al pedo, despues cuando pasemos a lista lo utilizamos para el "find"
+    
     // Popear el pcb pasado por parametro de forma atomica de NEW
     t_pcb* pcb_en_new = pop_cola_mutex(estado_new);
     // Pushear el pcb pasado por parametro de forma atomica en READY 
@@ -217,4 +238,14 @@ t_pcb* peek_pcb_en_new() {
     sem_wait(&sem_cantidad_pcbs_en_new);
     t_pcb* pcb = peek_cola_mutex(estado_new);
     return pcb;
+}
+
+bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new, int fd_conexion_memoria) { 
+    fd_conexion_memoria = crear_conexion(configuracion_kernel->IP_MEMORIA, configuracion_kernel->PUERTO_MEMORIA);
+            
+    // enviar_tamanioProceso(tam_proceso, fd_conexion_memoria);
+    enviarProceso_A_Memoria(*pcb_en_new, fd_conexion_memoria);
+            
+    // Recibo respuesta por parte de memo si es que hay memoria
+    return  manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }

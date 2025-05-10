@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
 	argv[1] = "proceso1";
-	argv[2] = "10000000";
+	argv[2] = "10000";
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES
