@@ -59,14 +59,6 @@ int main(int argc, char* argv[]) {
  	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, (void*)pcb_proceso_cero);
 	pthread_detach(hilo_servidor_kernel_interrupt);
 
-	// pthread_t hilo_planificador_mediano_plazo;
- 	// pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_medianoPlazo, NULL);
-	// pthread_detach(hilo_planificador_mediano_plazo);
-
-	pthread_t hilo_planificador_corto_plazo;
- 	pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_cortoPlazo, NULL);
-	pthread_detach(hilo_planificador_corto_plazo);
-
 	pthread_t hilo_servidor_kernel_dispatch;
     pthread_create(&hilo_servidor_kernel_dispatch, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
     pthread_join(hilo_servidor_kernel_dispatch, NULL);

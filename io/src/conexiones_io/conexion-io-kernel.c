@@ -86,7 +86,7 @@ int manejar_conexion_io(int socket_cliente){
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
 			enviar_respuesta_kernel_IO(socket_cliente, proceso_bloqueado->pid);
-
+		
 			break;
 		case -1:
 			log_error(logger_io, "el cliente se desconecto.");

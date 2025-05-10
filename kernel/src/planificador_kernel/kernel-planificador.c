@@ -73,6 +73,14 @@ void iniciar_planificacion_largoPlazo(t_pcb* pcb){
 
     inicializar_estructuras();
 
+    // pthread_t hilo_planificador_mediano_plazo;
+ 	// pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_medianoPlazo, NULL);
+	// pthread_detach(hilo_planificador_mediano_plazo);
+
+	pthread_t hilo_planificador_corto_plazo;
+ 	pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_cortoPlazo, NULL);
+	pthread_detach(hilo_planificador_corto_plazo);
+
     log_trace(logger_kernel, "Inicia el planificador a largoplazo");
     // Habria que poner un while(1) para que esto siempre este ejecutandose?
     sem_post(&sem_cantidad_pcbs_en_new);

@@ -7,6 +7,17 @@
     #include <utils/cliente/client.h>
     #include <utils/server/server.h>
 
+    /**
+	* @file
+	* @brief #include "io-gestor.h"
+    *        El proposito de este Gestor es almacenar structs, variables, etc; que sean utilizados por los modulos
+    *        y tenerelos a disposicion cuando sean requeridos.  
+    * 
+    * @note El manejo de errores relacionados a todos los structs, variables, etc; es contemplado en los archivos que utilizan
+    *       los dichos tipos de datos. 
+	*/ 
+
+
     // LOGS
     extern t_log* logger_io;
 

@@ -22,6 +22,7 @@
         char *ALGORITMO_CORTO_PLAZO;
         char *ALGORITMO_INGRESO_A_READY;
         char *ALFA;
+        char *ESTIMACION_INICIAL;
         char *TIEMPO_SUSPENSION;
         char *LOG_LEVEL;
     }t_kernel_config;

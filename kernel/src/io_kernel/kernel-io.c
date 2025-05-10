@@ -21,7 +21,7 @@ void inicializar_io(char* nombre_io, int socket_io) {
     io_prueba->socket = 100;
     list_add(lista_de_io, io_prueba);
 
-    log_info(logger_kernel, "IO inicializado: %s", io->nombre);
+    log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
     // t_io* io_encontrado = list_get(lista_de_io, 0);
     // log_info(logger_kernel, "Nombre %s", io_encontrado->nombre);
  }

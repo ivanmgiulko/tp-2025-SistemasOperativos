@@ -4,6 +4,16 @@
     #include "io-gestor.h"
     #include "conexiones_io/conexion-io-kernel.h"
 
+    /**
+	* @file
+	* @brief #include "io-main.h"
+	*/ 
+
+    /**
+	 * @def CANT_MINIMA_ARGUMENTOS
+	 * @brief Cantidad minima de argumentos que se debe ingresar al ejecutar una 
+     *        instancia de IO (./bin/io [arg1]. Ejemplo: ./bin/io MOUSE
+	 */
     #define CANT_MINIMA_ARGUMENTOS 1
 
     // LOGS

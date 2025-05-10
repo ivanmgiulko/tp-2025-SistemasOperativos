@@ -11,6 +11,7 @@ t_kernel_config* inicializar_config_kernel(t_config* config_kernel_estructurada)
     config_kernel->ALGORITMO_CORTO_PLAZO = config_get_string_value(config_kernel_estructurada, "ALGORITMO_CORTO_PLAZO");
     config_kernel->ALGORITMO_INGRESO_A_READY = config_get_string_value(config_kernel_estructurada, "ALGORITMO_INGRESO_A_READY");
     config_kernel->ALFA = config_get_string_value(config_kernel_estructurada, "ALFA");
+    config_kernel->ESTIMACION_INICIAL = config_get_string_value(config_kernel_estructurada, "ESTIMACION_INICIAL");
     config_kernel->TIEMPO_SUSPENSION = config_get_string_value(config_kernel_estructurada, "TIEMPO_SUSPENSION");
     config_kernel->LOG_LEVEL = config_get_string_value(config_kernel_estructurada, "LOG_LEVEL");
     return config_kernel;
