@@ -9,6 +9,7 @@
     #include <utils/contrato/contrato.h>
 
     #include "config_kernel/kernel-config.h"
+    #include "planificador_kernel/kernel-planificador.h"
     #include "conexiones_kernel/conexion-k-memoria.h"
     #include "conexiones_kernel/conexion-kernel-cpu.h"
     #include "conexiones_kernel/conexion-kernel-io.h"
@@ -23,14 +24,8 @@
      *       los dichos tipos de datos. 
 	 */ 
 
-    // QUEUES
-    extern t_queue* cola_procesos_new;
-    extern t_queue* cola_procesos_ready;
-    extern t_queue* cola_procesos_exec;
-    extern t_queue* cola_procesos_blocked;
-    extern t_queue* cola_procesos_exit;
-    extern t_queue* cola_procesos_suspReady;
-    extern t_queue* cola_procesos_suspBlocked;
+    
+
 
     // CONFIG
     extern t_kernel_config* configuracion_kernel;

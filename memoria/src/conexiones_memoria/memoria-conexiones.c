@@ -23,6 +23,7 @@ int manejar_conexion_cliente(int socket_cliente){
 			case MENSAJE:
 				recibir_mensaje(socket_cliente, logger_memoria);
 				break;
+				
         	case PROCESO_MEMORIA:
 				
 				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
@@ -42,8 +43,23 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_A_inicializar->pid, proceso_A_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
-				return EXIT_SUCCESS;
 				break; 
+
+			case PROCESO_FINALIZAR:
+				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+				paquete->buffer->stream = malloc(paquete->buffer->size);
+				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+
+				t_pcbMemoria* proceso_a_finalizar = deserializarProceso(paquete->buffer);
+				cantMemoria += proceso_a_finalizar->tamanioMemoria;
+				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
+
+				// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
+				enviar_proceso_terminado("FINALIZA EL PROCESO", socket_cliente);
+			
+
+				break; 
+
 
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
@@ -72,7 +88,6 @@ int manejar_conexion_cliente(int socket_cliente){
 		}
 	}
 
-	close(socket_cliente);
 	return EXIT_SUCCESS;
 }
 
@@ -122,6 +137,26 @@ void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
 	t_paquete* paquete = malloc(sizeof(t_paquete));
 
 	paquete->codigo_operacion = PROCESO_MEMORIA;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
+
+void enviar_proceso_terminado(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = PROCESO_FINALIZADO;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;
 	paquete->buffer->stream = malloc(paquete->buffer->size);

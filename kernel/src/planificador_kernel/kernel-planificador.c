@@ -23,10 +23,9 @@ t_pcb* crear_proceso_cero(char* path, int tamanio){
     
     inicializar_pid();
   	t_pcb* proceso_ejemplo = iniciarPCB(path ,tamanio, asignar_pid());
-    printf("Creando proceso cero con path %s, tamanio %d y pid %d\n", path, tamanio, proceso_ejemplo->pid);
-    
+
     pasar_pcb_a_new(proceso_ejemplo);
-	log_obligatorio(logger_kernel, proceso_ejemplo->pid, " Se crea el proceso - Estado: NEW");
+	log_info(logger_kernel,"## %d Se crea el proceso - Estado: NEW", proceso_ejemplo->pid);
     return proceso_ejemplo;
 }
 
@@ -50,7 +49,6 @@ void inicializar_estructuras(){
     estado_susp_blocked = inicializar_estado();
     estado_exit = inicializar_estado();
 
-    sem_post(&sem_hay_espacio_en_memoria);
 }
 
 
@@ -58,7 +56,7 @@ p_algoritmos devolver_algoritmo_planificacion(){
     
 }
 
-void iniciar_planificador_largoPlazo(){
+void iniciar_planificador_largo_plazo(){
 	char *leido;
 	bool lineaVacia = false;
 	do{
@@ -71,53 +69,45 @@ void iniciar_planificador_largoPlazo(){
 		}
 	}while(!lineaVacia);
 	
-    iniciar_planificacion_largoPlazo();
+    iniciar_planificacion_largo_plazo();
 }
 
 void iniciar_planificacion_largoPlazo(){
 
+    log_debug(logger_kernel, "Inicia el planificador a largoplazo");
+
     pthread_t hilo_planificador_corto_plazo;
-    pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_cortoPlazo, NULL);
+    pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_corto_plazo, NULL);
     pthread_detach(hilo_planificador_corto_plazo);
 
-    // pthread_t hilo_planificador_mediano_plazo;
- 	// pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_medianoPlazo, NULL);
-	// pthread_detach(hilo_planificador_mediano_plazo);
-
-    log_trace(logger_kernel, "Inicia el planificador a largoplazo");
-    // Habria que poner un while(1) para que esto siempre este ejecutandose?
+    pthread_t hilo_planificador_mediano_plazo;
+ 	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
+	pthread_detach(hilo_planificador_mediano_plazo);
 
     while(1){
 
+        // El proceso llega y no hay ningun proceso en la primer cola
+
         t_pcb* pcb_en_new = peek_pcb_en_new();
-        
+    
         bool cola_new_estaba_vacia = verificar_cola_new_estaba_vacia();  // :v
 
         char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
-
-        log_error(logger_kernel, "TENGO UN PROCESO");
-        
+ 
         if(cola_new_estaba_vacia) {
            
-            bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new, fd_conexion_memoria);
+            bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
             
             if(hay_espacio_en_memoria) { 
                 pasar_pcb_new_a_ready(pcb_en_new);
-                log_info(logger_kernel, "%d Pasa del estado NEW al estado READY", pcb_en_new->pid);
+                log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb_en_new->pid);
                 sem_post(&sem_cantidad_pcbs_en_ready); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
-                
-                // Como podemos testear esta shit:
-                /*
-                . El 2do proceso que llega no tiene espacio
-                . esperamos a que finalice el primero
-                . finaliza el primero
-                . hacemos que el 2do pase a Ready
-                . dios se apiade de nosotros
-                */
-
+            
             } else { 
                 log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
                 // El proceso sigue en la cola de New
+                sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
+                sem_post(&sem_cantidad_pcbs_en_new);   // comienzo de nuevo el while para que ponga al proceso en Ready
             }
 
         } else {
@@ -142,16 +132,21 @@ void iniciar_planificacion_largoPlazo(){
     
 }
 
+void iniciar_planificador_mediano_plazo() {
+
+}
+
 // CONSUMIDOR
-void iniciar_planificador_cortoPlazo(){
-    log_trace(logger_kernel, "Comienza hilo de corto plazo");
+void iniciar_planificador_corto_plazo(){
+    log_debug(logger_kernel, "Comienza hilo de corto plazo");
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
             
-            t_pcb* pcbEnReady = queue_pop(estado_ready->cola);
-            log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
+            t_pcb* pcbEnReady = list_remove(estado_ready->cola, 0);
+            log_info(logger_kernel, "## %d Pasa del estado READY al estado EXEC", pcbEnReady->pid);
+            list_add(estado_exec->cola, pcbEnReady);
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
             infoProceso->pc = pcbEnReady->pc;
             infoProceso->pid = pcbEnReady->pid;
@@ -161,8 +156,8 @@ void iniciar_planificador_cortoPlazo(){
             t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
             bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
             if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-                log_info(logger_kernel, "%d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
-                // sacar de ready y mandar a blocked
+                log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
+                // sacar de exec y mandar a blocked
                 enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
             } else {
                 log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
@@ -171,27 +166,37 @@ void iniciar_planificador_cortoPlazo(){
     }
 }
 
+bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new) { 
+    
+    char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+    int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+    enviarProceso_A_Memoria(*pcb_en_new, fd_conexion_memoria);
+            
+    return manejar_conexion_kernel_memoria(fd_conexion_memoria);
+}
+
 void encolar_pcb(t_estado* estado, t_pcb* pcb) {
 
     pthread_mutex_lock(&(estado->mutex));
-    queue_push(estado->cola, pcb);
+    list_add(estado->cola, pcb);
     pthread_mutex_unlock(&(estado->mutex));
 
-    log_debug(logger_kernel, "PCB con PID %d encolado en el estado.", pcb->pid);
 }
 
 bool verificar_cola_new_estaba_vacia() {
     pthread_mutex_lock(&(estado_new->mutex));
-    bool cola_vacia =  queue_size(estado_new->cola) - 1 == 0;
+    bool cola_vacia = list_size(estado_new->cola) - 1 == 0;
     pthread_mutex_unlock(&(estado_new->mutex));
 
     return cola_vacia;
 }
 
-void pasar_pcb_a_new(t_pcb* pcb) {
+void  pasar_pcb_a_new(t_pcb* pcb) {
     // Encolar el PCB en la cola de NEW
     encolar_pcb(estado_new, pcb);
-    log_info(logger_kernel, "%d Pasa al estado NEW", pcb->pid);
+    log_info(logger_kernel, "## %d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
 }
 
@@ -208,28 +213,28 @@ void pasar_pcb_new_a_ready(t_pcb* pcb) { // Por ahora al pedo, despues cuando pa
 t_estado* inicializar_estado() {
     // REVISAR FREE PARA MALLOC
     t_estado* estado = malloc(sizeof(t_estado));
-    estado->cola = queue_create();
+    estado->cola = list_create();
     pthread_mutex_init(&(estado->mutex), NULL);
     return estado;
 }
 
 t_pcb* pop_cola_mutex(t_estado* cola_mutex) {
     pthread_mutex_lock(&(cola_mutex->mutex));
-    t_pcb* pcb = queue_pop(cola_mutex->cola);
+    t_pcb* pcb = list_remove(cola_mutex->cola, 0);
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
 
 t_pcb* push_cola_mutex(t_estado* cola_mutex, t_pcb* pcb) {
     pthread_mutex_lock(&(cola_mutex->mutex));
-    queue_push(cola_mutex->cola, pcb);
+    list_add(cola_mutex->cola, pcb);
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
 
 t_pcb* peek_cola_mutex(t_estado* cola_mutex) {
     pthread_mutex_lock(&(cola_mutex->mutex));
-    t_pcb* pcb = queue_peek(cola_mutex->cola);
+    t_pcb* pcb = list_get(cola_mutex->cola, 0);
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
@@ -240,12 +245,3 @@ t_pcb* peek_pcb_en_new() {
     return pcb;
 }
 
-bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new, int fd_conexion_memoria) { 
-    fd_conexion_memoria = crear_conexion(configuracion_kernel->IP_MEMORIA, configuracion_kernel->PUERTO_MEMORIA);
-            
-    // enviar_tamanioProceso(tam_proceso, fd_conexion_memoria);
-    enviarProceso_A_Memoria(*pcb_en_new, fd_conexion_memoria);
-            
-    // Recibo respuesta por parte de memo si es que hay memoria
-    return  manejar_conexion_kernel_memoria(fd_conexion_memoria);
-}

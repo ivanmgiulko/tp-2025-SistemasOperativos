@@ -43,7 +43,6 @@ int esperar_cliente(int socket_servidor, t_log* logger)
         log_error(logger, "Error al aceptar cliente: %s", strerror(errno));
         return -1;
     }
-	log_info(logger, "Se conecto un cliente!");
 
 	return socket_cliente;
 }

@@ -44,11 +44,20 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 				return 1;
 			}
 			break;
-		
-		//case RESPUESTA_SYSCALL_EXIT:
-			// DAMOS DE BAJA EL PROCESO Y EL PCB ASOCIADO
+
+		case PROCESO_FINALIZADO:
+			char* validacion_proceso = recibir_respuestaMemoria(socket_cliente);
+			// Simula que llega el proceso 0
+			log_info(logger_kernel, "## 0 - Finaliza el proceso");
+			sem_post(&sem_hay_espacio_en_memoria);
+
+			//case RESPUESTA_SYSCALL_EXIT:
+			// DAMOS DE BAJA EL PROCESO Y EL PCB ASOCIADOs
 			// sem_post(&sem_hay_espacio_en_memoria);
 			//break;
+
+			break;
+		
 		case -1:
 			log_error(logger_kernel, "el cliente [MEMORIA] se desconecto .");
 			return EXIT_FAILURE;

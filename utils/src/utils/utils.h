@@ -28,6 +28,8 @@ typedef enum
 	INSTRUCCION,
 	RESPUESTA_MEMORIA, 
 	PROCESO_MEMORIA,
+	PROCESO_FINALIZAR,
+	PROCESO_FINALIZADO,
 	INFO_PROC_EXEC,
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ,

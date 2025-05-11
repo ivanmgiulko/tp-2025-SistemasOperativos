@@ -82,7 +82,6 @@ int main(int argc, char* argv[]){
     pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
     pthread_detach(hilo_cliente_cputDispatch_akernel);
 	
-
 	pthread_t hilo_cliente_cpu_amemoria;
     pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
 	pthread_join(hilo_cliente_cpu_amemoria, NULL);

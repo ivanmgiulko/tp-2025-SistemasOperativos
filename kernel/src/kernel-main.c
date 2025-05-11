@@ -21,29 +21,25 @@ int main(int argc, char* argv[]) {
         log_error(logger_kernel, "Error al iniciar servidor de CPU-interrupt");
         abort();
     }
-	log_trace(logger_kernel, "KERNEL listo para recibir al cliente CPU-Interrupt");
-
+	
 	fd_server_kernel_dispatch = iniciar_servidor(puerto_kernel_dispatch, logger_kernel);
 	if(fd_server_kernel_dispatch == -1){
         log_error(logger_kernel, "Error al iniciar servidor de CPU-dispatch");
         abort();
     }
-	log_trace(logger_kernel, "KERNEL listo para recibir al cliente CPU-Dispatch");
 	
-
 	fd_server_io = iniciar_servidor(puerto_io, logger_kernel);
 	if(fd_server_io == -1){
         log_error(logger_kernel, "Error al iniciar servidor de IO");
         abort();
     }
-	log_trace(logger_kernel, "KERNEL listo para recibir al cliente IO");
 
 	// decir_algoritmo();
 	inicializar_estructuras();
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
 	argv[1] = "proceso1";
-	argv[2] = "10000";
+	argv[2] = "4000";
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES

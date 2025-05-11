@@ -18,6 +18,7 @@ int manejar_conexion_kernel_dispatch(){
 				recv(fd_conexion_kernel_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
 				sem_post(&sem_cpu);
 				log_trace(logger_cpu, "PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
@@ -25,6 +26,7 @@ int manejar_conexion_kernel_dispatch(){
 				free(infoPCB);
 				// 
 
+				/* PRUEBA DE SYSCALL_IO CON KERNEL*/
 				// El proceso debe realizar una IO ahora:
 				// t_param_io* pruebaIO = malloc(sizeof(t_param_io));
 				// pruebaIO->dispositivo = string_duplicate("MOUSE");
@@ -32,11 +34,16 @@ int manejar_conexion_kernel_dispatch(){
 				// pruebaIO->tiempo = 2500000;
 				// enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
 
+				/* PRUEBA DE SYSCALL_PROC_INIC CON KERNEL*/
 				t_param_init_proc* prueba_proceso_new = malloc(sizeof(t_param_init_proc));
 				prueba_proceso_new->archivo = "proceso2";
 				prueba_proceso_new->tamanio = 1000;
 				enviar_syscall_init_proc_kernel(*prueba_proceso_new, fd_conexion_kernel_dispatch);
 				
+				/* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
+				enviar_syscall_exit("finaliza el proceso1", fd_conexion_kernel_dispatch);
+				
+
 				break;
 
 			case INSTRUCCION:
@@ -120,4 +127,24 @@ void enviar_syscall_init_proc_kernel(t_param_init_proc prueba_init_proc, int soc
     free(paquete->buffer);
     free(paquete);
 
+}
+
+void enviar_syscall_exit(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = SYSCALL_EXIT;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = strlen(mensaje) + 1;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
+
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
 }

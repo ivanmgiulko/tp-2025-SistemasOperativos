@@ -7,7 +7,7 @@ void manejar_conexion_kernel_interrupt() {
             log_error(logger_kernel, "Error al aceptar cliente en interrupt");
             continue;
         }
-        log_info(logger_kernel, "Nueva conexión en interrupt: socket %d", socket_interrupt);
+        log_debug(logger_kernel, "Nueva conexión en interrupt: socket %d", socket_interrupt);
 
         // Crear un hilo para manejar la conexión del cliente
         pthread_t hilo_cliente_interrupt;
@@ -23,7 +23,7 @@ void manejar_conexion_kernel_dispatch() {
             log_error(logger_kernel, "Error al aceptar cliente en dispatch");
             continue;
         }
-        log_info(logger_kernel, "Nueva conexión en dispatch: socket %d", socket_dispatch);
+        log_debug(logger_kernel, "Nueva conexión en dispatch: socket %d", socket_dispatch);
 
         // Crear un hilo para manejar la conexión del cliente
         // pthread_t hilo_cliente_dispatch;
@@ -80,16 +80,29 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
             recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
 			paquete->buffer->stream = malloc(paquete->buffer->size);
 			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
-            log_debug(logger_kernel, "Recibi un nuevo proceso desde CPU");
+            
             t_pcb* proceso_prueba_syscall = proceso_syscall_prueba(paquete->buffer);
-            log_debug(logger_kernel, "somos cracks");
-
+            
             pasar_pcb_a_new(proceso_prueba_syscall);
 
 
             break;
 
         case SYSCALL_EXIT:
+            recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+            
+            t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
+
+            char* ip_memoria = configuracion_kernel->IP_MEMponteORIA;
+            char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+            int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+            enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+
+            manejar_conexion_kernel_memoria(fd_conexion_memoria);
+
             break;
 
 

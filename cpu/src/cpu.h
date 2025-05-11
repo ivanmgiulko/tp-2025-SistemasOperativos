@@ -16,6 +16,4 @@ int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;
 
-
-
 #endif // CPU_H_
