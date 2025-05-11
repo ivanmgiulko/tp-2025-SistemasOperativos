@@ -35,11 +35,26 @@ int manejar_conexion_kernel_dispatch(){
 				// enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
 
 				/* PRUEBA DE SYSCALL_PROC_INIC CON KERNEL*/
-				t_param_init_proc* prueba_proceso_new = malloc(sizeof(t_param_init_proc));
-				prueba_proceso_new->archivo = "proceso2";
-				prueba_proceso_new->tamanio = 1000;
-				enviar_syscall_init_proc_kernel(*prueba_proceso_new, fd_conexion_kernel_dispatch);
+				t_param_init_proc* prueba_proceso_new1 = malloc(sizeof(t_param_init_proc));
+				prueba_proceso_new1->archivo = "proceso1";
+				prueba_proceso_new1->tamanio = 4000;
+				enviar_syscall_init_proc_kernel(*prueba_proceso_new1, fd_conexion_kernel_dispatch);
+
+				t_param_init_proc* prueba_proceso_new2 = malloc(sizeof(t_param_init_proc));
+				prueba_proceso_new2->archivo = "proceso2";
+				prueba_proceso_new2->tamanio = 3000;
+				enviar_syscall_init_proc_kernel(*prueba_proceso_new2, fd_conexion_kernel_dispatch);
 				
+				t_param_init_proc* prueba_proceso_new3 = malloc(sizeof(t_param_init_proc));
+				prueba_proceso_new3->archivo = "proceso3";
+				prueba_proceso_new3->tamanio = 2000;
+				enviar_syscall_init_proc_kernel(*prueba_proceso_new3, fd_conexion_kernel_dispatch);
+
+				t_param_init_proc* prueba_proceso_new4 = malloc(sizeof(t_param_init_proc));
+				prueba_proceso_new4->archivo = "proceso4";
+				prueba_proceso_new4->tamanio = 1;
+				enviar_syscall_init_proc_kernel(*prueba_proceso_new4, fd_conexion_kernel_dispatch);
+
 				/* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
 				enviar_syscall_exit("finaliza el proceso1", fd_conexion_kernel_dispatch);
 				

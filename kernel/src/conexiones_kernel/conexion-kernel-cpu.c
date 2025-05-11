@@ -26,9 +26,9 @@ void manejar_conexion_kernel_dispatch() {
         log_debug(logger_kernel, "Nueva conexión en dispatch: socket %d", socket_dispatch);
 
         // Crear un hilo para manejar la conexión del cliente
-        // pthread_t hilo_cliente_dispatch;
-        // pthread_create(&hilo_cliente_dispatch, NULL, (void*)manejar_cliente_dispatch, (void*)&socket_dispatch);
-        // pthread_detach(hilo_cliente_dispatch);
+        pthread_t hilo_cliente_dispatch;
+        pthread_create(&hilo_cliente_dispatch, NULL, (void*)manejar_cliente_dispatch, (void*)&socket_dispatch);
+        pthread_detach(hilo_cliente_dispatch);
     }
 }
 
@@ -81,10 +81,11 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 			paquete->buffer->stream = malloc(paquete->buffer->size);
 			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
             
+            // Recibo prooceso desde CPU deserializado
             t_pcb* proceso_prueba_syscall = proceso_syscall_prueba(paquete->buffer);
             
+            // Pasamos procesos que llegan desde CPU (SYSCALL INIT_PROC) a NEW
             pasar_pcb_a_new(proceso_prueba_syscall);
-
 
             break;
 
@@ -95,7 +96,7 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
             
             t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
 
-            char* ip_memoria = configuracion_kernel->IP_MEMponteORIA;
+            char* ip_memoria = configuracion_kernel->IP_MEMORIA;
             char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
             int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
@@ -104,8 +105,6 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
             manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
             break;
-
-
 
 		case INSTRUCCION:
 			break;

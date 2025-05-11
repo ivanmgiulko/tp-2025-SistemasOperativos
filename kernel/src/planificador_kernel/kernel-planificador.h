@@ -117,5 +117,9 @@
 
     bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new);
 
+    bool _tiene_menos_tamanio(void* a, void* b);
+
+    void _enviar_proceso_new_a_cola_ready();
+
 #endif
 

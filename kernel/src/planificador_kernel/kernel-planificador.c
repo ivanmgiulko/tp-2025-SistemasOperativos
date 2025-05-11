@@ -72,7 +72,7 @@ void iniciar_planificador_largo_plazo(){
     iniciar_planificacion_largo_plazo();
 }
 
-void iniciar_planificacion_largoPlazo(){
+void iniciar_planificacion_largo_plazo(){
 
     log_debug(logger_kernel, "Inicia el planificador a largoplazo");
 
@@ -84,48 +84,31 @@ void iniciar_planificacion_largoPlazo(){
  	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
 	pthread_detach(hilo_planificador_mediano_plazo);
 
+    char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
+
     while(1){
 
         // El proceso llega y no hay ningun proceso en la primer cola
 
-        t_pcb* pcb_en_new = peek_pcb_en_new();
-    
         bool cola_new_estaba_vacia = verificar_cola_new_estaba_vacia();  // :v
 
-        char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
- 
         if(cola_new_estaba_vacia) {
            
-            bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
-            
-            if(hay_espacio_en_memoria) { 
-                pasar_pcb_new_a_ready(pcb_en_new);
-                log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb_en_new->pid);
-                sem_post(&sem_cantidad_pcbs_en_ready); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
-            
-            } else { 
-                log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
-                // El proceso sigue en la cola de New
-                sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
-                sem_post(&sem_cantidad_pcbs_en_new);   // comienzo de nuevo el while para que ponga al proceso en Ready
-            }
+            _enviar_proceso_new_a_cola_ready();
 
         } else {
 
             if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
                 
-                // sem_wait(&sem_hay_espacio_en_memoria);  // Le avisa al planificador cuando no hay espacio en memo, asi evitamos la espera activa
-                
-                // hacemos peek al primero proceso
-                // vemos si hay espacio en memoria
-                // pasamos a ready
+               _enviar_proceso_new_a_cola_ready();
+            
             }
 
             if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
-                // ordenamos la cola (futura lista)
-                // hacemos peek al primero proceso
-                // vemos si hay espacio en memoria
-                // pasamos a ready
+                
+                list_sort(estado_new->cola, _tiene_menos_tamanio);
+
+                _enviar_proceso_new_a_cola_ready();
             }
         }
     }
@@ -142,6 +125,7 @@ void iniciar_planificador_corto_plazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
+        
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
             
             t_pcb* pcbEnReady = list_remove(estado_ready->cola, 0);
@@ -152,16 +136,17 @@ void iniciar_planificador_corto_plazo(){
             infoProceso->pid = pcbEnReady->pid;
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
+            
             // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-            t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
-            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
-            if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-                log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
-                // sacar de exec y mandar a blocked
-                enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
-            } else {
-                log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
-            }
+            // t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
+            // bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
+            // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+            //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
+            //     // sacar de exec y mandar a blocked
+            //     enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
+            // } else {
+            //     log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
+            // }
         }
     }
 }
@@ -207,7 +192,7 @@ void pasar_pcb_new_a_ready(t_pcb* pcb) { // Por ahora al pedo, despues cuando pa
     // Pushear el pcb pasado por parametro de forma atomica en READY 
     encolar_pcb(estado_ready,pcb_en_new);
     // POSTEAR EL SEAMOFOR QUE TE AVISA QUE TENES PROCESOS EN READY (?)
-    //  sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 
 t_estado* inicializar_estado() {
@@ -245,3 +230,24 @@ t_pcb* peek_pcb_en_new() {
     return pcb;
 }
 
+bool _tiene_menos_tamanio(void* a, void* b) { 
+    t_pcb* proceso_a = (t_pcb*) a;
+    t_pcb* proceso_b = (t_pcb*) b;
+    return proceso_a->tamanioMemoria <= proceso_b->tamanioMemoria;
+} 
+
+void _enviar_proceso_new_a_cola_ready() {
+    t_pcb* pcb_en_new = peek_pcb_en_new();
+
+    bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
+            
+    if(hay_espacio_en_memoria) { 
+        pasar_pcb_new_a_ready(pcb_en_new);
+        log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb_en_new->pid);
+    } else { 
+        log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
+        // El proceso sigue en la cola de New
+        sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
+        sem_post(&sem_cantidad_pcbs_en_new);   // comienzo de nuevo el while para que ponga al proceso en Ready
+    }
+}

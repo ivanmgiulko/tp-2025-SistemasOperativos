@@ -43,6 +43,8 @@ int main(int argc, char* argv[]) {
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES
+
+	
 	pthread_t hilo_servidor_io;
     pthread_create(&hilo_servidor_io, NULL, (void*)manejar_conexion_kernel_io, NULL);
     pthread_detach(hilo_servidor_io);
@@ -51,13 +53,14 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_servidor_kernel_interrupt, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_servidor_kernel_interrupt);
 
-	pthread_t hilo_planificador_largo_plazo;
- 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largoPlazo, NULL);
-	pthread_detach(hilo_servidor_kernel_interrupt);
-
+	
 	pthread_t hilo_servidor_kernel_dispatch;
     pthread_create(&hilo_servidor_kernel_dispatch, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
-    pthread_join(hilo_servidor_kernel_dispatch, NULL);
+    pthread_detach(hilo_servidor_kernel_dispatch);
 
+
+	pthread_t hilo_planificador_largo_plazo;
+ 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largo_plazo, NULL);
+	pthread_join(hilo_planificador_largo_plazo, NULL);
 	
 }
