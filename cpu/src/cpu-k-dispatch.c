@@ -20,6 +20,8 @@ int manejar_conexion_kernel_dispatch(){
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
+				pcb_actual->pid = infoPCB->pid;
+				pcb_actual->pc = infoPCB->pc;
 				sem_post(&sem_cpu);
 				log_trace(logger_cpu, "PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 				pedir_instruccion_a_memoria(infoPCB);
@@ -27,36 +29,36 @@ int manejar_conexion_kernel_dispatch(){
 				// 
 
 				/* PRUEBA DE SYSCALL_IO CON KERNEL*/
-				// El proceso debe realizar una IO ahora:
-				// t_param_io* pruebaIO = malloc(sizeof(t_param_io));
-				// pruebaIO->dispositivo = string_duplicate("MOUSE");
-				// pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
-				// pruebaIO->tiempo = 2500000;
-				// enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
+				//El proceso debe realizar una IO ahora:
+				t_param_io* pruebaIO = malloc(sizeof(t_param_io));
+				pruebaIO->dispositivo = string_duplicate("MOUSE");
+				pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
+				pruebaIO->tiempo = 2500000;
+				enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
 
 				/* PRUEBA DE SYSCALL_PROC_INIC CON KERNEL*/
-				t_param_init_proc* prueba_proceso_new1 = malloc(sizeof(t_param_init_proc));
-				prueba_proceso_new1->archivo = "proceso1";
-				prueba_proceso_new1->tamanio = 4000;
-				enviar_syscall_init_proc_kernel(*prueba_proceso_new1, fd_conexion_kernel_dispatch);
+				// t_param_init_proc* prueba_proceso_new1 = malloc(sizeof(t_param_init_proc));
+				// prueba_proceso_new1->archivo = "proceso1";
+				// prueba_proceso_new1->tamanio = 4000;
+				// enviar_syscall_init_proc_kernel(*prueba_proceso_new1, fd_conexion_kernel_dispatch);
 
-				t_param_init_proc* prueba_proceso_new2 = malloc(sizeof(t_param_init_proc));
-				prueba_proceso_new2->archivo = "proceso2";
-				prueba_proceso_new2->tamanio = 3000;
-				enviar_syscall_init_proc_kernel(*prueba_proceso_new2, fd_conexion_kernel_dispatch);
+				// t_param_init_proc* prueba_proceso_new2 = malloc(sizeof(t_param_init_proc));
+				// prueba_proceso_new2->archivo = "proceso2";
+				// prueba_proceso_new2->tamanio = 3000;
+				// enviar_syscall_init_proc_kernel(*prueba_proceso_new2, fd_conexion_kernel_dispatch);
 				
-				t_param_init_proc* prueba_proceso_new3 = malloc(sizeof(t_param_init_proc));
-				prueba_proceso_new3->archivo = "proceso3";
-				prueba_proceso_new3->tamanio = 2000;
-				enviar_syscall_init_proc_kernel(*prueba_proceso_new3, fd_conexion_kernel_dispatch);
+				// t_param_init_proc* prueba_proceso_new3 = malloc(sizeof(t_param_init_proc));
+				// prueba_proceso_new3->archivo = "proceso3";
+				// prueba_proceso_new3->tamanio = 2000;
+				// enviar_syscall_init_proc_kernel(*prueba_proceso_new3, fd_conexion_kernel_dispatch);
 
-				t_param_init_proc* prueba_proceso_new4 = malloc(sizeof(t_param_init_proc));
-				prueba_proceso_new4->archivo = "proceso4";
-				prueba_proceso_new4->tamanio = 1;
-				enviar_syscall_init_proc_kernel(*prueba_proceso_new4, fd_conexion_kernel_dispatch);
+				// t_param_init_proc* prueba_proceso_new4 = malloc(sizeof(t_param_init_proc));
+				// prueba_proceso_new4->archivo = "proceso4";
+				// prueba_proceso_new4->tamanio = 1;
+				// enviar_syscall_init_proc_kernel(*prueba_proceso_new4, fd_conexion_kernel_dispatch);
 
-				/* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
-				enviar_syscall_exit("finaliza el proceso1", fd_conexion_kernel_dispatch);
+				// /* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
+				// enviar_syscall_exit("finaliza el proceso1", fd_conexion_kernel_dispatch);
 				
 
 				break;

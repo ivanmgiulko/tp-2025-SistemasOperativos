@@ -8,7 +8,7 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid)
     nuevoPCB->tamanioMemoria = tamanio;
     nuevoPCB->path_length = strlen(path);
     nuevoPCB->pid = pid;
-    nuevoPCB->pc = 1;
+    nuevoPCB->pc = 0;
     nuevoPCB->estadoProceso = NEW;
     nuevoPCB->metricas_estado = iniciarMetricasEstado();
     nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();

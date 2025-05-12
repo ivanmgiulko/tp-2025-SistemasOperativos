@@ -35,7 +35,10 @@ void inicializar_pid(){
 
 int asignar_pid(){
     pthread_mutex_lock(&pid->mutex);
-    int valor_pid = pid->valor++;
+    log_trace(logger_kernel, "valor_pid variable kernel: %d", pid->valor);
+    int valor_pid = ++pid->valor;
+    log_trace(logger_kernel, "valor_pid variable kernel: %d", pid->valor);
+    log_trace(logger_kernel, "valor_pid asignado: %d", valor_pid);
     pthread_mutex_unlock(&pid->mutex);
     return valor_pid;
 }
@@ -53,7 +56,7 @@ void inicializar_estructuras(){
 
 
 p_algoritmos devolver_algoritmo_planificacion(){
-    
+    return EXIT_FAILURE;
 }
 
 void iniciar_planificador_largo_plazo(){
@@ -137,16 +140,17 @@ void iniciar_planificador_corto_plazo(){
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
             
-            // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-            // t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
-            // bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
-            // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-            //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
-            //     // sacar de exec y mandar a blocked
-            //     enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
-            // } else {
-            //     log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
-            // }
+          
+        //  Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
+            t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
+            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
+            if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+                log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
+                // sacar de exec y mandar a blocked
+                enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
+            } else {
+                log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
+            }
         }
     }
 }

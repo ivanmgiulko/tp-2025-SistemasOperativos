@@ -80,7 +80,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de instrucción");
 					break;
 				}
-				log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
+			//	log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
 				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
 
 				// Libera el paquete
@@ -130,9 +130,9 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
         log_warning(logger, "Error al serializar la respuesta de instruccion");
         return;
 	}
-	log_debug(logger, "Serializando paquete:");
-	log_debug(logger, "Código de operación: %d", INSTRUCCION);
-	log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
+	//log_debug(logger, "Serializando paquete:");
+//	log_debug(logger, "Código de operación: %d", INSTRUCCION);
+//	log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
 	log_debug(logger, "Instrucción: %s", respuesta->instruccion);
 
 	//Envio la instruccion serializada envio a CPU 

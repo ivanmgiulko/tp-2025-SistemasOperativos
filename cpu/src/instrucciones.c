@@ -38,16 +38,15 @@ t_instruccion* parse_noop(char* linea) {
     log_info(logger_cpu, "ADENTRO DEL PARSER NOOP A VER EL TIPO: %d", instr->tipo);
     return instr;
 }
-t_instruccion* parse_read(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
-    string_trim(&linea_trimmed); 
-    log_debug(logger_cpu, "Instrucción READ. LINEA: %s", linea_trimmed);
 
-    char** partes = string_split(linea_trimmed, " ");  
+
+t_instruccion* parse_read(char* linea) {
+    log_debug(logger_cpu, "Instrucción READ. LINEA: %s", linea);
+
+    char** partes = string_split(linea, " ");  
     if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
         log_error(logger_cpu, "Error: la línea no tiene el formato esperado.");
         string_array_destroy(partes);
-        free(linea_trimmed); 
         return NULL;
     }
 
@@ -60,72 +59,36 @@ t_instruccion* parse_read(char* linea) {
               instr->parametros.read.direccion, instr->parametros.read.tamanio);
 
     string_array_destroy(partes);
-    free(linea_trimmed); 
 
     return instr;  
 }
 // SUPUESTAMENTE ESTA FUNCION ES MEJOR. TODAVIA NO LA PROBAMOS. COPAILOT CREE EN LEAN, YO (IVAN) NO CREO EN EL.
 
 
-// t_instruccion* parse_write(char* linea) {
-//     log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea);
-
-//     // Dividir la línea en partes
-//     char** partes = string_split(linea, " ");  
-//     if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
-//         log_error(logger_cpu, "Error: la línea no tiene el formato esperado.");
-//         string_array_destroy(partes);
-//         return NULL;
-//     }
-
-//     // Crear la instrucción
-//     t_instruccion* instr = malloc(sizeof(t_instruccion));
-//     instr->tipo = INSTR_WRITE;
-//     instr->parametros.write.datos = string_duplicate(partes[1]);
-//     instr->parametros.write.direccion = string_duplicate(partes[2]);
-
-//     log_debug(logger_cpu, "Instrucción WRITE creada correctamente: datos=%s, dirección=%s",
-//               instr->parametros.write.datos, instr->parametros.write.direccion);
-
-//     // Liberar memoria de las partes
-//     string_array_destroy(partes);
-
-//     return instr; 
-// }
 t_instruccion* parse_write(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
-    string_trim(&linea_trimmed); 
-    log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea_trimmed);
+    log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea);
 
-    char** partes = string_split(linea_trimmed, " ");  
-    if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
-        log_error(logger_cpu, "Error: la línea no tiene el formato esperado.");
-        string_array_destroy(partes);
-        free(linea_trimmed); 
-        return NULL;
-    }
+    // Dividir la línea en partes
+    char** partes = string_split(linea, " ");  
+    
 
+    // Crear la instrucción
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_WRITE;
     instr->parametros.write.datos = string_duplicate(partes[1]);
     instr->parametros.write.direccion = string_duplicate(partes[2]);
 
-    log_debug(logger_cpu, "Instrucción WRITE creada correctamente: archivo=%s, tamaño=%s",
+    log_debug(logger_cpu, "Instrucción WRITE creada correctamente: datos=%s, dirección=%s",
               instr->parametros.write.datos, instr->parametros.write.direccion);
 
+    // Liberar memoria de las partes
     string_array_destroy(partes);
-    free(linea_trimmed); 
 
     return instr; 
 }
 t_instruccion* parse_goto(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
 
-    string_trim(&linea_trimmed); 
-    char** partes = string_split(linea_trimmed, " ");  
-    
-    if (partes[1] == NULL) return NULL;
-
+    char** partes = string_split(linea, " ");  
 
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_GOTO;
@@ -135,13 +98,10 @@ t_instruccion* parse_goto(char* linea) {
               instr->parametros.go_to.valor);
 
     string_array_destroy(partes);
-    free(linea_trimmed); 
     return instr;        
 }
 t_instruccion* parse_io(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
-    string_trim(&linea_trimmed); 
-    char** partes = string_split(linea_trimmed, " "); 
+    char** partes = string_split(linea, " "); 
     
     if (partes[1] == NULL) return NULL;
 
@@ -155,21 +115,12 @@ t_instruccion* parse_io(char* linea) {
               instr->parametros.io.dispositivo, instr->parametros.io.tiempo);
 
     string_array_destroy(partes);
-    free(linea_trimmed); 
     return instr;       
 }
 t_instruccion* parse_init_proc(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
-    string_trim(&linea_trimmed); 
-    log_debug(logger_cpu, "Instrucción INIT_PROC. LINEA: %s", linea_trimmed);
+    log_debug(logger_cpu, "Instrucción INIT_PROC. LINEA: %s", linea);
 
-    char** partes = string_split(linea_trimmed, " ");  
-    if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
-        log_error(logger_cpu, "Error: la línea no tiene el formato esperado.");
-        string_array_destroy(partes);
-        free(linea_trimmed); 
-        return NULL;
-    }
+    char** partes = string_split(linea, " ");  
 
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_INIT_PROC;
@@ -180,7 +131,6 @@ t_instruccion* parse_init_proc(char* linea) {
               instr->parametros.init_proc.archivo, instr->parametros.init_proc.tamanio);
 
     string_array_destroy(partes);
-    free(linea_trimmed); 
 
     return instr; 
 }
@@ -199,25 +149,23 @@ t_instruccion* parse_exit(char* linea) {
     return instr;
 }
 
-
 t_instruccion* decode(char* linea) {
-    char* linea_trimmed = string_duplicate(linea); 
-    string_trim(&linea_trimmed); 
-    log_debug(logger_cpu, "Decodificando instrucción: %s", linea_trimmed);
+    log_debug(logger_cpu, "Decodificando instrucción: %s", linea);
 
-    char** partes = string_split(linea_trimmed, " ");  
+    // Dividir la línea en partes
+    char** partes = string_split(linea, " ");  
     if (partes[0] == NULL) {
         log_error(logger_cpu, "Error: la instrucción no tiene tipo");
         string_array_destroy(partes);
-        free(linea_trimmed); 
         return NULL;
     }
 
+    // Obtener el tipo de instrucción
     instruccion_t tipo = obtener_tipo(partes[0]);
     log_debug(logger_cpu, "Tipo de instrucción: %d", tipo);
     string_array_destroy(partes);
-    free(linea_trimmed); 
 
+    // Llamar a la función de parseo correspondiente
     t_instruccion* instruccion = parse_funciones[tipo](linea);
     if (instruccion == NULL) {
         log_error(logger_cpu, "Error: no se pudo decodificar la instrucción");
@@ -232,6 +180,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
 			log_info(logger_cpu, "Ejecutando instrucción NOOP con parametros");
+            pcb_actual->pc++;
 			break;
 		case INSTR_WRITE:
                 //char* direccion = instruccion->parametros.write.direccion;
@@ -244,16 +193,21 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //agregar_a_paquete(paquete, datos, strlen(datos) + 1);
                 //enviar_paquete(paquete, fd_conexion_memoria) {;
                 //eliminar_paquete(paquete);
+                pcb_actual->pc++;
 
                 //log_info(logger_cpu, "WRITE enviado a Memoria.");
 			break;
 		case INSTR_READ:
 			log_info(logger_cpu, "Ejecutando instrucción READ con parametros %s %d",
 				instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
+                pcb_actual->pc++;
+
 			break;
 		case INSTR_GOTO:
 			log_info(logger_cpu, "Ejecutando instrucción GOTO con parametros %d",
 				instruccion->parametros.go_to.valor);
+                pcb_actual->pc = instruccion->parametros.go_to.valor;
+
 			break;
 
 			////////////////////////////
@@ -263,20 +217,33 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 		case INSTR_IO:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
 				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
+                pcb_actual->pc++;
+
 			break;
 		case INSTR_INIT_PROC:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
 				instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
+                pcb_actual->pc++;
+
 			break;
 		case INSTR_DUMP_MEMORY:
 			log_info(logger_cpu, "syscall detectada... parametros ");
+            pcb_actual->pc++;
+
 			break;
 		case INSTR_EXIT:
 			log_info(logger_cpu, "syscall detectada... parametros ");
+            pcb_actual->pc++;
+
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo);
+            
 			break;
 	}
+    // sem_post(&sem_cpu);
+    // log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
+    // pedir_instruccion_a_memoria(pcb_actual); 
+    
 }
 

@@ -11,7 +11,7 @@
 t_log* logger_cpu;
 
 sem_t sem_cpu;
-
+t_peticion_instruccion* pcb_actual;
 int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;

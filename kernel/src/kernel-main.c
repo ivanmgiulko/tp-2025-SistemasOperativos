@@ -38,8 +38,9 @@ int main(int argc, char* argv[]) {
 	inicializar_estructuras();
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
-	argv[1] = "./PATH_INSTRUCCIONES.txt";
+	argv[1] = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
 	argv[2] = "4000";
+	log_trace(logger_kernel, "Creando proceso cero con el path: %s y tamanio: %s", argv[1], argv[2]);
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	// HILOS PARA MANEJAR LAS PETICIONES

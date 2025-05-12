@@ -83,7 +83,7 @@ CHECKPOINT 2
         - [HECHO]Interpretación de instrucciones[HECHO] y [FALTA] ejecución de instrucciones[FALTA]
 
     Módulo Memoria:
-        - Devolver lista de instrucciones
+        - [HECHO] Devolver lista de instrucciones
         - Devolver un valor fijo de espacio libre (mock)
 
-    Módulo IO: Completo 
+    Módulo IO: Completo  [HECHO]

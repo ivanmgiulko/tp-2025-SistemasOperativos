@@ -68,7 +68,9 @@ int main(int argc, char* argv[]){
 	enviar_mensaje(valor_prueba_dispatch, fd_conexion_kernel_dispatch);
 	enviar_mensaje(cpu_id, fd_conexion_kernel_dispatch);
 	enviar_mensaje(valor_prueba_memoria, fd_conexion_memoria);
-
+	pcb_actual = malloc(sizeof(t_peticion_instruccion));
+	pcb_actual->pid = 0;
+	pcb_actual->pc = 0;
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.

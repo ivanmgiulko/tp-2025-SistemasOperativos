@@ -12,6 +12,8 @@ extern t_log* logger_cpu;
 
 extern sem_t sem_cpu;
 
+extern t_peticion_instruccion* pcb_actual;
+
 //conexiones
 extern int fd_conexion_kernel_interrupt;
 extern int fd_conexion_kernel_dispatch;

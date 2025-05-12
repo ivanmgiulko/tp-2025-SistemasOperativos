@@ -59,6 +59,7 @@ t_peticion_instruccion* deserializar_peticion_instruccion(void* buffer) {
     int desplazamiento = 0;
     int tamanio;
 
+    
     // Leer tamaño del PID (y descartarlo)
     memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
     desplazamiento += sizeof(int);
@@ -66,15 +67,15 @@ t_peticion_instruccion* deserializar_peticion_instruccion(void* buffer) {
     // Leer PID
     memcpy(&(peticion->pid), buffer + desplazamiento, tamanio);
     desplazamiento += tamanio;
-
     // Leer tamaño del PC
     memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
     desplazamiento += sizeof(int);
-
+    
     // Leer PC
     memcpy(&(peticion->pc), buffer + desplazamiento, tamanio);
     desplazamiento += tamanio;
-
+    
+    
     return peticion;
 }
 

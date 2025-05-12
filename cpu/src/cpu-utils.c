@@ -42,7 +42,7 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
     }
 	log_debug(logger_cpu, "Instrucción decodificada: %d", instruccion->tipo);
 
-	ejecutar_instruccion(instruccion, fd_conexion_memoria);
+	ejecutar_instruccion(instruccion);
 
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
