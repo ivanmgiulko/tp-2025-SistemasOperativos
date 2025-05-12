@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	inicializar_estructuras();
 	// Habria que contemplar que pasa si el usuario es un imbecil y no mete ni el path ni el tamanio del proceso -_-
 	// Le borramos system32 por pescado.-S
-	argv[1] = "proceso1";
+	argv[1] = "./PATH_INSTRUCCIONES.txt";
 	argv[2] = "4000";
 	t_pcb* pcb_proceso_cero = crear_proceso_cero(argv[1], atoi(argv[2]));
 	

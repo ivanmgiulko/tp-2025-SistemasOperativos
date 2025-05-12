@@ -64,6 +64,34 @@ t_instruccion* parse_read(char* linea) {
 
     return instr;  
 }
+// SUPUESTAMENTE ESTA FUNCION ES MEJOR. TODAVIA NO LA PROBAMOS. COPAILOT CREE EN LEAN, YO (IVAN) NO CREO EN EL.
+
+
+// t_instruccion* parse_write(char* linea) {
+//     log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea);
+
+//     // Dividir la línea en partes
+//     char** partes = string_split(linea, " ");  
+//     if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
+//         log_error(logger_cpu, "Error: la línea no tiene el formato esperado.");
+//         string_array_destroy(partes);
+//         return NULL;
+//     }
+
+//     // Crear la instrucción
+//     t_instruccion* instr = malloc(sizeof(t_instruccion));
+//     instr->tipo = INSTR_WRITE;
+//     instr->parametros.write.datos = string_duplicate(partes[1]);
+//     instr->parametros.write.direccion = string_duplicate(partes[2]);
+
+//     log_debug(logger_cpu, "Instrucción WRITE creada correctamente: datos=%s, dirección=%s",
+//               instr->parametros.write.datos, instr->parametros.write.direccion);
+
+//     // Liberar memoria de las partes
+//     string_array_destroy(partes);
+
+//     return instr; 
+// }
 t_instruccion* parse_write(char* linea) {
     char* linea_trimmed = string_duplicate(linea); 
     string_trim(&linea_trimmed); 
@@ -200,7 +228,7 @@ t_instruccion* decode(char* linea) {
     return instruccion;
 }
 
-void ejecutar_instruccion(t_instruccion* instruccion, int socket_memoria){
+void ejecutar_instruccion(t_instruccion* instruccion) {
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
 			log_info(logger_cpu, "Ejecutando instrucción NOOP con parametros");
@@ -214,7 +242,7 @@ void ejecutar_instruccion(t_instruccion* instruccion, int socket_memoria){
                 //t_paquete* paquete = crear_paquete(); // Averiguar si modificar crear_paquete() para que tome un OP_CODE
                 //agregar_a_paquete(paquete, direccion, strlen(direccion) + 1);
                 //agregar_a_paquete(paquete, datos, strlen(datos) + 1);
-                //enviar_paquete(paquete, socket_memoria);
+                //enviar_paquete(paquete, fd_conexion_memoria) {;
                 //eliminar_paquete(paquete);
 
                 //log_info(logger_cpu, "WRITE enviado a Memoria.");

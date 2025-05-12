@@ -23,6 +23,6 @@ t_peticion_instruccion* deserializar_peticion_instruccion(void*);
 void* serializar_respuesta_instruccion(t_respuesta_instruccion*, int*);
 t_respuesta_instruccion* deserializar_respuesta_instruccion(void*);
 
-char* obtener_instruccion(int, int, char*, t_log*);
+//char* obtener_instruccion(int, int, char*, t_log*);
 
 #endif // CONTRATO_H_

@@ -2,6 +2,7 @@
 #define MEMORIA_CONEXIONES_H_
 
     #include "memoria-gestor.h"
+	#include "./utils_memoria/memoria-utils.h"
 
     /**
 	 * @file

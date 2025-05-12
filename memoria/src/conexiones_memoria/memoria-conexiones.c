@@ -42,9 +42,9 @@ int manejar_conexion_cliente(int socket_cliente){
 					// le mandamos a Kernel el num de tabla de primer nivel
 
 					//Agrego el proceso (ver que pasa si hay error aca)
-					agregar_proceso(memoriaDelSistema, proceso_a_inicializar);
+					agregar_proceso(proceso_a_inicializar);
 
-					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_A_inicializar->tamanioMemoria);
+					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
 				break; 
@@ -60,14 +60,14 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				//Elimino el proceso (ver que pasa si hay error acá)
 				int pidParaEliminar = proceso_a_finalizar->pid;
-				int pidEliminado = finalizar_proceso(memoriaDelSistema, pidParaEliminar);
+				int pidEliminado = finalizar_proceso(pidParaEliminar);
 				if(pidEliminado != -1){
 					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 					// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
 					enviar_proceso_terminado("FINALIZA EL PROCESO", socket_cliente);
 				}
 				else{
-					log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidEliminado);
+					log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);
 					//Aca hay que ver que pasa en el lado de kernell en el caso de que no se elimine y como avisarles
 					enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
 				}
@@ -116,7 +116,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
-	respuesta->instruccion = obtener_instruccion(memoriaDelSistema, peticion->pid, peticion->pc);
+	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc);
 	if(respuesta->instruccion == NULL){
 	 	log_error(logger, "Instrucción NO ENCONTRADA, verifique PID y PC");
 		return;
