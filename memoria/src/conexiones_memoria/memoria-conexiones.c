@@ -30,17 +30,21 @@ int manejar_conexion_cliente(int socket_cliente){
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 
-				t_pcbMemoria* proceso_A_inicializar = deserializarProceso(paquete->buffer);
-				cantMemoria -= proceso_A_inicializar->tamanioMemoria;
+				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
+				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
 				if(cantMemoria < 0) {
 					// NO hay memoria para este proceso
 					// enviar a Kernel que no se pudo
-					cantMemoria += proceso_A_inicializar->tamanioMemoria;
+					cantMemoria += proceso_a_inicializar->tamanioMemoria;
 					enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
 				} else {
 					// Hay memoria para este proceso
 					// le mandamos a Kernel el num de tabla de primer nivel
-					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_A_inicializar->pid, proceso_A_inicializar->tamanioMemoria);
+
+					//Agrego el proceso (ver que pasa si hay error aca)
+					agregar_proceso(memoriaDelSistema, proceso_a_inicializar);
+
+					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_A_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
 				break; 
@@ -54,12 +58,20 @@ int manejar_conexion_cliente(int socket_cliente){
 				cantMemoria += proceso_a_finalizar->tamanioMemoria;
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
 
-				// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
-				enviar_proceso_terminado("FINALIZA EL PROCESO", socket_cliente);
-			
-
+				//Elimino el proceso (ver que pasa si hay error acá)
+				int pidParaEliminar = proceso_a_finalizar->pid;
+				int pidEliminado = finalizar_proceso(memoriaDelSistema, pidParaEliminar);
+				if(pidEliminado != -1){
+					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
+					// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
+					enviar_proceso_terminado("FINALIZA EL PROCESO", socket_cliente);
+				}
+				else{
+					log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidEliminado);
+					//Aca hay que ver que pasa en el lado de kernell en el caso de que no se elimine y como avisarles
+					enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
+				}
 				break; 
-
 
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
@@ -104,9 +116,13 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
-	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc, "./PATH_INSTRUCCIONES.txt",logger);
-	log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);
-
+	respuesta->instruccion = obtener_instruccion(memoriaDelSistema, peticion->pid, peticion->pc);
+	if(respuesta->instruccion == NULL){
+	 	log_error(logger, "Instrucción NO ENCONTRADA, verifique PID y PC");
+		return;
+	} 
+	else{log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);}
+	
 	//Serializo la respuesta
 	int size_respuesta;
 	void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);

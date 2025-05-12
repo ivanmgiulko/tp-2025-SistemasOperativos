@@ -19,5 +19,6 @@
 
     // VARIABLES
     int cantMemoria;
+    t_memoriaDelSistema* memoriaDelSistema;
 
 #endif // MEMORIA_H_

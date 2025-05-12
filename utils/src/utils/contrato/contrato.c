@@ -103,50 +103,38 @@ t_respuesta_instruccion* deserializar_respuesta_instruccion(void* stream) {
     return respuesta;
 }
 
-/* t_respuesta_instruccion* deserializar_respuesta_instruccion(void* stream) {
-    t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
+// char* obtener_instruccion(int pid, int pc, char* path_pseudocodigos, t_log* logger_memoria) {
+//     char path_archivo[256];
+//     //sprintf(path_archivo, "%s/%d.txt", path_pseudocodigos, pid);
 
-    int longitud;
-    memcpy(&longitud, stream, sizeof(int));
+//     FILE* archivo = fopen(path_pseudocodigos, "r");
+//     if (archivo == NULL) {
+//         log_error(logger_memoria, "No se pudo abrir el archivo de pseudocodigo: %s", path_archivo);
+//         return strdup("INSTRUCCION_NO_ENCONTRADA");
+//     }
 
-    respuesta->instruccion = malloc(longitud);
-    memcpy(respuesta->instruccion, stream + sizeof(int), longitud);
+//     char* linea = NULL;
+//     size_t len = 0;
+//     int linea_actual = 0;
+//     char* instruccion = NULL;
 
-    return respuesta;
-} */
+//     //Recorre el archivo linea x linea hasta llegar a la linea de pc o acabar las lineas
+//     while (getline(&linea, &len, archivo) != -1) {
+//         if (linea_actual == pc) {
+//             instruccion = strdup(linea);
+//             break;
+//         }
+//         linea_actual++;
+//     }
 
-char* obtener_instruccion(int pid, int pc, char* path_pseudocodigos, t_log* logger_memoria) {
-    char path_archivo[256];
-    //sprintf(path_archivo, "%s/%d.txt", path_pseudocodigos, pid);
+//     fclose(archivo);
+//     if (linea) free(linea);// Verifica que no haga free(NULL)
 
-    FILE* archivo = fopen(path_pseudocodigos, "r");
-    if (archivo == NULL) {
-        log_error(logger_memoria, "No se pudo abrir el archivo de pseudocodigo: %s", path_archivo);
-        return strdup("INSTRUCCION_NO_ENCONTRADA");
-    }
-
-    char* linea = NULL;
-    size_t len = 0;
-    int linea_actual = 0;
-    char* instruccion = NULL;
-
-    //Recorre el archivo linea x linea hasta llegar a la linea de pc o acabar las lineas
-    while (getline(&linea, &len, archivo) != -1) {
-        if (linea_actual == pc) {
-            instruccion = strdup(linea);
-            break;
-        }
-        linea_actual++;
-    }
-
-    fclose(archivo);
-    if (linea) free(linea);// Verifica que no haga free(NULL)
-
-    //Si no encontro la linea ( pc > a cant de lineas)
-    if (!instruccion) {
-        instruccion = strdup("INSTRUCCION_NO_ENCONTRADA");
-    }
+//     //Si no encontro la linea ( pc > a cant de lineas)
+//     if (!instruccion) {
+//         instruccion = strdup("INSTRUCCION_NO_ENCONTRADA");
+//     }
 
 
-    return instruccion;
-}
+//     return instruccion;
+// }

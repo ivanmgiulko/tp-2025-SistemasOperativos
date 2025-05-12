@@ -38,6 +38,10 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 - Código comentado del envío de ejecución de instrucción WRITE a memoria (en progreso)
 - "Sobrio no te puedo ni hablar, estoy perdido sin mi estupidez" tiraba esa no
 
+#47
+- Creación de memoria del sistema para almacenar instrucciones de procesos
+- modificación de case memoria agregar/finalizar proceso e instruccion
+- queda pendiente verificar que este todo ok y ver los casos de error
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 

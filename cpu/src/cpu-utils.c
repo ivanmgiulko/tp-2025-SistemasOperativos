@@ -6,9 +6,6 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
 	sem_wait(&sem_cpu);
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
 
-	//crea la peticion
-    
-
 	//Serializa la petición
 	int size_peticion = 0;
 	void* peticion_serializada = serializar_peticion_instruccion(infoPCB, &size_peticion);
@@ -22,18 +19,6 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
 	log_debug(logger_cpu, "Petición envíada, aguardo respuesta");
 	send(fd_conexion_memoria, peticion_serializada, size_peticion, 0);
 	free(peticion_serializada);
-
-	/* //Recibe la instruccion serializada desde MEMORIA
-	int size_respuesta;
-	log_info(logger_cpu, "Esperando respuesta de memoria");
-	void* buffer_respuesta = recibir_buffer(&size_respuesta, fd_conexion_memoria);
-	
-	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(buffer_respuesta);
- 	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
- 
- 	free(respuesta->instruccion);
- 	free(respuesta);
- 	free(buffer_respuesta); */
 }	
 	
 
