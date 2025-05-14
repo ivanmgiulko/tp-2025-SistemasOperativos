@@ -108,6 +108,8 @@
     t_pcb* push_cola_mutex(t_estado* , t_pcb*);
     
     t_pcb* peek_pcb_en_new();
+
+    t_pcb* peek_cola_mutex(t_estado* cola_mutex);
     
     void pasar_pcb_new_a_ready(t_pcb* pcb);
 
@@ -120,6 +122,8 @@
     bool _tiene_menos_tamanio(void* a, void* b);
 
     void _enviar_proceso_new_a_cola_ready();
+
+    void pasar_pcb_ready_a_exec(t_pcb* pcb);
 
 #endif
 

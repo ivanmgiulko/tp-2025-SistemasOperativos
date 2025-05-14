@@ -45,7 +45,6 @@ int main(int argc, char* argv[]) {
 	
 	// HILOS PARA MANEJAR LAS PETICIONES
 
-	
 	pthread_t hilo_servidor_io;
     pthread_create(&hilo_servidor_io, NULL, (void*)manejar_conexion_kernel_io, NULL);
     pthread_detach(hilo_servidor_io);
@@ -54,11 +53,9 @@ int main(int argc, char* argv[]) {
     pthread_create(&hilo_servidor_kernel_interrupt, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_servidor_kernel_interrupt);
 
-	
 	pthread_t hilo_servidor_kernel_dispatch;
     pthread_create(&hilo_servidor_kernel_dispatch, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
     pthread_detach(hilo_servidor_kernel_dispatch);
-
 
 	pthread_t hilo_planificador_largo_plazo;
  	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largo_plazo, NULL);
