@@ -126,31 +126,60 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
 	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc);
-	if(respuesta->instruccion == NULL){
-	 	log_error(logger, "Instrucción NO ENCONTRADA, verifique PID y PC");
+
+	//Entra a este if cuando el pc es mayor a cant de instrucciones
+	if(strcmp(respuesta->instruccion, "PC FINALIZADO")== 0){
+	
+		log_info(logger, "No hay más instrucciones a ejecutar para este proceso");
+
+		// log_debug(logger, "Serializando paquete:");
+		// log_debug(logger, "Código de operación: %d", FIN_PID);
+
+		//Acá me queda hacer la serialización de un paquete para mandar a cpu el fin pid
+		// int size_respuesta;
+		// void* fin_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
+		// if(respuesta_serializada == NULL) {
+		// 	log_warning(logger, "Error al serializar la respuesta de instruccion");
+		// 	return;
+		// }
+		// log_info(logger, "Enviando PID FINALIZADO a CPU");
+		// int bytes_enviados = send(socket_cliente, paquete_serializado, size_respuesta, 0);
+		// if (bytes_enviados <= 0) {
+		// 	log_error(logger, "Fallo al enviar la instrucción al CPU");
+		// }
+		return;
+	}
+
+	//Entra aca si Memoria del sistema no incializada o pid no encontrado
+	else if(respuesta->instruccion == NULL){
+	 	log_error(logger, "pid no encontrado o memoria_del_sistema/procesos no están inicializados");
 		return;
 	} 
-	else{log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);}
-	
-	//Serializo la respuesta
-	int size_respuesta;
-	void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
-	if(respuesta_serializada == NULL) {
-        log_warning(logger, "Error al serializar la respuesta de instruccion");
-        return;
-	}
-	//log_debug(logger, "Serializando paquete:");
-//	log_debug(logger, "Código de operación: %d", INSTRUCCION);
-//	log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
-	log_debug(logger, "Instrucción: %s", respuesta->instruccion);
 
-	//Envio la instruccion serializada envio a CPU 
-	//log_info(logger, "Size_respuesta= %d", size_respuesta);
-	log_info(logger, "Enviando Instrucción a CPU");
-	int bytes_enviados = send(socket_cliente, respuesta_serializada, size_respuesta, 0);
-	if (bytes_enviados <= 0) {
-		log_error(logger, "Fallo al enviar la instrucción al CPU");
+	//Entra acá si encontro el proceso y la instrucción
+	else{
+		log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);
+		//Serializo la respuesta
+		int size_respuesta;
+		void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
+		if(respuesta_serializada == NULL) {
+			log_warning(logger, "Error al serializar la respuesta de instruccion");
+			return;
+		}
+		log_debug(logger, "Serializando paquete:");
+		log_debug(logger, "Código de operación: %d", INSTRUCCION);
+		log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
+		log_debug(logger, "Instrucción: %s", respuesta->instruccion);
+
+		//Envio la instruccion serializada envio a CPU 
+		//log_info(logger, "Size_respuesta= %d", size_respuesta);
+		log_info(logger, "Enviando Instrucción a CPU");
+		int bytes_enviados = send(socket_cliente, respuesta_serializada, size_respuesta, 0);
+		if (bytes_enviados <= 0) {
+			log_error(logger, "Fallo al enviar la instrucción al CPU");
+		}
 	}
+
 	//Libero memoria
     free(peticion);
 	free(respuesta->instruccion);
