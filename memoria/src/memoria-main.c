@@ -6,8 +6,8 @@ int main(int argc, char* argv[]) {
     logger_memoria = log_create("./memoria.log", "log", true, LOG_LEVEL_TRACE);
     t_memoria_config* config_memoria = crear_config_memoria("./memoria.config", logger_memoria);
     cantMemoria = atoi(config_memoria->TAM_MEMORIA);
-    memoriaDelSistema = malloc(sizeof(t_memoriaDelSistema));
-    *memoriaDelSistema = crear_memoria_del_sistema();
+    memoria_del_sistema = malloc(sizeof(t_memoria_del_sistema));
+    *memoria_del_sistema = crear_memoria_del_sistema();
 
     puerto_servidor_memoria = config_memoria->PUERTO_ESCUCHA;
 

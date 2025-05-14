@@ -31,10 +31,13 @@ int manejar_conexion_cliente(int socket_cliente){
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 
 				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
+				log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
+				log_debug(logger_memoria, "Cantidad de memoria despues: %d", cantMemoria);
 				if(cantMemoria < 0) {
 					// NO hay memoria para este proceso
 					// enviar a Kernel que no se pudo
+					log_info(logger_memoria, "No se puedo crear el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
 					cantMemoria += proceso_a_inicializar->tamanioMemoria;
 					enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
 				} else {
@@ -43,7 +46,7 @@ int manejar_conexion_cliente(int socket_cliente){
 
 					//Agrego el proceso (ver que pasa si hay error aca)
 					agregar_proceso(proceso_a_inicializar);
-
+					//falta agregar caso de error para el log
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}

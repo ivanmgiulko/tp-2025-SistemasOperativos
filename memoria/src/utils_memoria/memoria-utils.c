@@ -1,8 +1,8 @@
 #include "memoria-utils.h"
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
-t_memoriaDelSistema crear_memoria_del_sistema() {
-    t_memoriaDelSistema memoria;
-    memoria.procesos = malloc(sizeof(t_procesoEnMemoria)); 
+t_memoria_del_sistema crear_memoria_del_sistema() {
+    t_memoria_del_sistema memoria;
+    memoria.procesos = malloc(sizeof(t_proceso_en_memoria)); 
     memoria.cant_procesos = 0;
     return memoria;
 }
@@ -101,7 +101,7 @@ t_memoriaDelSistema crear_memoria_del_sistema() {
 //         return;
 //     }
 
-//     t_procesoEnMemoria* temp = realloc(memoriaDelSistema->procesos, (memoriaDelSistema->cant_procesos + 1) * sizeof(t_procesoEnMemoria));
+//     t_proceso_en_memoria* temp = realloc(memoria_del_sistema->procesos, (memoria_del_sistema->cant_procesos + 1) * sizeof(t_proceso_en_memoria));
 //     if (!temp) {
 //         log_error(logger_memoria, "Error al reasignar memoria para procesos");
 //         for (int i = 0; i < cant_inst; i++) {
@@ -110,22 +110,32 @@ t_memoriaDelSistema crear_memoria_del_sistema() {
 //         free(instrucciones);
 //         return;
 //     }
-//     memoriaDelSistema->procesos = temp;
+//     memoria_del_sistema->procesos = temp;
 
-//     t_procesoEnMemoria nuevoProceso;
+//     t_proceso_en_memoria nuevoProceso;
 //     nuevoProceso.pid = pcb->pid;
 //     nuevoProceso.instrucciones = instrucciones;
 //     nuevoProceso.cant_instrucciones = cant_inst;
 
-//     memoriaDelSistema->procesos[memoriaDelSistema->cant_procesos] = nuevoProceso;
-//     memoriaDelSistema->cant_procesos++;
+//     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
+//     memoria_del_sistema->cant_procesos++;
 // }
 
 //hehco por nosotros
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-   // pathArchivoPseudocodigo = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
+    pathArchivoPseudocodigo = "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
+    //esto lo use para probar algo ignorar /borrar cuando este todo ok (lean)
+    // FILE* test = fopen("/home/utnso/tp-2025-1c-FAMILIA-MATRIX/memoria/PATH_INSTRUCCIONES.txt", "r");
+    // if (!test) {
+    //     perror("Test fopen directa");
+    //     return NULL;
+    // } else {
+    //     log_debug(logger_memoria, "fopen directa FUNCIONÓ.");
+    //     fclose(test);
+    //     return NULL;
+    // }
     FILE* archivo = fopen(pathArchivoPseudocodigo, "r");
     if (!archivo) {
         perror("Error abriendo archivo de pseudocodigo");
@@ -162,27 +172,31 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
 
 void agregar_proceso(t_pcbMemoria* pcb) {
     int cant_inst = 0;
+    log_debug(logger_memoria, "Path recibido en PCB: %s", pcb->pathArchivoPseudocodigo);
     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
     
-    if (!instrucciones) return;
+    if (!instrucciones){
+        log_error(logger_memoria, "Error al cargar instrucciones, falla al crear proceso");
+        return;
+    } 
 
-    memoriaDelSistema->procesos = realloc(memoriaDelSistema->procesos, (memoriaDelSistema->cant_procesos + 1) * sizeof(t_procesoEnMemoria));
+    memoria_del_sistema->procesos = realloc(memoria_del_sistema->procesos, (memoria_del_sistema->cant_procesos + 1) * sizeof(t_proceso_en_memoria));
 
-    t_procesoEnMemoria nuevoProceso;
+    t_proceso_en_memoria nuevoProceso;
     nuevoProceso.pid = pcb->pid;
     nuevoProceso.instrucciones = instrucciones;
     nuevoProceso.cant_instrucciones = cant_inst;
 
-    memoriaDelSistema->procesos[memoriaDelSistema->cant_procesos] = nuevoProceso;
-    memoriaDelSistema->cant_procesos++;
+    memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
+    memoria_del_sistema->cant_procesos++;
 }
 
 int finalizar_proceso(int pid) {
     int encontrado = -1;
 
     // Buscar el proceso por PID
-    for (int i = 0; i < memoriaDelSistema->cant_procesos; i++) {
-        if (memoriaDelSistema->procesos[i].pid == pid) {
+    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
+        if (memoria_del_sistema->procesos[i].pid == pid) {
             encontrado = i;
             break;
         }
@@ -194,24 +208,24 @@ int finalizar_proceso(int pid) {
     }
 
     // Liberar instrucciones del proceso
-    for (int j = 0; j < memoriaDelSistema->procesos[encontrado].cant_instrucciones; j++) {
-        free(memoriaDelSistema->procesos[encontrado].instrucciones[j]);
+    for (int j = 0; j < memoria_del_sistema->procesos[encontrado].cant_instrucciones; j++) {
+        free(memoria_del_sistema->procesos[encontrado].instrucciones[j]);
     }
-    free(memoriaDelSistema->procesos[encontrado].instrucciones);
+    free(memoria_del_sistema->procesos[encontrado].instrucciones);
 
     // Desplazar los procesos siguientes para llenar el hueco
-    for (int i = encontrado; i < memoriaDelSistema->cant_procesos - 1; i++) {
-        memoriaDelSistema->procesos[i] = memoriaDelSistema->procesos[i + 1];
+    for (int i = encontrado; i < memoria_del_sistema->cant_procesos - 1; i++) {
+        memoria_del_sistema->procesos[i] = memoria_del_sistema->procesos[i + 1];
     }
 
-    memoriaDelSistema->cant_procesos--;
+    memoria_del_sistema->cant_procesos--;
 
     // Redimensionar el array de procesos si hay procesos restantes
-    if (memoriaDelSistema->cant_procesos > 0) {
-        memoriaDelSistema->procesos = realloc(memoriaDelSistema->procesos, memoriaDelSistema->cant_procesos * sizeof(t_procesoEnMemoria));
+    if (memoria_del_sistema->cant_procesos > 0) {
+        memoria_del_sistema->procesos = realloc(memoria_del_sistema->procesos, memoria_del_sistema->cant_procesos * sizeof(t_proceso_en_memoria));
     } else {
-        free(memoriaDelSistema->procesos);
-        memoriaDelSistema->procesos = NULL;
+        free(memoria_del_sistema->procesos);
+        memoria_del_sistema->procesos = NULL;
     }
 
     //printf("Proceso con PID %d liberado correctamente.\n", pid);
@@ -220,35 +234,31 @@ int finalizar_proceso(int pid) {
 
 char* obtener_instruccion(int pid, int pc) {
     log_debug(logger_memoria, "ENTRA A OBTENER INSTRUCCION PID %d PC %d", pid, pc);
-    if (memoriaDelSistema == NULL || memoriaDelSistema->procesos == NULL) {
-        log_error(logger_memoria, "memoriaDelSistema o procesos no están inicializados");
+    if (memoria_del_sistema == NULL || memoria_del_sistema->procesos == NULL) {
+        log_error(logger_memoria, "memoria_del_sistema o procesos no están inicializados");
         return NULL;
     }
+    log_debug(logger_memoria, "Cant de procesos actual: %d", memoria_del_sistema->cant_procesos);
    // if(pc <0) return NULL; // PC inválido
-    for (int i = 0; i < memoriaDelSistema->cant_procesos; i++) {
-        if (memoriaDelSistema->procesos[i].pid == pid) {
+    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
+        if (memoria_del_sistema->procesos[i].pid == pid) {
             log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
-            if (pc < memoriaDelSistema->procesos[i].cant_instrucciones) {
-                return memoriaDelSistema->procesos[i].instrucciones[pc];
+            if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
+                return memoria_del_sistema->procesos[i].instrucciones[pc];
             } else {
-                log_debug(logger_memoria, "PID %d no encontrado", memoriaDelSistema->procesos[i].pid);
-                log_debug(logger_memoria, "PID %d no encontrado", memoriaDelSistema->procesos[i].cant_instrucciones);
-                log_debug(logger_memoria, "PID %d no encontrado", memoriaDelSistema->cant_procesos);
-                log_debug(logger_memoria, "PID %s no encontrado", memoriaDelSistema->procesos[i].instrucciones[pc]);
+                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->procesos[i].pid);
+                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->procesos[i].cant_instrucciones);
+                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->cant_procesos);
+                log_debug(logger_memoria, "PID %s no encontrado", memoria_del_sistema->procesos[i].instrucciones[pc]);
                 return NULL; // PC inválido
             }
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoriaDelSistema->procesos[i].pid);
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoriaDelSistema->procesos[i].cant_instrucciones);
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoriaDelSistema->cant_procesos);
-                log_debug(logger_memoria, "1er if PID %s no encontrado", memoriaDelSistema->procesos[i].instrucciones[pc]);
+                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->procesos[i].pid);
+                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->procesos[i].cant_instrucciones);
+                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->cant_procesos);
+                log_debug(logger_memoria, "1er if PID %s no encontrado", memoria_del_sistema->procesos[i].instrucciones[pc]);
         }
-        
-        log_debug(logger_memoria, "for PID %d no encontrado", memoriaDelSistema->procesos[i].pid);
-        log_debug(logger_memoria, "for PID %d no encontrado", memoriaDelSistema->procesos[i].cant_instrucciones);
-        log_debug(logger_memoria, "for PID %d no encontrado", memoriaDelSistema->cant_procesos);
-        log_debug(logger_memoria, "for PID %s no encontrado", memoriaDelSistema->procesos[i].instrucciones[pc]);
     }
     log_error(logger_memoria, "PID %d no encontrado", pid);
-    log_error(logger_memoria, "cant procesos: %d", memoriaDelSistema->cant_procesos);
+    log_error(logger_memoria, "cant procesos: %d", memoria_del_sistema->cant_procesos);
     return NULL; // PID no encontrado
 }
