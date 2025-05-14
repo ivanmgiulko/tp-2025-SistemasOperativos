@@ -206,8 +206,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 		case INSTR_GOTO:
 			log_info(logger_cpu, "Ejecutando instrucción GOTO con parametros %d",
 				instruccion->parametros.go_to.valor);
-                pcb_actual->pc = instruccion->parametros.go_to.valor;
-
+              //  pcb_actual->pc = instruccion->parametros.go_to.valor;
+                pcb_actual->pc++;
 			break;
 
 			////////////////////////////
@@ -241,9 +241,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
 			break;
 	}
-    // sem_post(&sem_cpu);
-    // log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
-    // pedir_instruccion_a_memoria(pcb_actual); 
+    sem_post(&sem_cpu);
+    log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
+    pedir_instruccion_a_memoria(pcb_actual); 
     
 }
 

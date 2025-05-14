@@ -124,18 +124,10 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
 //hehco por nosotros
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-    pathArchivoPseudocodigo = "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
+   // pathArchivoPseudocodigo = "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
     //esto lo use para probar algo ignorar /borrar cuando este todo ok (lean)
-    // FILE* test = fopen("/home/utnso/tp-2025-1c-FAMILIA-MATRIX/memoria/PATH_INSTRUCCIONES.txt", "r");
-    // if (!test) {
-    //     perror("Test fopen directa");
-    //     return NULL;
-    // } else {
-    //     log_debug(logger_memoria, "fopen directa FUNCIONÓ.");
-    //     fclose(test);
-    //     return NULL;
-    // }
+   
     FILE* archivo = fopen(pathArchivoPseudocodigo, "r");
     if (!archivo) {
         perror("Error abriendo archivo de pseudocodigo");
@@ -239,23 +231,14 @@ char* obtener_instruccion(int pid, int pc) {
         return NULL;
     }
     log_debug(logger_memoria, "Cant de procesos actual: %d", memoria_del_sistema->cant_procesos);
-   // if(pc <0) return NULL; // PC inválido
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
         if (memoria_del_sistema->procesos[i].pid == pid) {
             log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
             if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
                 return memoria_del_sistema->procesos[i].instrucciones[pc];
-            } else {
-                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->procesos[i].pid);
-                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->procesos[i].cant_instrucciones);
-                log_debug(logger_memoria, "PID %d no encontrado", memoria_del_sistema->cant_procesos);
-                log_debug(logger_memoria, "PID %s no encontrado", memoria_del_sistema->procesos[i].instrucciones[pc]);
-                return NULL; // PC inválido
-            }
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->procesos[i].pid);
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->procesos[i].cant_instrucciones);
-                log_debug(logger_memoria, "1er if PID %d no encontrado", memoria_del_sistema->cant_procesos);
-                log_debug(logger_memoria, "1er if PID %s no encontrado", memoria_del_sistema->procesos[i].instrucciones[pc]);
+            } else {  
+                return NULL; 
+            }            
         }
     }
     log_error(logger_memoria, "PID %d no encontrado", pid);

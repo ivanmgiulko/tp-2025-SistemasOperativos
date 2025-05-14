@@ -24,7 +24,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				recibir_mensaje(socket_cliente, logger_memoria);
 				break;
 				
-        	case PROCESO_MEMORIA:
+			case PROCESO_MEMORIA:
 				
 				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
@@ -50,6 +50,11 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
+
+				// Liberar memoria del paquete recibido
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break; 
 
 			case PROCESO_FINALIZAR:
