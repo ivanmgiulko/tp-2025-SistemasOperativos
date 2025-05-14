@@ -30,7 +30,7 @@
         pthread_mutex_t mutex;
     } t_estado;
 
-    extern t_estado* estado_new;
+    extern t_estado* estado_new;        
     extern t_estado* estado_ready;
     extern t_estado* estado_susp_ready;
     extern t_estado* estado_exec;
@@ -43,7 +43,6 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_hay_espacio_en_memoria;
     
-
     /**
 	* @brief Inicializa el struct t_estado
 	* @returns un t_struct relacionado al manejo de colas
@@ -95,35 +94,86 @@
 	*/
     void encolar_pcb(t_estado* estado , t_pcb* pcb);
 
-    t_pcb* crear_proceso_cero(char*, int);
+    /**
+	* @brief crea el proceso 0, que es pasado por parametro por el ./bin/kernel
+    * @param char* path del archivo de pseudocodigo del proceso 0
+    * @param int tamanio en memoria del proceso 0
+    * @return retorna el proceso 0 
+	*/
+    void crear_proceso_cero(char*, int);
 
-    void pasar_pcb_a_new(t_pcb*);
-
+    
+    /**
+	* @brief inicializa el pid_contador en 0 para ser puesto en los procesos
+	*/
     void inicializar_pid();
 
+    /**
+	* @brief le asigna al proceso que le invoca un PID
+    * @return devuelve el valor del PID de manera thread-safe
+	*/
     int asignar_pid();
 
+    /**
+	* @brief quita el primer elemento de la cola del estado que le pasemos por parametro
+    * @param t_estado estado del cual agarramos la cola y sacamos el primer proceso
+    * @return devuelve el proceso sacado 
+	*/
     t_pcb* pop_cola_mutex(t_estado*);
 
-    t_pcb* push_cola_mutex(t_estado* , t_pcb*);
     
+    /**
+	* @brief agarra el primer proceso en la cola del estado NEW
+    * @return devuelve el primer proceso en la cola NEW
+	*/
     t_pcb* peek_pcb_en_new();
 
+    /**
+	* @brief agarra el primer proceso en la cola del estado que le pasemos
+    * @return devuelve el primer proceso en la cola que le pasamos por parametro
+	*/
     t_pcb* peek_cola_mutex(t_estado* cola_mutex);
     
+    /**
+	* @brief pasa el proceso que le pasemos por parametro al estado NEW
+    * @param t_pcb* proceso que va a ser pasado a NEW
+	*/
+    void pasar_pcb_a_new(t_pcb*);
+
+    /**
+	* @brief pasa el proceso que le pasemos por parametro del estado NEW a READY
+    * @param t_pcb* proceso que va a ser pasado a READY
+	*/
     void pasar_pcb_new_a_ready(t_pcb* pcb);
 
+    /**
+	* @brief pasa el proceso que le pasemos por parametro del estado READY a EXEC
+    * @param t_pcb* proceso que va a ser pasado a EXEC
+	*/
+    void pasar_pcb_ready_a_exec(t_pcb* pcb);
+
+    /**
+	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta
+    * @return devuelve TRUE si estaba vacia, o FALSE si no lo estaba.
+	*/
     bool verificar_cola_new_estaba_vacia();
 
-    void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente);
-
+    /**
+	* @brief Le pregunta a la memoria si tiene espacio para enviar un proceso a la cola de READY
+    * @return devuelve TRUE si es que hay espacio, o FALSE si no lo hay.
+	*/
     bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new);
 
+    /**
+	* @brief Funcion utilizada en el algoritmo PMCP para ordenar la cola del estado NEW en relacion al tamnio de los procesos
+    * @return devuelve TRUE cuando un proceso tiene menso tamanio que otro, o FALSO en el caso contrario.
+	*/
     bool _tiene_menos_tamanio(void* a, void* b);
 
+    /**
+	* @brief Manda un proceso a la cola de NEW teniendo en cuenta el algortimo de ingreso a ready y si hay tamanio en la memoria
+	*/
     void _enviar_proceso_new_a_cola_ready();
-
-    void pasar_pcb_ready_a_exec(t_pcb* pcb);
 
 #endif
 

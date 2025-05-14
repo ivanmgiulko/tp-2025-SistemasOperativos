@@ -83,6 +83,7 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
             
             // Recibo prooceso desde CPU deserializado
             t_pcb* proceso_prueba_syscall = proceso_syscall_prueba(paquete->buffer);
+            // Observacion: este proceso no tiene iniciada las metricas, habria que ver como usar la funcion "iniciarPCB"
             
             // Pasamos procesos que llegan desde CPU (SYSCALL INIT_PROC) a NEW
             pasar_pcb_a_new(proceso_prueba_syscall);

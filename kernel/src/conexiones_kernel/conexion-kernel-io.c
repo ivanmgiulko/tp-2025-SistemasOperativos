@@ -43,7 +43,7 @@ int manejar_conexion_kernel_io(){
 			paquete->buffer->stream = malloc(paquete->buffer->size);
 			recv(socket_io, paquete->buffer->stream, paquete->buffer->size, 0);
 
-			uint8_t pid_desbloqueado = recibir_proceso_bloqueado(paquete->buffer);
+			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
 			// Sacar el proceso de bloqueado y mandar a Ready
 
@@ -61,7 +61,7 @@ int manejar_conexion_kernel_io(){
 	return EXIT_SUCCESS;
 }
 
-void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente) { 
+void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente) { 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
     buffer->size = sizeof(uint8_t) + sizeof(int64_t);
     buffer->stream = malloc(buffer->size);
@@ -87,11 +87,57 @@ void enviar_proceso_a_io(uint8_t pid, int64_t tiempo, int socket_cliente) {
     free(paquete);
 }
 
-uint8_t recibir_proceso_bloqueado(t_buffer* buffer) { 
+uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) { 
 	uint8_t* pid = malloc(sizeof(uint8_t));
     void* stream = buffer->stream;
 
     memcpy(&(pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
     
     return pid;
+}
+
+t_list* lista_de_io = NULL;
+
+void inicializar_lista_io() {
+    lista_de_io = list_create();
+    log_info(logger_kernel, "Lista de IO inicializada");
+}
+
+void inicializar_io(char* nombre_io, int socket_io) {
+    
+    t_io* io = malloc(sizeof(t_io));
+    io->nombre = nombre_io;
+    io->procesos = list_create();
+    io->socket = socket_io;
+    list_add(lista_de_io, io);
+
+    t_io* io_prueba = malloc(sizeof(t_io));
+    io_prueba->nombre = "MOUSE";
+    io_prueba->procesos = list_create();
+    io_prueba->socket = 100;
+    list_add(lista_de_io, io_prueba);
+
+    log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
+    // t_io* io_encontrado = list_get(lista_de_io, 0);
+    // log_info(logger_kernel, "Nombre %s", io_encontrado->nombre);
+ }
+
+t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
+    bool _es_el_io(void* elemento) {
+        t_io* io = (t_io*) elemento;
+        return string_contains(io->nombre, nombre_io);
+    }
+
+    return list_find(lista_de_io, _es_el_io);
+}
+
+bool funcion_syscall_IO(char* nombreInterfaz, int64_t tiempo) { 
+    t_io* io_buscada = buscar_io(lista_de_io, nombreInterfaz);
+    if(io_buscada == NULL) {
+        log_trace(logger_kernel, "No existe la interfaz MOUSE");
+        return false;
+    } else {
+        log_trace(logger_kernel, "existe la interfaz MOUSE");
+        return true;
+    }
 }

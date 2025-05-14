@@ -1,4 +1,4 @@
-#include "conexion-k-memoria.h"
+#include "conexion-kernel-memoria.h"
 
 void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente)
 {

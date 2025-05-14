@@ -11,7 +11,7 @@
     #include "config_kernel/kernel-config.h"
     #include "planificador_kernel/kernel-planificador.h"
     #include "utils_kernel/kernel-utils.h"
-    #include "conexiones_kernel/conexion-k-memoria.h"
+    #include "conexiones_kernel/conexion-kernel-memoria.h"
     #include "conexiones_kernel/conexion-kernel-cpu.h"
     #include "conexiones_kernel/conexion-kernel-io.h"
 
@@ -24,9 +24,6 @@
      * @note El manejo de errores relacionados a todos los structs, variables, etc; es contemplado en los archivos que utilizan
      *       los dichos tipos de datos. 
 	 */ 
-
-    
-
 
     // CONFIG
     extern t_kernel_config* configuracion_kernel;

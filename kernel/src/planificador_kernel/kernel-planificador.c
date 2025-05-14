@@ -1,6 +1,5 @@
 #include "kernel-planificador.h"
 
-
 void decir_algoritmo(){
     printf("%s", configuracion_kernel->ALGORITMO_INGRESO_A_READY);
 }
@@ -13,30 +12,30 @@ t_estado* estado_blocked;
 t_estado* estado_susp_blocked;
 t_estado* estado_exit;
 
-t_contador* pid;
+t_contador* pid_contador;
 
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_hay_espacio_en_memoria;
 
-t_pcb* crear_proceso_cero(char* path, int tamanio){
+void crear_proceso_cero(char* path, int tamanio){
     
     inicializar_pid();
   	t_pcb* proceso_ejemplo = iniciarPCB(path ,tamanio, asignar_pid());
 
     pasar_pcb_a_new(proceso_ejemplo);
 	log_info(logger_kernel,"## %d Se crea el proceso - Estado: NEW", proceso_ejemplo->pid);
-    return proceso_ejemplo;
+    
 }
 
 void inicializar_pid(){
-   pid = inicializar_contador();
+   pid_contador = inicializar_contador();
 }
 
 int asignar_pid(){
-    pthread_mutex_lock(&pid->mutex);
-    int valor_pid = pid->valor++;
-    pthread_mutex_unlock(&pid->mutex);
+    pthread_mutex_lock(&pid_contador->mutex);
+    int valor_pid = pid_contador->valor++;
+    pthread_mutex_unlock(&pid_contador->mutex);
     return valor_pid;
 }
 
@@ -151,13 +150,13 @@ void iniciar_planificador_corto_plazo(){
 
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
-        //  Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
+            // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
             t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
             bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
             if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
                 log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcb_en_ready->pid, io_recibida_cpu->dispositivo);    
                 // sacar de exec y mandar a blocked
-                enviar_proceso_a_io(pcb_en_ready->pid, io_recibida_cpu->tiempo, socket_io);
+                enviar_proceso_a_io_para_bloqueo(pcb_en_ready->pid, io_recibida_cpu->tiempo, socket_io);
             } else {
                 log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
             }
@@ -176,12 +175,7 @@ bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new)
     return manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }
 
-void encolar_pcb(t_estado* estado, t_pcb* pcb) 
-{
-    pthread_mutex_lock(&(estado->mutex));
-    list_add(estado->cola, pcb);
-    pthread_mutex_unlock(&(estado->mutex));
-}
+
 
 bool verificar_cola_new_estaba_vacia() 
 {
@@ -191,9 +185,10 @@ bool verificar_cola_new_estaba_vacia()
     return cola_vacia;
 }
 
-void  pasar_pcb_a_new(t_pcb* pcb) 
+void pasar_pcb_a_new(t_pcb* pcb) 
 {
     encolar_pcb(estado_new, pcb);
+    pcb->estadoProceso = NEW;
     log_info(logger_kernel, "## %d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
 }
@@ -201,6 +196,7 @@ void  pasar_pcb_a_new(t_pcb* pcb)
 void pasar_pcb_new_a_ready(t_pcb* pcb)
 { 
     encolar_pcb(estado_ready, pcb);
+    pcb->estadoProceso = READY;
     log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
@@ -208,6 +204,7 @@ void pasar_pcb_new_a_ready(t_pcb* pcb)
 void pasar_pcb_ready_a_exec(t_pcb* pcb) 
 { 
     encolar_pcb(estado_exec, pcb);
+    pcb->estadoProceso = EXEC;
     log_info(logger_kernel, "## %d Pasa del estado READY al estado EXEC", pcb->pid);
 }
 
@@ -228,12 +225,11 @@ t_pcb* pop_cola_mutex(t_estado* cola_mutex)
     return pcb;
 }
 
-t_pcb* push_cola_mutex(t_estado* cola_mutex, t_pcb* pcb) 
+void encolar_pcb(t_estado* estado, t_pcb* pcb) 
 {
-    pthread_mutex_lock(&(cola_mutex->mutex));
-    list_add(cola_mutex->cola, pcb);
-    pthread_mutex_unlock(&(cola_mutex->mutex));
-    return pcb;
+    pthread_mutex_lock(&(estado->mutex));
+    list_add(estado->cola, pcb);
+    pthread_mutex_unlock(&(estado->mutex));
 }
 
 t_pcb* peek_cola_mutex(t_estado* cola_mutex) 

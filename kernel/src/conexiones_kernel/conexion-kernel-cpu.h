@@ -2,8 +2,7 @@
 #define CONEXION_KERNEL_CPU_H_
 
     #include "kernel-gestor.h"
-	#include "io_kernel/kernel-io.h"
-	
+	#include "conexion-kernel-io.h"
 
     /**
 	 * @file
@@ -19,13 +18,11 @@
     // Funciones 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde el CPU Interrupt
-    *
 	*/
     void manejar_conexion_kernel_interrupt();
 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde el CPU Dispatch
-    *
 	*/
     void manejar_conexion_kernel_dispatch();
 
@@ -39,14 +36,28 @@
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde el CPU - Dispatch
 	* @param void*: Socket de escucha de CPU - Dispatch 
-	* @returns 
 	*/
     void* manejar_cliente_dispatch(void* socket_cliente_ptr);
 
+	/**
+	* @brief envia el proceso a CPU (via dispatch) para que este lo manipule como se debe
+	* @param t_peticion_instruccion*: PID y PC del proceso
+	* @param int*: Socket de escucha de CPU - Dispatch 
+	*/
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
+	/**
+	* @brief recibe la SYSCALL IO enviada desde el CPU
+	* @param t_buffer*: Contenido de la interfaz a recibir
+	* @return devuelve la interfaz a la que llama el proceso desde CPU
+	*/
 	t_param_io* deserializar_syscall_io(t_buffer* buffer);
 
+	/**
+	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC
+	* @param t_buffer*: Contenido del proceso a poner en NEW
+	* @return devuelve un proceso creado a raiz de la syscall
+	*/
 	t_pcb* proceso_syscall_prueba(t_buffer* buffer);
 
 #endif // CONEXION_KERNEL_CPU_H_
