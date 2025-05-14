@@ -35,10 +35,7 @@ void inicializar_pid(){
 
 int asignar_pid(){
     pthread_mutex_lock(&pid->mutex);
-    log_trace(logger_kernel, "valor_pid variable kernel: %d", pid->valor);
-    int valor_pid = ++pid->valor;
-    log_trace(logger_kernel, "valor_pid variable kernel: %d", pid->valor);
-    log_trace(logger_kernel, "valor_pid asignado: %d", valor_pid);
+    int valor_pid = pid->valor++;
     pthread_mutex_unlock(&pid->mutex);
     return valor_pid;
 }
@@ -88,6 +85,21 @@ void iniciar_planificacion_largo_plazo(){
 	pthread_detach(hilo_planificador_mediano_plazo);
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
+
+
+        t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 1000, asignar_pid());
+        pasar_pcb_a_new(proceso_ejemplo1);
+
+        t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid());
+        pasar_pcb_a_new(proceso_ejemplo2);
+
+        t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 300, asignar_pid());
+        pasar_pcb_a_new(proceso_ejemplo3);
+
+        t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 1500, asignar_pid());
+        pasar_pcb_a_new(proceso_ejemplo4);
+
+
 
     while(1){
 
@@ -142,15 +154,15 @@ void iniciar_planificador_corto_plazo(){
             
           
         //  Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-            t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
-            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
-            if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-                log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
-                // sacar de exec y mandar a blocked
-                enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
-            } else {
-                log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
-            }
+            // t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
+            // bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
+            // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+            //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcbEnReady->pid, io_recibida_cpu->dispositivo);    
+            //     // sacar de exec y mandar a blocked
+            //     enviar_proceso_a_io(pcbEnReady->pid, io_recibida_cpu->tiempo, socket_io);
+            // } else {
+            //     log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
+            // }
         }
     }
 }

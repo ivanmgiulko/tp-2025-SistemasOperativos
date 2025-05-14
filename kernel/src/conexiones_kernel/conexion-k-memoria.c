@@ -47,9 +47,15 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 		case PROCESO_FINALIZADO:
 			char* validacion_proceso = recibir_respuestaMemoria(socket_cliente);
-			// Simula que llega el proceso 0
-			log_info(logger_kernel, "## 0 - Finaliza el proceso");
-			sem_post(&sem_hay_espacio_en_memoria);
+			log_warning(logger_kernel, "ME LLEGO EL PROCESO TERMINADO!");
+
+			
+			// // Simula que llega el proceso 0
+			// log_info(logger_kernel, "## 0 - Finaliza el proceso");
+			// sem_post(&sem_hay_espacio_en_memoria);
+
+
+
 
 			//case RESPUESTA_SYSCALL_EXIT:
 			// DAMOS DE BAJA EL PROCESO Y EL PCB ASOCIADOs

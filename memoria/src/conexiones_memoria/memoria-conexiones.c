@@ -50,6 +50,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				break; 
 
 			case PROCESO_FINALIZAR:
+			
 				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);

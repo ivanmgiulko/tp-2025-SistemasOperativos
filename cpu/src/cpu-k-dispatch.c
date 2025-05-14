@@ -30,11 +30,11 @@ int manejar_conexion_kernel_dispatch(){
 
 				/* PRUEBA DE SYSCALL_IO CON KERNEL*/
 				//El proceso debe realizar una IO ahora:
-				t_param_io* pruebaIO = malloc(sizeof(t_param_io));
-				pruebaIO->dispositivo = string_duplicate("MOUSE");
-				pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
-				pruebaIO->tiempo = 2500000;
-				enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
+				// t_param_io* pruebaIO = malloc(sizeof(t_param_io));
+				// pruebaIO->dispositivo = string_duplicate("MOUSE");
+				// pruebaIO->dispositivo_length = string_length(pruebaIO->dispositivo);
+				// pruebaIO->tiempo = 2500000;
+				// enviar_io_kernel(*pruebaIO, fd_conexion_kernel_dispatch);
 
 				/* PRUEBA DE SYSCALL_PROC_INIC CON KERNEL*/
 				// t_param_init_proc* prueba_proceso_new1 = malloc(sizeof(t_param_init_proc));
@@ -58,9 +58,9 @@ int manejar_conexion_kernel_dispatch(){
 				// enviar_syscall_init_proc_kernel(*prueba_proceso_new4, fd_conexion_kernel_dispatch);
 
 				// /* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
-				// enviar_syscall_exit("finaliza el proceso1", fd_conexion_kernel_dispatch);
+				log_debug(logger_cpu, "TENGO UN PROCESO EN CPU QUE ME LLEGO DESDE KERNEL");
+				enviar_syscall_exit("finaliza el proceso", fd_conexion_kernel_dispatch);
 				
-
 				break;
 
 			case INSTRUCCION:
