@@ -58,7 +58,6 @@ int manejar_conexion_kernel_dispatch(){
 				// enviar_syscall_init_proc_kernel(*prueba_proceso_new4, fd_conexion_kernel_dispatch);
 
 				// /* PRUEBA DE SYSCALL_EXIT CON KERNEL*/
-				log_debug(logger_cpu, "TENGO UN PROCESO EN CPU QUE ME LLEGO DESDE KERNEL");
 				enviar_syscall_exit("finaliza el proceso", fd_conexion_kernel_dispatch);
 				
 				break;

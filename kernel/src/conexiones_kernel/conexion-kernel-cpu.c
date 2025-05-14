@@ -91,8 +91,6 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 
         case SYSCALL_EXIT:
 
-            log_debug(logger_kernel, "TENGO UN PROCESO QUE ME LLEGO DESDE CPU PARA FINALIZARLO");
-
             recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
 			paquete->buffer->stream = malloc(paquete->buffer->size);
 			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
@@ -105,7 +103,7 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 
             enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
 
-            // manejar_conexion_kernel_memoria(fd_conexion_memoria);
+            manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
             break;
 

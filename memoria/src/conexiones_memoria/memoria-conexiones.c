@@ -50,7 +50,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				break; 
 
 			case PROCESO_FINALIZAR:
-			
+
 				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
@@ -65,7 +65,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				if(pidEliminado != -1){
 					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 					// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
-					enviar_proceso_terminado("FINALIZA EL PROCESO", socket_cliente);
+					enviar_proceso_a_finalizar_kernel(*proceso_a_finalizar, socket_cliente);
 				}
 				else{
 					log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);

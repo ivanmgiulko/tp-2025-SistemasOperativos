@@ -28,8 +28,10 @@ char* recibir_respuestaMemoria(int socket_cliente) {
 
 int manejar_conexion_kernel_memoria(int socket_cliente){
 	while (1) {
-		int cod_op = recibir_operacion(socket_cliente);
-		switch (cod_op) {
+		t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente, logger_kernel);
 			break;
@@ -46,22 +48,16 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case PROCESO_FINALIZADO:
-			char* validacion_proceso = recibir_respuestaMemoria(socket_cliente);
-			log_warning(logger_kernel, "ME LLEGO EL PROCESO TERMINADO!");
-
+			recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 			
-			// // Simula que llega el proceso 0
-			// log_info(logger_kernel, "## 0 - Finaliza el proceso");
-			// sem_post(&sem_hay_espacio_en_memoria);
+			t_pcbMemoria* proceso_finalizado = deserializarProceso(paquete->buffer);
 
+			log_info(logger_kernel, "## %d - Finaliza el proceso", proceso_finalizado->pid);
+			sem_post(&sem_hay_espacio_en_memoria);
 
-
-
-			//case RESPUESTA_SYSCALL_EXIT:
-			// DAMOS DE BAJA EL PROCESO Y EL PCB ASOCIADOs
-			// sem_post(&sem_hay_espacio_en_memoria);
-			//break;
-
+			return EXIT_SUCCESS;
 			break;
 		
 		case -1:
