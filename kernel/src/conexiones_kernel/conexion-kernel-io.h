@@ -8,6 +8,8 @@
 	 * @brief #include "conexiones_kernel/conexion-kernel-io.h"
 	 */
 
+	extern t_list* lista_de_io;
+
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde la IO
 	* @returns 0 (finalizando la conexion previamente) en caso de que se termine de manejar la conexion dada entre Kernel y IO
@@ -39,14 +41,31 @@
         int socket;
     } t_io;
 
-    extern t_list* lista_de_io;
+    /**
+	 * @brief inicia la lista que va a contener a las interfaces
+	 */
+	void inicializar_lista_io();
 
+	/**
+	 * @brief inicia un modulo de IO y lo mete en la lista de IOs
+	 * @param char nombre del interfaz agregada en la lista
+	 * @param int socket de la conexion IO - Kernel
+	 */
     void inicializar_io(char* nombre_io, int socket_io);
 
-    void inicializar_lista_io();
-
+	/**
+	 * @brief busca en la lista de IOs la que le pasemos por parametro
+	 * @param t_list lista de IOs
+	 * @param char nombre de la IO a buscar
+	 * @return devuelve TRUE si existe la lista que la pasamos, o FALSE caso contrario
+	 */
     t_io* buscar_io(t_list* lista_de_io, char* nombre_io);
 
-    bool funcion_syscall_IO(char* nombreInterfaz, int64_t tiempo);
+	/**
+	 * @brief nos confirma si es que existe o no la interfaz que debe usar el proceso al bloquearse
+	 * @param char nombre de la interfaz que usa el proceso
+	 * @return devuelve TRUE si existe la lista que la pasamos, o FALSE caso contrario
+	 */
+    bool funcion_syscall_IO(char* nombreInterfaz);
 
 #endif  /*CONEXION_KERNEL_IO_*/  

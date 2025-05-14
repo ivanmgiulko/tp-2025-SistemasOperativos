@@ -152,7 +152,7 @@ void iniciar_planificador_corto_plazo(){
 
             // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
             t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
-            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo, io_recibida_cpu->tiempo);
+            bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo);
             if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
                 log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcb_en_ready->pid, io_recibida_cpu->dispositivo);    
                 // sacar de exec y mandar a blocked
