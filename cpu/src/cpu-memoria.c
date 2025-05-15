@@ -6,6 +6,7 @@ int manejar_conexion_memoria(){
 		int cod_op = recibir_operacion(fd_conexion_memoria);
 		switch (cod_op) {
 		case MENSAJE:
+		
 			recibir_mensaje(fd_conexion_memoria, logger_cpu);
 			break;
 		case INSTRUCCION:
@@ -18,11 +19,15 @@ int manejar_conexion_memoria(){
 				log_info(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);				
 				manejar_respuesta_de_instruccion(paquete);
 				break;
+		case FIN_PID:
+			log_info(logger_cpu, "Recibi el fin de PID");
+			
+			break;
 		case -1:
 			log_error(logger_cpu, "el cliente se desconecto.");
 			return EXIT_FAILURE;
 		default:
-			log_warning(logger_cpu, "Operacion desconocida. No quieras meter la pata");
+			log_warning(logger_cpu, "Operacion desconocida #%d#. No quieras meter la pata", cod_op);
 			break;
 		}
 	}

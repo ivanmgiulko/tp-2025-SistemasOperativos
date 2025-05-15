@@ -1,3 +1,4 @@
+
 #include "instrucciones.h"
 
 instruccion_map_entry mapa_instrucciones[] = {
@@ -22,6 +23,14 @@ func_parse_t parse_funciones[CANT_INSTRUCCIONES] = {
     [INSTR_DUMP_MEMORY] = parse_dump_memory,
     [INSTR_EXIT]        = parse_exit
 };
+char* obtener_nombre_instruccion(instruccion_t tipo) {
+    for (int i = 0; mapa_instrucciones[i].nombre != NULL; i++) {
+        if (mapa_instrucciones[i].tipo == tipo) {
+            return mapa_instrucciones[i].nombre;
+        }
+    }
+    return "NULL"; // Si no se encuentra el tipo
+}
 instruccion_t obtener_tipo(char* nombre_instr) {
     for (int i = 0; mapa_instrucciones[i].nombre != NULL; i++) {
         if (string_equals_ignore_case(mapa_instrucciones[i].nombre, nombre_instr)) {
@@ -62,11 +71,13 @@ t_instruccion* parse_read(char* linea) {
 
     return instr;  
 }
+// SUPUESTAMENTE ESTA FUNCION ES MEJOR. TODAVIA NO LA PROBAMOS. COPAILOT CREE EN LEAN, YO (IVAN) NO CREO EN EL.
 
 
 t_instruccion* parse_write(char* linea) {
     log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea);
 
+    // Dividir la línea en partes
     char** partes = string_split(linea, " ");  
     
 
@@ -75,6 +86,9 @@ t_instruccion* parse_write(char* linea) {
     instr->tipo = INSTR_WRITE;
     instr->parametros.write.datos = string_duplicate(partes[1]);
     instr->parametros.write.direccion = string_duplicate(partes[2]);
+
+    log_debug(logger_cpu, "Instrucción WRITE creada correctamente: datos=%s, dirección=%s",
+              instr->parametros.write.datos, instr->parametros.write.direccion);
 
     // Liberar memoria de las partes
     string_array_destroy(partes);
@@ -89,7 +103,8 @@ t_instruccion* parse_goto(char* linea) {
     instr->tipo = INSTR_GOTO;
     instr->parametros.go_to.valor = atoi(partes[1]);
 
-   
+    log_debug(logger_cpu, "Instrucción GOTO creada correctamente: valor=%d",
+              instr->parametros.go_to.valor);
 
     string_array_destroy(partes);
     return instr;        
@@ -105,11 +120,14 @@ t_instruccion* parse_io(char* linea) {
     instr->parametros.io.dispositivo = string_duplicate(partes[1]);
     instr->parametros.io.tiempo = atoi(partes[2]);
 
+    log_debug(logger_cpu, "Instrucción IO creada correctamente: dispositivo=%s, tiempo=%d",
+              instr->parametros.io.dispositivo, instr->parametros.io.tiempo);
 
     string_array_destroy(partes);
     return instr;       
 }
 t_instruccion* parse_init_proc(char* linea) {
+    log_debug(logger_cpu, "Instrucción INIT_PROC. LINEA: %s", linea);
 
     char** partes = string_split(linea, " ");  
 
@@ -118,7 +136,9 @@ t_instruccion* parse_init_proc(char* linea) {
     instr->parametros.init_proc.archivo = string_duplicate(partes[1]);
     instr->parametros.init_proc.tamanio = atoi(partes[2]);
 
-  
+    log_debug(logger_cpu, "Instrucción INIT_PROC creada correctamente: archivo=%s, tamaño=%d",
+              instr->parametros.init_proc.archivo, instr->parametros.init_proc.tamanio);
+
     string_array_destroy(partes);
 
     return instr; 
@@ -127,11 +147,13 @@ t_instruccion* parse_dump_memory(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_DUMP_MEMORY; 
 
+    log_debug(logger_cpu, "Instrucción DUMP_MEMORY creada correctamente: %d", instr->tipo);
     return instr;   
 }
 t_instruccion* parse_exit(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_EXIT;    
+    log_debug(logger_cpu, "Instrucción EXIT creada correctamente: %d", instr->tipo);
 
     return instr;
 }
@@ -158,7 +180,6 @@ t_instruccion* decode(char* linea) {
         return NULL;
     }
 
-    log_debug(logger_cpu, "Instrucción decodificada correctamente: %d", instruccion->tipo);
     return instruccion;
 }
 
@@ -166,16 +187,16 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     int bytes;
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
-        log_info(logger_cpu, "##PID <%d> | Ejecutando: <%d>", 
-            pcb_actual->pid, instruccion->tipo);            
+        log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
+            pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo));            
             pcb_actual->pc++;
 			break;
 		case INSTR_WRITE:
                 //char* direccion = instruccion->parametros.write.direccion;
                 //char* datos = instruccion->parametros.write.datos;
 
-            log_info(logger_cpu, "##PID <%d> - Ejecutando: <%d> - <%s> <%s>", 
-                pcb_actual->pid, instruccion->tipo,
+            log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
+                pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
 
 
@@ -189,15 +210,15 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //log_info(logger_cpu, "WRITE enviado a Memoria.");
 			break;
 		case INSTR_READ:
-            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%d> con parametros %s %d",
-            pcb_actual->pid, instruccion->tipo,
+            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
+            pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
             pcb_actual->pc++;
 
 			break;
 		case INSTR_GOTO:
-            log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%d> con parametros %d",
-            pcb_actual->pid, instruccion->tipo, instruccion->parametros.go_to.valor);
+            log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> con parametros %d",
+            pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
               //  pcb_actual->pc = instruccion->parametros.go_to.valor;
                 pcb_actual->pc++;
 			break;
@@ -250,6 +271,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
     pedir_instruccion_a_memoria(pcb_actual); 
 }
+
 void free_instruccion(t_instruccion* instruccion) {
     if (!instruccion) return;
 

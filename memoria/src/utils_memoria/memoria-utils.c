@@ -229,10 +229,10 @@ char* obtener_instruccion(int pid, int pc) {
     log_debug(logger_memoria, "ENTRA A OBTENER INSTRUCCION PID %d PC %d", pid, pc);
 
     //Esto no debería pasar nunca!!
-    if (memoria_del_sistema == NULL || memoria_del_sistema->procesos == NULL) {
-        log_error(logger_memoria, "memoria_del_sistema o procesos no están inicializados");
-        return NULL;
-    }
+    // if (memoria_del_sistema == NULL || memoria_del_sistema->procesos == NULL) {
+    //     log_error(logger_memoria, "memoria_del_sistema o procesos no están inicializados");
+    //     return NULL;
+    // }
 
     //log_debug(logger_memoria, "Cant de procesos actual: %d", memoria_del_sistema->cant_procesos);
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {

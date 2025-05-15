@@ -1,3 +1,4 @@
+
 #ifndef INSTRUCCIONES_H_
 #define INSTRUCCIONES_H_
 #include "./cpu-gestor.h"
@@ -66,10 +67,10 @@ t_instruccion* parse_init_proc(char* linea);
 t_instruccion* parse_dump_memory(char* linea);
 t_instruccion* parse_exit(char* linea);
 
-void ejecutar_instruccion(t_instruccion* instruccion);
+void ejecutar_instruccion(t_instruccion* );
 void free_instruccion(t_instruccion* );
-
 typedef t_instruccion* (*func_parse_t)(char* linea);
+char* obtener_nombre_instruccion(instruccion_t );
 
 extern func_parse_t parse_funciones[CANT_INSTRUCCIONES];
     

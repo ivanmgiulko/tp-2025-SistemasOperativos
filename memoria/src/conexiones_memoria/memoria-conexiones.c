@@ -32,6 +32,7 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
 				log_debug(logger_memoria, "PID recibido: %d", proceso_a_inicializar->pid);
+
 				log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
 				log_debug(logger_memoria, "Cantidad de memoria despues: %d", cantMemoria);
@@ -105,7 +106,6 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 	
 			default:
-			log_error(logger_memoria, "operacion paquete desconocida: %d", paquete->codigo_operacion);
 				log_warning(logger_memoria, "Operacion desconocida. No quieras meter la pata");
 				break;
 		}
@@ -134,21 +134,21 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	
 		log_info(logger, "No hay más instrucciones a ejecutar para este proceso");
 
-		// log_debug(logger, "Serializando paquete:");
-		// log_debug(logger, "Código de operación: %d", FIN_PID);
+		log_debug(logger, "Serializando paquete:");
+		log_debug(logger, "Código de operación: %d", FIN_PID);
 
-		//Acá me queda hacer la serialización de un paquete para mandar a cpu el fin pid
-		// int size_respuesta;
-		// void* fin_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
-		// if(respuesta_serializada == NULL) {
-		// 	log_warning(logger, "Error al serializar la respuesta de instruccion");
-		// 	return;
-		// }
-		// log_info(logger, "Enviando PID FINALIZADO a CPU");
-		// int bytes_enviados = send(socket_cliente, paquete_serializado, size_respuesta, 0);
-		// if (bytes_enviados <= 0) {
-		// 	log_error(logger, "Fallo al enviar la instrucción al CPU");
-		// }
+		t_paquete* paquete = malloc(sizeof(t_paquete));
+		crear_buffer(paquete);
+
+		paquete->codigo_operacion = FIN_PID;
+		int bytes = sizeof(int) + sizeof(int);
+		void* paquete_pc_fin = serializar_paquete(paquete, bytes);
+		
+		send(socket_cliente, paquete_pc_fin, bytes, 0);
+
+		free(paquete->buffer);
+		free(paquete_pc_fin);
+		free(paquete);
 		return;
 	}
 
@@ -184,6 +184,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Libero memoria
     free(peticion);
+	log_trace(logger_memoria, "se llega a los frees");
 	free(respuesta->instruccion);
 	free(respuesta);
 }

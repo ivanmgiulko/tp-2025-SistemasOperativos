@@ -1,3 +1,4 @@
+
 #include "conexion-kernel-cpu.h"
 
 void manejar_conexion_kernel_interrupt() {
@@ -39,38 +40,38 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_interrupt);
-        switch (paquete->codigo_operacion) {
-        case MENSAJE:
-            recibir_mensaje(socket_interrupt, logger_kernel);
-            break;
-        case INSTRUCCION:
-            break;
-        case SYSCALL_EXIT:
-            log_trace(logger_kernel, "Recibi la syscall EXIT desde CPU");
-            recv(socket_interrupt, &(paquete->buffer->size), sizeof(uint32_t), 0);
-			paquete->buffer->stream = malloc(paquete->buffer->size);
-			recv(socket_interrupt, paquete->buffer->stream, paquete->buffer->size, 0);
-            
-            t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
+        switch (paquete->codigo_operacion){
+            case MENSAJE:
+                recibir_mensaje(socket_interrupt, logger_kernel);
+                break;
+            case INSTRUCCION:
+                break;
+            case SYSCALL_EXIT:
+                log_trace(logger_kernel, "Recibi la syscall EXIT desde CPU");
+                recv(socket_interrupt, &(paquete->buffer->size), sizeof(uint32_t), 0);
+                paquete->buffer->stream = malloc(paquete->buffer->size);
+                recv(socket_interrupt, paquete->buffer->stream, paquete->buffer->size, 0);
+                
+                t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
 
-            char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-            char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-            int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+                char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-            enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+                enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
 
-            manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
-            break;
+                break;
 
-		case -1:
-			log_error(logger_kernel, "El cliente [CPU - Interrupt] se desconectó.");
-			return EXIT_FAILURE;
-        default:
-            log_warning(logger_kernel, "Operación desconocida en interrupt.");
-            break;
+            case -1:
+                log_error(logger_kernel, "El cliente [CPU - Interrupt] se desconectó.");
+                return EXIT_FAILURE;
+            default:
+                log_warning(logger_kernel, "Operación desconocida en interrupt.");
+                break;
+            }
         }
-    }
     close(socket_interrupt);
     log_info(logger_kernel, "Conexión cerrada en interrupt: socket %d", socket_interrupt);
 	return EXIT_SUCCESS;
@@ -110,23 +111,23 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 
             break;
 
-        // case SYSCALL_EXIT:
+        case SYSCALL_EXIT:
 
-        //     recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
-		// 	paquete->buffer->stream = malloc(paquete->buffer->size);
-		// 	recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+            recv(socket_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
+			paquete->buffer->stream = malloc(paquete->buffer->size);
+			recv(socket_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
             
-        //     t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
+            t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
 
-        //     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-        //     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-        //     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+            char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+            char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+            int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-        //     enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+            enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
 
-        //     manejar_conexion_kernel_memoria(fd_conexion_memoria);
+            manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
-        //     break;
+            break;
 
 		case INSTRUCCION:
 			break;

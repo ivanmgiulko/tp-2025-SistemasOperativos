@@ -46,6 +46,15 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 #50.3
 - Ver el tema del PATH_INSTRUCCIONES
 - Hacer la serializacion 
+
+
+#51
+------------------------------IMPORTANTE------------------------------
+
+- Ver por que no es determinista el programa luego del primer proceso.
+
+------------------------------IMPORTANTE------------------------------
+
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 
