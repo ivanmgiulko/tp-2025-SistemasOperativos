@@ -10,7 +10,6 @@ void manejar_conexion_kernel_interrupt() {
         }
         log_debug(logger_kernel, "Nueva conexión en interrupt: socket %d", socket_interrupt);
 
-        // Crear un hilo para manejar la conexión del cliente
         pthread_t hilo_cliente_interrupt;
         pthread_create(&hilo_cliente_interrupt, NULL, (void*)manejar_cliente_interrupt, (void*)&socket_interrupt);
         pthread_detach(hilo_cliente_interrupt);

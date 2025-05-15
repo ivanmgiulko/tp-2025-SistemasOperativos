@@ -69,12 +69,10 @@ int manejar_conexion_cliente(int socket_cliente){
 				cantMemoria += proceso_a_finalizar->tamanioMemoria;
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
 
-				//Elimino el proceso (ver que pasa si hay error acá)
 				int pidParaEliminar = proceso_a_finalizar->pid;
 				int pidEliminado = finalizar_proceso(pidParaEliminar);
 				if(pidEliminado != -1){
 					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
-					// se limpia todo en memoria y suponiendo que todo sale bien, le manda la confirmacion a Kernel:
 					enviar_proceso_a_finalizar_kernel(*proceso_a_finalizar, socket_cliente);
 				}
 				else{
@@ -128,7 +126,6 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
 	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc);
-
 	//Entra a este if cuando el pc es mayor a cant de instrucciones
 	if(strcmp(respuesta->instruccion, "PC FINALIZADO")== 0){
 	
@@ -138,12 +135,12 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 		log_debug(logger, "Código de operación: %d", FIN_PID);
 
 		t_paquete* paquete = malloc(sizeof(t_paquete));
-		crear_buffer(paquete);
 
 		paquete->codigo_operacion = FIN_PID;
-		int bytes = sizeof(int) + sizeof(int);
-		void* paquete_pc_fin = serializar_paquete(paquete, bytes);
-		
+		int bytes = sizeof(int);
+		void* paquete_pc_fin = malloc(bytes);
+		memcpy(paquete_pc_fin, &(paquete->codigo_operacion), sizeof(int));
+		log_debug(logger, "Tamaño del buffer: %d", bytes);
 		send(socket_cliente, paquete_pc_fin, bytes, 0);
 
 		free(paquete->buffer);
