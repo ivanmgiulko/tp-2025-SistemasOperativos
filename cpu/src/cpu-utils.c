@@ -28,8 +28,8 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 	//Deserializa la instrucción recibida
 	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(paquete->buffer->stream);
 	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
-
-	t_instruccion* instruccion = decode(respuesta->instruccion);
+	t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+	instruccion = decode(respuesta->instruccion);
 	if (!instruccion) {
         log_error(logger_cpu, "Error al decodificar la instrucción");
         // No olvides liberar respuesta->instruccion antes de salir
@@ -43,7 +43,7 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 	log_debug(logger_cpu, "Instrucción decodificada: %d", instruccion->tipo);
 
 	ejecutar_instruccion(instruccion);
-
+	free_instruccion(instruccion);	
 	free(paquete->buffer->stream);
 	free(paquete->buffer);
 	free(paquete);

@@ -67,6 +67,7 @@ t_instruccion* parse_dump_memory(char* linea);
 t_instruccion* parse_exit(char* linea);
 
 void ejecutar_instruccion(t_instruccion* instruccion);
+void free_instruccion(t_instruccion* );
 
 typedef t_instruccion* (*func_parse_t)(char* linea);
 

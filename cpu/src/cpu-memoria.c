@@ -8,7 +8,6 @@ int manejar_conexion_memoria(){
 		case MENSAJE:
 			recibir_mensaje(fd_conexion_memoria, logger_cpu);
 			break;
-        
 		case INSTRUCCION:
 				log_info(logger_cpu, "Recibi la instrucción solicitada a MEMORIA");
 				t_paquete* paquete = recibir_paquete_instruccion(fd_conexion_memoria);

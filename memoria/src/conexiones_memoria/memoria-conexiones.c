@@ -31,6 +31,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 
 				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
+				log_debug(logger_memoria, "PID recibido: %d", proceso_a_inicializar->pid);
 				log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
 				log_debug(logger_memoria, "Cantidad de memoria despues: %d", cantMemoria);
@@ -104,6 +105,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 	
 			default:
+			log_error(logger_memoria, "operacion paquete desconocida: %d", paquete->codigo_operacion);
 				log_warning(logger_memoria, "Operacion desconocida. No quieras meter la pata");
 				break;
 		}
