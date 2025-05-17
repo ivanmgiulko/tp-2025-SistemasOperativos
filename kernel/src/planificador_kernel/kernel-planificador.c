@@ -39,7 +39,12 @@ int asignar_pid(){
     return valor_pid;
 }
 
-void inicializar_estructuras(){
+void inicializar_estructuras()
+{
+    logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); 
+
+	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
+
     estado_new = inicializar_estado();
     estado_ready = inicializar_estado();
     estado_susp_ready = inicializar_estado();
@@ -47,7 +52,6 @@ void inicializar_estructuras(){
     estado_blocked = inicializar_estado();
     estado_susp_blocked = inicializar_estado();
     estado_exit = inicializar_estado();
-
 }
 
 
