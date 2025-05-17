@@ -89,7 +89,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de instrucción");
 					break;
 				}
-			//	log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
+				//	log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
 				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
 
 				// Libera el paquete

@@ -16,6 +16,8 @@ t_contador* pid_contador;
 
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
+sem_t sem_cantidad_pcbs_en_susp_ready;
+
 sem_t sem_hay_espacio_en_memoria;
 
 void crear_proceso_cero(char* path, int tamanio){
@@ -87,47 +89,70 @@ void iniciar_planificacion_largo_plazo(){
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
 
+        // t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+        // pasar_pcb_a_susp_ready(proceso_ejemplo1);
 
-        t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-        pasar_pcb_a_new(proceso_ejemplo1);
+        // t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+        // pasar_pcb_a_susp_ready(proceso_ejemplo2);        
 
-        t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-        pasar_pcb_a_new(proceso_ejemplo2);
-
-        t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+        t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
         pasar_pcb_a_new(proceso_ejemplo3);
 
-        t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+        t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
         pasar_pcb_a_new(proceso_ejemplo4);
 
-
+        
     while(1){
 
-        // El proceso llega y no hay ningun proceso en la primer cola
+        bool _cola_susp_ready_estaba_vacia = _verificar_cola_susp_ready_estaba_vacia();
+        
+        bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
 
-        bool cola_new_estaba_vacia = verificar_cola_new_estaba_vacia();  // :v
+        if(_cola_susp_ready_estaba_vacia) { 
 
-        if(cola_new_estaba_vacia) {
+            if(_cola_new_estaba_vacia) {
            
             _enviar_proceso_new_a_cola_ready();
 
-        } else {
+            } else {
 
-            if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
+                if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
                 
-               _enviar_proceso_new_a_cola_ready();
+                    _enviar_proceso_new_a_cola_ready();
             
+                }
+
+                if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+                
+                    list_sort(estado_new->cola, _tiene_menos_tamanio);
+
+                    _enviar_proceso_new_a_cola_ready();
+                }
             }
 
-            if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
-                
-                list_sort(estado_new->cola, _tiene_menos_tamanio);
+        } else { 
 
-                _enviar_proceso_new_a_cola_ready();
+            if(_cola_new_estaba_vacia) {
+           
+            _enviar_proceso_susp_ready_a_cola_ready();
+
+            } else {
+
+                if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
+                
+                    _enviar_proceso_susp_ready_a_cola_ready();
+            
+                }
+
+                if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+                
+                    list_sort(estado_susp_ready->cola, _tiene_menos_tamanio);
+
+                    _enviar_proceso_susp_ready_a_cola_ready();
+                }
             }
         }
     }
-    
 }
 
 void iniciar_planificador_mediano_plazo() {
@@ -179,13 +204,18 @@ bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new)
     return manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }
 
-
-
-bool verificar_cola_new_estaba_vacia() 
+bool _verificar_cola_new_estaba_vacia() 
 {
     pthread_mutex_lock(&(estado_new->mutex));
     bool cola_vacia = list_size(estado_new->cola) - 1 == 0;
     pthread_mutex_unlock(&(estado_new->mutex));
+    return cola_vacia;
+}
+
+bool _verificar_cola_susp_ready_estaba_vacia() { 
+    pthread_mutex_lock(&(estado_susp_ready->mutex));
+    bool cola_vacia = list_size(estado_susp_ready->cola) == 0;
+    pthread_mutex_unlock(&(estado_susp_ready->mutex));
     return cola_vacia;
 }
 
@@ -197,11 +227,26 @@ void pasar_pcb_a_new(t_pcb* pcb)
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
 }
 
+void pasar_pcb_a_susp_ready(t_pcb* pcb) 
+{
+    encolar_pcb(estado_susp_ready, pcb);
+    pcb->estadoProceso = SUSP_READY;
+    log_info(logger_kernel, "## %d Pasa al estado SUSP-READY", pcb->pid);
+    sem_post(&sem_cantidad_pcbs_en_susp_ready); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
+}
+
 void pasar_pcb_new_a_ready(t_pcb* pcb)
 { 
     encolar_pcb(estado_ready, pcb);
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb->pid);
+    sem_post(&sem_cantidad_pcbs_en_ready); 
+}
+
+void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
+    encolar_pcb(estado_ready, pcb);
+    pcb->estadoProceso = READY;
+    log_info(logger_kernel, "## %d Pasa del estado SUSP-READY al estado READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 
@@ -251,6 +296,13 @@ t_pcb* peek_pcb_en_new()
     return pcb;
 }
 
+t_pcb* peek_pcb_en_susp_ready() 
+{
+    sem_wait(&sem_cantidad_pcbs_en_susp_ready);
+    t_pcb* pcb = peek_cola_mutex(estado_new);
+    return pcb;
+}
+
 bool _tiene_menos_tamanio(void* a, void* b) 
 { 
     t_pcb* proceso_a = (t_pcb*) a;
@@ -264,12 +316,29 @@ void _enviar_proceso_new_a_cola_ready() {
     bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
             
     if(hay_espacio_en_memoria) { 
-        t_pcb* pcb_en_new = pop_cola_mutex(estado_new);
+        pcb_en_new = pop_cola_mutex(estado_new);
         pasar_pcb_new_a_ready(pcb_en_new);
     } else { 
         log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
         // El proceso sigue en la cola de New
         sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
         sem_post(&sem_cantidad_pcbs_en_new);   // comienzo de nuevo el while para que ponga al proceso en Ready
+    }
+}
+
+void _enviar_proceso_susp_ready_a_cola_ready() 
+{
+    t_pcb* pcb_en_susp_ready = peek_pcb_en_susp_ready();
+
+    bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_susp_ready);
+            
+    if(hay_espacio_en_memoria) { 
+        pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
+        pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
+    } else { 
+        log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
+        // El proceso sigue en la cola de New
+        sem_wait(&sem_hay_espacio_en_memoria);        // Espera el semaforo desde kernel-memoria
+        sem_post(&sem_cantidad_pcbs_en_susp_ready);   // comienzo de nuevo el while para que ponga al proceso en Ready
     }
 }

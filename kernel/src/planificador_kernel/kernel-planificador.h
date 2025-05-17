@@ -152,11 +152,13 @@
 	*/
     void pasar_pcb_ready_a_exec(t_pcb* pcb);
 
+    void pasar_pcb_a_susp_ready(t_pcb* pcb);
+
     /**
 	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta
     * @return devuelve TRUE si estaba vacia, o FALSE si no lo estaba.
 	*/
-    bool verificar_cola_new_estaba_vacia();
+    bool _verificar_cola_new_estaba_vacia();
 
     /**
 	* @brief Le pregunta a la memoria si tiene espacio para enviar un proceso a la cola de READY
@@ -174,6 +176,10 @@
 	* @brief Manda un proceso a la cola de NEW teniendo en cuenta el algortimo de ingreso a ready y si hay tamanio en la memoria
 	*/
     void _enviar_proceso_new_a_cola_ready();
+
+    void _enviar_proceso_susp_ready_a_cola_ready();
+
+    bool _verificar_cola_susp_ready_estaba_vacia();
 
 #endif
 
