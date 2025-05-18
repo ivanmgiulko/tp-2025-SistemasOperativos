@@ -246,6 +246,7 @@ char* obtener_instruccion(int pid, int pc) {
             }            
         }
     }
+    
     log_error(logger_memoria, "PID %d no encontrado", pid);
     log_error(logger_memoria, "cant procesos: %d", memoria_del_sistema->cant_procesos);
     return NULL; // PID no encontrado

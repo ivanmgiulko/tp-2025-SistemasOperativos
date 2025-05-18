@@ -61,3 +61,49 @@ void _iniciar_server_para_io()
     pthread_create(&hilo_servidor_io, NULL, (void*)manejar_conexion_kernel_io, NULL);
     pthread_detach(hilo_servidor_io);
 }
+
+void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
+{ 
+    if(_cola_new_estaba_vacia) {
+
+    _enviar_proceso_new_a_cola_ready();
+
+    } else {
+
+        if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
+            
+             _enviar_proceso_new_a_cola_ready();
+            
+        }
+
+         if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+                
+            list_sort(estado_new->cola, _tiene_menos_tamanio);
+
+            _enviar_proceso_new_a_cola_ready();
+        }
+    }
+}
+
+void _enviar_desde_susp_ready_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
+{
+    if(_cola_new_estaba_vacia) {
+           
+        _enviar_proceso_susp_ready_a_cola_ready();
+
+    } else {
+
+         if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
+                
+            _enviar_proceso_susp_ready_a_cola_ready();
+            
+        }
+
+        if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+                
+            list_sort(estado_susp_ready->cola, _tiene_menos_tamanio);
+
+            _enviar_proceso_susp_ready_a_cola_ready();
+        }
+    }
+}

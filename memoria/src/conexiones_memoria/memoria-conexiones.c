@@ -36,6 +36,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
 				log_debug(logger_memoria, "Cantidad de memoria despues: %d", cantMemoria);
+				
 				if(cantMemoria < 0) {
 					// NO hay memoria para este proceso
 					// enviar a Kernel que no se pudo

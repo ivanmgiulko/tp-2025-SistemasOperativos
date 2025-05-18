@@ -179,7 +179,7 @@
 
     void _enviar_proceso_susp_ready_a_cola_ready();
 
-    bool _verificar_cola_susp_ready_estaba_vacia();
+    bool _verificar_cola_susp_ready_esta_vacia();
 
 #endif
 

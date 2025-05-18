@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 
 	argv[1] = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
 	argv[2] = "4000";
-	log_debug(logger_kernel, "Creando proceso cero con el path: %s y tamanio: %s", argv[1], argv[2]);
+	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", argv[1], argv[2]);
 	crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	pthread_t hilo_planificador_largo_plazo;

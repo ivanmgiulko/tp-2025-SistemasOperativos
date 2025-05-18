@@ -35,13 +35,13 @@ void manejar_conexion_kernel_dispatch() {
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
-   int offset;
-   int pid;
-   int tamanio_pid;
+    int offset;
+    int pid;
+    int tamanio_pid;
     while (1) {
         offset = 0;
-   pid = 0;
-    tamanio_pid = 0;
+        pid = 0;
+        tamanio_pid = 0;
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_interrupt);
@@ -91,6 +91,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 free(paquete->buffer->stream);
                 free(paquete->buffer);
                 free(paquete);
+                
                 break;
             case SYSCALL_INIT_PROC:
 
@@ -138,8 +139,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 free(paquete->buffer->stream);
                 free(paquete->buffer);
                 free(paquete);
+            
                 break;
-                case SYSCALL_DUMP_MEMORY:
+            case SYSCALL_DUMP_MEMORY:
                 log_trace(logger_kernel, "Recibi la syscall DUMP_MEMORY desde CPU");
                 recv(socket_interrupt, &(paquete->buffer->size), sizeof(uint32_t), 0);
                 paquete->buffer->stream = malloc(paquete->buffer->size);
@@ -173,6 +175,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
 
                 manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                
                 free(paquete->buffer->stream);
                 free(paquete->buffer);
                 free(paquete);

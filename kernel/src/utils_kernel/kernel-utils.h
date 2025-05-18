@@ -11,4 +11,8 @@
 
     void _iniciar_server_para_io();
 
+    void _enviar_desde_new_a_ready(bool , char* );
+
+    void _enviar_desde_susp_ready_a_ready(bool , char* );
+
 #endif // KERNEL_UTILS_H_

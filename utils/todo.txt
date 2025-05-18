@@ -72,9 +72,6 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
     - Descripción de funciones en contrato/ordenarlas con las de serializacion
     - Serilizar caso de error pid o pc mayor a cant de instrucciones
 . IO:
-    - Descripcion de funciones
-    - Generar issue: ¿Cómo definir las interfaces de IO? - Me fijo yo vini esto
-    - Implementar la funcion que hizo luchito de inicializar config
 
 . KERNEL:
     - Ver como hacer que el Kernel sepa desde antes el strlen de la interfaz que le es enviada
@@ -82,8 +79,6 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 . GENERALES:
     - Chequear warnings de cada modulo. 
         UPDATE: Warnings generales corregidos, tener cuidado con los (void*), no se por que es motivo de warning
-
-
 
 
 

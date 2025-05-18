@@ -95,62 +95,27 @@ void iniciar_planificacion_largo_plazo(){
         // t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
         // pasar_pcb_a_susp_ready(proceso_ejemplo2);        
 
-        t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
-        pasar_pcb_a_new(proceso_ejemplo3);
+        // t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+        // pasar_pcb_a_new(proceso_ejemplo3);
 
-        t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
-        pasar_pcb_a_new(proceso_ejemplo4);
+        // t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+        // pasar_pcb_a_new(proceso_ejemplo4);
 
         
     while(1){
 
-        bool _cola_susp_ready_estaba_vacia = _verificar_cola_susp_ready_estaba_vacia();
+        bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
         
         bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
 
-        if(_cola_susp_ready_estaba_vacia) { 
+        if(_cola_susp_ready_esta_vacia) { 
 
-            if(_cola_new_estaba_vacia) {
-           
-            _enviar_proceso_new_a_cola_ready();
-
-            } else {
-
-                if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
-                
-                    _enviar_proceso_new_a_cola_ready();
-            
-                }
-
-                if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
-                
-                    list_sort(estado_new->cola, _tiene_menos_tamanio);
-
-                    _enviar_proceso_new_a_cola_ready();
-                }
-            }
+            _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
 
         } else { 
 
-            if(_cola_new_estaba_vacia) {
-           
-            _enviar_proceso_susp_ready_a_cola_ready();
+            _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
 
-            } else {
-
-                if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
-                
-                    _enviar_proceso_susp_ready_a_cola_ready();
-            
-                }
-
-                if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
-                
-                    list_sort(estado_susp_ready->cola, _tiene_menos_tamanio);
-
-                    _enviar_proceso_susp_ready_a_cola_ready();
-                }
-            }
         }
     }
 }
@@ -212,7 +177,7 @@ bool _verificar_cola_new_estaba_vacia()
     return cola_vacia;
 }
 
-bool _verificar_cola_susp_ready_estaba_vacia() { 
+bool _verificar_cola_susp_ready_esta_vacia() { 
     pthread_mutex_lock(&(estado_susp_ready->mutex));
     bool cola_vacia = list_size(estado_susp_ready->cola) == 0;
     pthread_mutex_unlock(&(estado_susp_ready->mutex));
@@ -299,7 +264,7 @@ t_pcb* peek_pcb_en_new()
 t_pcb* peek_pcb_en_susp_ready() 
 {
     sem_wait(&sem_cantidad_pcbs_en_susp_ready);
-    t_pcb* pcb = peek_cola_mutex(estado_new);
+    t_pcb* pcb = peek_cola_mutex(estado_susp_ready);
     return pcb;
 }
 
