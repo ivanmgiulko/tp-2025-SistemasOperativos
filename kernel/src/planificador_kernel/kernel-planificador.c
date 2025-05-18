@@ -144,16 +144,7 @@ void iniciar_planificador_corto_plazo(){
 
             enviar_proc_cpu(*infoProceso, socket_dispatch);
 
-            // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-            // t_param_io* io_recibida_cpu = (t_param_io*) manejar_cliente_dispatch(&socket_dispatch);
-            // bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo);
-            // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-            //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcb_en_ready->pid, io_recibida_cpu->dispositivo);    
-            //     // sacar de exec y mandar a blocked
-            //     enviar_proceso_a_io_para_bloqueo(pcb_en_ready->pid, io_recibida_cpu->tiempo, socket_io);
-            // } else {
-            //     log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
-            // }
+            
         }
     }
 }

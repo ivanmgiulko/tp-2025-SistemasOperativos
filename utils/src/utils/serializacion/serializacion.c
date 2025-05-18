@@ -124,27 +124,13 @@ void recibir_mensaje(int socket_cliente, t_log* logger)
 	free(buffer);
 }
 
-t_list* recibir_paquete(int socket_cliente)
+void recibir_paquete(int socket_cliente, t_paquete* paquete)
 {
-	int size;
-	int desplazamiento = 0;
-	void * buffer;
-	t_list* valores = list_create();
-	int tamanio;
-
-	buffer = recibir_buffer(&size, socket_cliente);
-	while(desplazamiento < size)
-	{
-		memcpy(&tamanio, buffer + desplazamiento, sizeof(int));
-		desplazamiento+=sizeof(int);
-		char* valor = malloc(tamanio);
-		memcpy(valor, buffer+desplazamiento, tamanio);
-		desplazamiento+=tamanio;
-		list_add(valores, valor);
-	}
-	free(buffer);
-	return valores;
+	recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 }
+
 t_paquete* recibir_paquete_instruccion(int socket) {
     t_paquete* paquete = malloc(sizeof(t_paquete));
     crear_buffer(paquete);
