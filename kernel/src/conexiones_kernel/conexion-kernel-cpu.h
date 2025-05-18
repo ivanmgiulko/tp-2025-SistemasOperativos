@@ -11,9 +11,8 @@
 
 	typedef struct {
         char* dispositivo;
-        uint32_t dispositivo_length;
         int64_t tiempo;
-    } t_param_io;
+    } t_syscall_io;
 
     // Funciones 
     /**
@@ -46,12 +45,9 @@
 	*/
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
-	/**
-	* @brief recibe la SYSCALL IO enviada desde el CPU
-	* @param t_buffer*: Contenido de la interfaz a recibir
-	* @return devuelve la interfaz a la que llama el proceso desde CPU
-	*/
-	t_param_io* deserializar_syscall_io(t_buffer* buffer);
+	t_syscall_io _deserializar_syscall_io(int , t_paquete* );
+
+	int _deserializar_pid(int, t_paquete*);
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC

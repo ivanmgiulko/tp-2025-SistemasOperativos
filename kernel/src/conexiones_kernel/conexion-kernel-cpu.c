@@ -35,67 +35,55 @@ void manejar_conexion_kernel_dispatch() {
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
-    int offset;
-    int pid;
-    int tamanio_pid;
+    int offset, pid, tamanio_pid;
     while (1) {
-        offset = 0;
-        pid = 0;
-        tamanio_pid = 0;
+        
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_interrupt);
+
+        offset = 0;
+        tamanio_pid = 0;
+        
+
         switch (paquete->codigo_operacion){
             case MENSAJE:
                 recibir_mensaje(socket_interrupt, logger_kernel);
                 break;
-            case INSTRUCCION:
-                break;
-
+            
             case SYSCALL_IO:
+                // de la syscall IO recibo PID, DISPOSITIVO, TIEMPO
                 recibir_paquete(socket_interrupt, paquete);
 
-                // Leer PID     
-                memcpy(&tamanio_pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-                memcpy(&pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+                pid = _deserializar_pid(offset, paquete);
 
-                // Leer dispositivo
-                int len_dispositivo=0;
-                memcpy(&len_dispositivo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
-                char* dispositivo = malloc(len_dispositivo);
-                memcpy(dispositivo, paquete->buffer->stream + offset, len_dispositivo); offset += len_dispositivo;
-
-                // Leer tiempo
-                int tamanio_tiempo;
-                memcpy(&tamanio_tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
-                int tiempo;
-                memcpy(&tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
+                t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
+                
                 log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
 
-                // log_trace(logger_kernel, "SYSCALL_IO recibida: PID=%d, dispositivo=%s, tiempo=%d", pid, dispositivo, tiempo);
-
-
                 // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
-                // t_param_io* pruebaIO = deserializar_syscall_io(paquete->buffer);
-                // bool interfaz_disponible = funcion_syscall_IO(io_recibida_cpu->dispositivo);
+                // bool interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
+                
                 // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
-                //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pcb_en_ready->pid, io_recibida_cpu->dispositivo);    
+                //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                 //     // sacar de exec y mandar a blocked
-                //     enviar_proceso_a_io_para_bloqueo(pcb_en_ready->pid, io_recibida_cpu->tiempo, socket_io);
+                //     enviar_proceso_a_io_para_bloqueo(pid, _syscall_io_recibida.tiempo, socket_io);
                 // } else {
-                //     log_debug(logger_kernel, "LA INTERFAZ MOUSE NOOOOO ESTA DISPONIBLE!");
-                // }
+                //     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                //     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                //     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-                free(dispositivo);
+                //     // buscar proceso y sacarlo para finalizarlo a la mierda
+                //     // enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+
+                //     manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                // }
 
                 eliminar_paquete(paquete);
                  
                 break;
             case SYSCALL_INIT_PROC:
-
+                // de la syscall INIT_PORC recibo PID, Archivo, tamanioProceso
                 recibir_paquete(socket_interrupt, paquete);
 
                 offset = 0;
@@ -136,10 +124,12 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
             
                 break;
             case SYSCALL_DUMP_MEMORY:
-                log_trace(logger_kernel, "Recibi la syscall DUMP_MEMORY desde CPU");
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
+                pid = _deserializar_pid(offset, paquete);
+
+                log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
                 
                 // t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
                 
@@ -157,6 +147,8 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
+                // Me genera duda hacerlo asi... en caso un proceso termine antes que otro, va a finalizar el que estaba primero.
+                // habria que recibir el PID, buscarlo en la cola de mutex, sacarlo de ahi y finalizarlo
                 t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: EXIT", proceso_a_finalizar->pid);
@@ -237,18 +229,6 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     free(paquete);
 }
 
-t_param_io* deserializar_syscall_io(t_buffer* buffer) { 
-    t_param_io* pruebaIO = malloc(sizeof(t_param_io));
-    void* stream = buffer->stream;
-
-    memcpy(&(pruebaIO->tiempo), stream, sizeof(int64_t)); stream += sizeof(int64_t);
-    memcpy(&(pruebaIO->dispositivo_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    pruebaIO->dispositivo = malloc(pruebaIO->dispositivo_length);
-    memcpy(pruebaIO->dispositivo , stream, pruebaIO->dispositivo_length);
-
-    return pruebaIO;
-}
-
 t_pcb* proceso_syscall_prueba(t_buffer* buffer) { 
     char* pathArchivoPseudocodigo;
     uint32_t path_length;
@@ -264,4 +244,35 @@ t_pcb* proceso_syscall_prueba(t_buffer* buffer) {
     t_pcb* proceso_syscall_prueba = iniciarPCB(pathArchivoPseudocodigo, tamanioProceso, asignar_pid());
 
     return proceso_syscall_prueba;
+}
+
+t_syscall_io _deserializar_syscall_io(int offset, t_paquete* paquete) 
+{ 
+    t_syscall_io _syscall_io_recibida;
+
+    int len_dispositivo = 0;
+    memcpy(&len_dispositivo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+
+    char* dispositivo = malloc(len_dispositivo);
+    memcpy(dispositivo, paquete->buffer->stream + offset, len_dispositivo); offset += len_dispositivo;
+    _syscall_io_recibida.dispositivo = dispositivo;
+
+    // Leer tiempo
+    int tamanio_tiempo;
+    memcpy(&tamanio_tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+
+    int tiempo;
+    memcpy(&tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    _syscall_io_recibida.tiempo = tiempo;
+
+    return _syscall_io_recibida;
+}
+
+int _deserializar_pid(int offset, t_paquete* paquete) { 
+    int pid = 0, tamanio_pid = 0;
+    // El PID es recibido como INT, pero deberia ser uint8_t    
+    memcpy(&tamanio_pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+
+    return pid;
 }
