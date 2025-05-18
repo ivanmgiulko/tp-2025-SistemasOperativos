@@ -56,7 +56,10 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 			log_info(logger_kernel, "## %d - Finaliza el proceso", proceso_finalizado->pid);
 			sem_post(&sem_hay_espacio_en_memoria);
-
+			free(paquete->buffer->stream);
+			free(paquete->buffer);
+			free(paquete);
+			free(proceso_finalizado);
 			return EXIT_SUCCESS;
 			break;
 		

@@ -185,6 +185,8 @@ t_instruccion* decode(char* linea) {
 
 void ejecutar_instruccion(t_instruccion* instruccion) {
     int bytes;
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    crear_buffer(paquete);
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
         log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
@@ -230,23 +232,89 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 		case INSTR_IO:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
 				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
-                pcb_actual->pc++;
+            char* dispositivo = instruccion->parametros.io.dispositivo;
+            int tiempo = instruccion->parametros.io.tiempo;
+          
+            paquete->codigo_operacion = SYSCALL_IO;
+            
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+
+            int len_dispositivo = strlen(dispositivo) + 1; 
+            agregar_a_paquete(paquete, dispositivo, len_dispositivo);
+
+            // Agregar tiempo (serializa el int)
+            agregar_a_paquete(paquete, &tiempo, sizeof(int));
+
+            // Serializar y enviar
+            bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+            void* paquete_io = serializar_paquete(paquete, bytes);
+
+            send(fd_conexion_kernel_interrupt, paquete_io, bytes, 0);
+            free(paquete->buffer->stream);
+            free(paquete->buffer);
+            free(paquete_io);
+            free(paquete);
+
+            log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
+
+            pcb_actual->pc++;
+
 			break;
 		case INSTR_INIT_PROC:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
 				instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
+            char* archivo = instruccion->parametros.init_proc.archivo;
+            int tamanio = instruccion->parametros.init_proc.tamanio;
+          
+            paquete->codigo_operacion = SYSCALL_INIT_PROC;
+            
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+
+            int len_archivo = strlen(archivo) + 1; 
+            agregar_a_paquete(paquete, archivo, len_archivo);
+
+            // Agregar tamanio (serializa el int)
+            agregar_a_paquete(paquete, &tamanio, sizeof(int));
+
+            // Serializar y enviar
+            bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+            void* paquete_init_proc = serializar_paquete(paquete, bytes);
+
+            send(fd_conexion_kernel_interrupt, paquete_init_proc, bytes, 0);
+            free(paquete->buffer->stream);
+            free(paquete->buffer);
+            free(paquete_init_proc);
+            free(paquete);
+
+            log_info(logger_cpu, "Enviando SYSCALL_INIT_PROC a Kernel");
+
                 pcb_actual->pc++;
 			break;
 		case INSTR_DUMP_MEMORY:
 			log_info(logger_cpu, "syscall detectada... parametros ");
+
+            
+
+            paquete->codigo_operacion = SYSCALL_DUMP_MEMORY;
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+            bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
+            void* paquete_dump_memory = serializar_paquete(paquete, bytes);
+            
+            send(fd_conexion_kernel_interrupt, paquete_dump_memory, bytes, 0);
+
+            free(paquete->buffer->stream);
+            free(paquete->buffer);
+            free(paquete_dump_memory);
+            free(paquete);
+
+            log_info(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
+
             pcb_actual->pc++;
 			break;
 		case INSTR_EXIT:
 
 			log_info(logger_cpu, "syscall detectada... parametros ");
 
-            t_paquete* paquete = malloc(sizeof(t_paquete));
-            crear_buffer(paquete);
 
             paquete->codigo_operacion = SYSCALL_EXIT;
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
