@@ -47,7 +47,9 @@
 
 	t_syscall_io _deserializar_syscall_io(int , t_paquete* );
 
-	int _deserializar_pid(int, t_paquete*);
+	bool _tiene_el_pid(void* ptr, void* data);
+
+	t_pcb* _sacar_pcb_de_exec(int pid);
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC

@@ -45,7 +45,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
         offset = 0;
         tamanio_pid = 0;
         
-
         switch (paquete->codigo_operacion){
             case MENSAJE:
                 recibir_mensaje(socket_interrupt, logger_kernel);
@@ -56,25 +55,32 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 recibir_paquete(socket_interrupt, paquete);
 
                 pid = _deserializar_pid(offset, paquete);
-
+                offset += sizeof(int) * 2;
+                
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
                 log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
 
-                // Ver "conexion-kernel-cpu ya que ahora estamos simulando que recibe una IO desde CPU"
                 // bool interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
                 // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
                 //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
-                //     // sacar de exec y mandar a blocked
+                    
+                //     t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
+
+                //     encolar_pcb(estado_blocked, _proceso_a_bloquear); 
+                //     // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
+
                 //     enviar_proceso_a_io_para_bloqueo(pid, _syscall_io_recibida.tiempo, socket_io);
+
                 // } else {
                 //     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
                 //     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
                 //     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-                //     // buscar proceso y sacarlo para finalizarlo a la mierda
-                //     // enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+                //     // Falta realizar prueba
+                //     t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
+                //     enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
 
                 //     manejar_conexion_kernel_memoria(fd_conexion_memoria);
                 // }
@@ -131,15 +137,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
                 
-                // t_pcb* proceso_a_finalizar = pop_cola_mutex(estado_exec);
-                
-                // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-                // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-                // int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-                
-                // enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
-                
-                // manejar_conexion_kernel_memoria(fd_conexion_memoria);
                 eliminar_paquete(paquete);
                 break;
 
@@ -268,11 +265,28 @@ t_syscall_io _deserializar_syscall_io(int offset, t_paquete* paquete)
     return _syscall_io_recibida;
 }
 
-int _deserializar_pid(int offset, t_paquete* paquete) { 
+int _deserializar_pid(int offset, t_paquete* paquete) 
+{ 
     int pid = 0, tamanio_pid = 0;
     // El PID es recibido como INT, pero deberia ser uint8_t    
     memcpy(&tamanio_pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
     memcpy(&pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
 
     return pid;
+}
+
+t_pcb* _sacar_pcb_de_exec(int pid) 
+{ 
+    pthread_mutex_lock(&(estado_exec->mutex));
+    t_pcb* _proceso_a_bloquear = NULL;
+    for (int i = 0; i < list_size(estado_exec->cola); i++) {
+        t_pcb* pcb = list_get(estado_exec->cola, i);
+        if (pcb->pid == pid) {
+            _proceso_a_bloquear = list_remove(estado_exec->cola, i); // Eliminar el elemento
+            break; // Salir del bucle una vez encontrado
+        }
+    }
+
+    pthread_mutex_unlock(&(estado_exec->mutex));
+    return _proceso_a_bloquear;
 }
