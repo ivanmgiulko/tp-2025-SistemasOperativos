@@ -9,6 +9,11 @@
 	 */
 
 typedef struct {
+    char* direccion;
+    char* datos;
+} t_write;
+
+typedef struct {
     int pid;
     char** instrucciones;           // array dinámico de instrucciones
     int cant_instrucciones;
@@ -22,6 +27,7 @@ typedef struct {
 extern t_memoria_del_sistema* memoria_del_sistema; // variable global para almacenar la memoria del sistema
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad);
+char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 void agregar_proceso(t_pcbMemoria* pcb);
 int finalizar_proceso(int pid);
 char* obtener_instruccion(int pid, int pc);

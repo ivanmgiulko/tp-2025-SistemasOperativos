@@ -98,6 +98,19 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete_tmp->buffer);
 				free(paquete_tmp);
 				break;
+			case WRITE_MEMORIA:
+				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
+				t_paquete* paquete_write = recibir_paquete_instruccion(socket_cliente);
+				if (paquete_write == NULL) {
+					log_error(logger_memoria, "Fallo al recibir paquete de WRITE");
+					break;
+				}
+				manejar_escritura_memoria(socket_cliente, paquete_write, logger_memoria);
+
+				free(paquete_write->buffer->stream);
+				free(paquete_write->buffer);
+				free(paquete_write);
+				break;
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
 				log_error(logger_memoria, "el cliente se desconecto.");
@@ -185,6 +198,22 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	log_trace(logger_memoria, "se llega a los frees");
 	free(respuesta->instruccion);
 	free(respuesta);
+}
+
+void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger) {
+    t_buffer* buffer = paquete->buffer;
+
+    int desplazamiento = 0;
+
+    char* direccion = leer_string_desde_buffer(buffer, &desplazamiento);
+    char* datos = leer_string_desde_buffer(buffer, &desplazamiento);
+
+    log_info(logger, "[MEMORIA] WRITE recibido - Direccion: %s | Datos: %s", direccion, datos);
+
+    // Aca va la lógica para escribir el dato en memoria física (resta crear la tabla de páginas y la MMU)
+
+    free(direccion);
+    free(datos);
 }
 
 void enviar_respuesta_kernel(char* mensaje, int socket_cliente)

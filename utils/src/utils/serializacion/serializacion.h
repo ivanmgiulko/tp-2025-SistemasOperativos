@@ -14,6 +14,7 @@ void recibir_mensaje(int, t_log* );
 // Funciones que complementan a la serializacion
 t_paquete* crear_paquete(void);
 t_paquete* crear_paquete_instruccion(void);
+t_paquete* crear_paquete_con_codigo(op_code codigo);
 void agregar_a_paquete(t_paquete*, void*, int);
 void enviar_paquete(t_paquete*, int);
 void liberar_conexion(int);

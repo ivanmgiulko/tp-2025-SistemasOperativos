@@ -29,6 +29,13 @@ t_paquete* crear_paquete(void)
 	crear_buffer(paquete);
 	return paquete;
 }
+// Funcion temporal - Ver de normalizarla junto a crear_paquete
+t_paquete* crear_paquete_con_codigo(op_code codigo) {
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = codigo;
+    crear_buffer(paquete);
+    return paquete;
+}
 void crear_buffer(t_paquete* paquete)
 {
 	paquete->buffer = malloc(sizeof(t_buffer));

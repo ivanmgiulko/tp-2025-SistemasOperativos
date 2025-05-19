@@ -55,6 +55,12 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 
 ------------------------------IMPORTANTE------------------------------
 
+# 55.4
+- Envío de la instrucción WRITE_MEMORIA de CPU a Memoria al momento de ejecutar INSTR_WRITE
+- Case WRITE_MEMORIA en manejar_conexion_cliente para escribir en memoria usando manejar_escritura_memoria
+- leer_string_desde_buffer en memoria-utils.c (esto seguro que puede reemplazarse)
+- Resta para completar el WRITE: crear struct de tabla de páginas para la memoria y funciones relacionadas al read/write, y crear MMU en la CPU
+
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 

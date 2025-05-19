@@ -27,7 +27,11 @@
 	
 	void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
 
+	void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger);
+
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 	
+	void enviar_proceso_terminado(char* mensaje, int socket_cliente);
+
     
 #endif // MEMORIA_CONEXIONES_H_

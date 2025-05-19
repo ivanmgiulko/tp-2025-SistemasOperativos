@@ -251,3 +251,15 @@ char* obtener_instruccion(int pid, int pc) {
     log_error(logger_memoria, "cant procesos: %d", memoria_del_sistema->cant_procesos);
     return NULL; // PID no encontrado
 }
+
+char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
+    int tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
+    *desplazamiento += sizeof(int);
+
+    char* string = malloc(tamanio);
+    memcpy(string, buffer->stream + *desplazamiento, tamanio);
+    *desplazamiento += tamanio;
+
+    return string;
+}

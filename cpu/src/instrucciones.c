@@ -194,22 +194,19 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pc++;
 			break;
 		case INSTR_WRITE:
-                //char* direccion = instruccion->parametros.write.direccion;
-                //char* datos = instruccion->parametros.write.datos;
-
             log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
 
-
-                //t_paquete* paquete = crear_paquete(); // Averiguar si modificar crear_paquete() para que tome un OP_CODE
-                //agregar_a_paquete(paquete, direccion, strlen(direccion) + 1);
-                //agregar_a_paquete(paquete, datos, strlen(datos) + 1);
-                //enviar_paquete(paquete, fd_conexion_memoria) {;
-                //eliminar_paquete(paquete);
+                pcb_actual->pc++;
+                t_paquete* paquete = crear_paquete_con_codigo(WRITE_MEMORIA); // Averiguar si modificar crear_paquete() para que tome un OP_CODE
+                agregar_a_paquete(paquete, instruccion->parametros.write.direccion, strlen(instruccion->parametros.write.direccion) + 1);
+                agregar_a_paquete(paquete, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
+                enviar_paquete(paquete, fd_conexion_memoria);
+                eliminar_paquete(paquete);
                 pcb_actual->pc++;
 
-                //log_info(logger_cpu, "WRITE enviado a Memoria.");
+                log_info(logger_cpu, "WRITE enviado a Memoria.");
 			break;
 		case INSTR_READ:
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
