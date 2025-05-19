@@ -9,7 +9,7 @@
 // En el header definimos structs, enums, firma de funciones, y creo que nada mas
 
 t_log* logger_cpu;
-
+pthread_mutex_t mutex_cpu;
 sem_t sem_cpu;
 t_peticion_instruccion* pcb_actual;
 int fd_conexion_kernel_interrupt;

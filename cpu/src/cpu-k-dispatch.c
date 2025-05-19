@@ -23,7 +23,7 @@ int manejar_conexion_kernel_dispatch(){
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;
 				sem_post(&sem_cpu);
-				log_trace(logger_cpu, "PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
+				log_trace(logger_cpu, "#cpu-k-dispatch.c PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 				
 				pedir_instruccion_a_memoria(infoPCB);
 				

@@ -12,6 +12,9 @@ extern t_log* logger_cpu;
 
 extern sem_t sem_cpu;
 
+extern pthread_mutex_t mutex_cpu;
+
+
 extern t_peticion_instruccion* pcb_actual;
 
 //conexiones

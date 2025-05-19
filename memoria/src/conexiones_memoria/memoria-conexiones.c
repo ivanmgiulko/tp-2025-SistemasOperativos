@@ -107,6 +107,23 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 				manejar_escritura_memoria(socket_cliente, paquete_write, logger_memoria);
 
+				// Enviar confirmación de éxito al cliente
+				t_paquete* paquete_confirmacion = malloc(sizeof(t_paquete));
+				paquete_confirmacion->codigo_operacion = WRITE_MEMORIA;
+				paquete_confirmacion->buffer = malloc(sizeof(t_buffer));
+				char* mensaje_confirmacion = "WRITE completado con éxito";
+				paquete_confirmacion->buffer->size = strlen(mensaje_confirmacion) + 1;
+				paquete_confirmacion->buffer->stream = malloc(paquete_confirmacion->buffer->size);
+				memcpy(paquete_confirmacion->buffer->stream, mensaje_confirmacion, paquete_confirmacion->buffer->size);
+
+				int bytes_confirmacion = paquete_confirmacion->buffer->size + 2 * sizeof(int);
+				void* a_enviar = serializar_paquete(paquete_confirmacion, bytes_confirmacion);
+				send(socket_cliente, a_enviar, bytes_confirmacion, 0);
+				log_info(logger_memoria, "Enviando confirmación de WRITE a CPU");
+				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion);
+				free(a_enviar);
+				eliminar_paquete(paquete_confirmacion);
+
 				free(paquete_write->buffer->stream);
 				free(paquete_write->buffer);
 				free(paquete_write);

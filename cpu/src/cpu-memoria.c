@@ -10,6 +10,8 @@ int manejar_conexion_memoria(){
 		case MENSAJE:
 		
 			recibir_mensaje(fd_conexion_memoria, logger_cpu);
+			
+			free(paquete);
 			break;
 		case INSTRUCCION:
 				log_info(logger_cpu, "Recibi la instrucción solicitada a MEMORIA");
@@ -18,9 +20,38 @@ int manejar_conexion_memoria(){
         			log_error(logger_cpu, "Error al recibir el paquete de instrucción");
         			break;
     			}
-				log_info(logger_cpu, "Tamaño del buffer recibido: %d", paquete_instruccion->buffer->size);				
+				log_info(logger_cpu, "Tamaño del buffer recibido: %d", paquete_instruccion->buffer->size);			
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);	
 				manejar_respuesta_de_instruccion(paquete_instruccion);
 				break;
+		case WRITE_MEMORIA:
+			uint32_t size;
+				if (recv(fd_conexion_memoria, &size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+					log_error(logger_cpu, "Error al recibir el tamaño del buffer de confirmación WRITE");
+					break;
+				}
+
+			// Recibir contenido del buffer
+			char* mensaje_confirmacion = malloc(size);
+				if (recv(fd_conexion_memoria, mensaje_confirmacion, size, MSG_WAITALL) <= 0) {
+					log_error(logger_cpu, "Error al recibir el mensaje de confirmación WRITE");
+					free(mensaje_confirmacion);
+					break;
+				}
+
+			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion);
+
+			pcb_actual->pc++;
+			sem_post(&sem_cpu);
+    		pedir_instruccion_a_memoria(pcb_actual);
+
+			free(mensaje_confirmacion);
+			free(paquete->buffer);
+			free(paquete);
+			pthread_mutex_unlock(&mutex_cpu);
+			break;
 		case FIN_PID:
 			log_info(logger_cpu, "Recibi el fin de PID");
 			free(paquete->buffer);

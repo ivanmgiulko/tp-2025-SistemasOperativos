@@ -5,7 +5,6 @@
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
 void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
 	log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
-	sem_wait(&sem_cpu);
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
 
 	//Serializa la petición

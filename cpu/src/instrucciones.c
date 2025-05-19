@@ -192,34 +192,54 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
         log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo));            
             pcb_actual->pc++;
+            sem_post(&sem_cpu);
+            sem_wait(&sem_cpu);
+    pedir_instruccion_a_memoria(pcb_actual);
+
+            eliminar_paquete(paquete);
 			break;
 		case INSTR_WRITE:
+        pthread_mutex_lock(&mutex_cpu);
             log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
 
-                pcb_actual->pc++;
-                t_paquete* paquete = crear_paquete_con_codigo(WRITE_MEMORIA); // Averiguar si modificar crear_paquete() para que tome un OP_CODE
-                agregar_a_paquete(paquete, instruccion->parametros.write.direccion, strlen(instruccion->parametros.write.direccion) + 1);
-                agregar_a_paquete(paquete, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
-                enviar_paquete(paquete, fd_conexion_memoria);
-                eliminar_paquete(paquete);
-                pcb_actual->pc++;
+            t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
+            agregar_a_paquete(paquete_write, instruccion->parametros.write.direccion, strlen(instruccion->parametros.write.direccion) + 1);
+            agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
+            bytes = paquete_write->buffer->size + 2*sizeof(int);
+            void* a_enviar = serializar_paquete(paquete_write, bytes);
 
-                log_info(logger_cpu, "WRITE enviado a Memoria.");
+            send(fd_conexion_memoria, a_enviar, bytes, 0);
+
+            free(a_enviar);
+            eliminar_paquete(paquete_write);
+            
+            log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
 			break;
 		case INSTR_READ:
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
             pcb_actual->pc++;
+            eliminar_paquete(paquete);
+            sem_post(&sem_cpu);
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
 
 			break;
 		case INSTR_GOTO:
             log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> con parametros %d",
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
               //  pcb_actual->pc = instruccion->parametros.go_to.valor;
-                pcb_actual->pc++;
+            pcb_actual->pc++;
+            eliminar_paquete(paquete);
+            sem_post(&sem_cpu);
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
+
 			break;
 
 			////////////////////////////
@@ -247,14 +267,16 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             void* paquete_io = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_io, bytes, 0);
-            free(paquete->buffer->stream);
-            free(paquete->buffer);
+            eliminar_paquete(paquete);
+
             free(paquete_io);
-            free(paquete);
 
             log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
 
             pcb_actual->pc++;
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
 
 			break;
 		case INSTR_INIT_PROC:
@@ -278,14 +300,17 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             void* paquete_init_proc = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_init_proc, bytes, 0);
-            free(paquete->buffer->stream);
-            free(paquete->buffer);
+            eliminar_paquete(paquete);
+
             free(paquete_init_proc);
-            free(paquete);
 
             log_info(logger_cpu, "Enviando SYSCALL_INIT_PROC a Kernel");
 
-                pcb_actual->pc++;
+            pcb_actual->pc++;
+            sem_post(&sem_cpu);
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		case INSTR_DUMP_MEMORY:
 			log_info(logger_cpu, "syscall detectada... parametros ");
@@ -299,14 +324,16 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             send(fd_conexion_kernel_interrupt, paquete_dump_memory, bytes, 0);
 
-            free(paquete->buffer->stream);
-            free(paquete->buffer);
-            free(paquete_dump_memory);
-            free(paquete);
+            eliminar_paquete(paquete);
 
+            free(paquete_dump_memory);
+            
             log_info(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
 
             pcb_actual->pc++;
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		case INSTR_EXIT:
 
@@ -320,21 +347,22 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             send(fd_conexion_kernel_interrupt, paquete_exit, bytes, 0);
 
-            free(paquete->buffer->stream);
-            free(paquete->buffer);
+            eliminar_paquete(paquete);
+
             free(paquete_exit);
-            free(paquete);
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             pcb_actual->pc++;
+             sem_wait(&sem_cpu);
+
+    pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 
 			break;
 	}
-    sem_post(&sem_cpu);
     log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
-    pedir_instruccion_a_memoria(pcb_actual); 
+   
 }
 
 void free_instruccion(t_instruccion* instruccion) {
