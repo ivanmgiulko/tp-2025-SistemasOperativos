@@ -187,6 +187,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     int bytes;
     t_paquete* paquete = malloc(sizeof(t_paquete));
     crear_buffer(paquete);
+        log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
+
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
         log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
@@ -218,6 +220,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
 			break;
 		case INSTR_READ:
+        pthread_mutex_lock(&mutex_cpu);
+
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
@@ -232,12 +236,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete_read);
             
             log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
-            pcb_actual->pc++;
             eliminar_paquete(paquete);
-            sem_post(&sem_cpu);
-             sem_wait(&sem_cpu);
-
-    pedir_instruccion_a_memoria(pcb_actual); 
+          
 
 			break;
 		case INSTR_GOTO:
@@ -245,11 +245,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
               //  pcb_actual->pc = instruccion->parametros.go_to.valor;
             pcb_actual->pc++;
-            eliminar_paquete(paquete);
             sem_post(&sem_cpu);
-             sem_wait(&sem_cpu);
+            sem_wait(&sem_cpu);
 
-    pedir_instruccion_a_memoria(pcb_actual); 
+            pedir_instruccion_a_memoria(pcb_actual); 
+            eliminar_paquete(paquete);
 
 			break;
 
@@ -372,7 +372,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 
 			break;
 	}
-    log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
    
 }
 

@@ -20,8 +20,10 @@ int manejar_conexion_kernel_dispatch(){
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
+				pthread_mutex_lock(&mutex_cpu);
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;
+				pthread_mutex_unlock(&mutex_cpu);
 				sem_post(&sem_cpu);
 				log_trace(logger_cpu, "#cpu-k-dispatch.c PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 				
