@@ -194,7 +194,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pc++;
             sem_post(&sem_cpu);
             sem_wait(&sem_cpu);
-    pedir_instruccion_a_memoria(pcb_actual);
+            pedir_instruccion_a_memoria(pcb_actual);
 
             eliminar_paquete(paquete);
 			break;
@@ -208,11 +208,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             agregar_a_paquete(paquete_write, instruccion->parametros.write.direccion, strlen(instruccion->parametros.write.direccion) + 1);
             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
             bytes = paquete_write->buffer->size + 2*sizeof(int);
-            void* a_enviar = serializar_paquete(paquete_write, bytes);
+            void* a_enviar_write = serializar_paquete(paquete_write, bytes);
 
-            send(fd_conexion_memoria, a_enviar, bytes, 0);
+            send(fd_conexion_memoria, a_enviar_write, bytes, 0);
 
-            free(a_enviar);
+            free(a_enviar_write);
             eliminar_paquete(paquete_write);
             
             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
@@ -221,6 +221,17 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
+            t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
+            agregar_a_paquete(paquete_read, instruccion->parametros.read.direccion, strlen(instruccion->parametros.read.direccion) + 1);
+            bytes = paquete_read->buffer->size + 2*sizeof(int);
+            void* a_enviar_read = serializar_paquete(paquete_read, bytes);
+
+            send(fd_conexion_memoria, a_enviar_read, bytes, 0);
+
+            free(a_enviar_read);
+            eliminar_paquete(paquete_read);
+            
+            log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
             pcb_actual->pc++;
             eliminar_paquete(paquete);
             sem_post(&sem_cpu);

@@ -35,6 +35,7 @@ typedef enum
 	TAMANIO_PROCESO, 	// Kernel -> tamanio de proceso para inicializarlo
 	INTERFAZ,
 	WRITE_MEMORIA,
+	READ_MEMORIA,
 	// Syscalls que recibe Kernel desde CPU (no se si disp o inter)
 	SYSCALL_IO,
 	SYSCALL_EXIT,

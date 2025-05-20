@@ -108,25 +108,55 @@ int manejar_conexion_cliente(int socket_cliente){
 				manejar_escritura_memoria(socket_cliente, paquete_write, logger_memoria);
 
 				// Enviar confirmación de éxito al cliente
-				t_paquete* paquete_confirmacion = malloc(sizeof(t_paquete));
-				paquete_confirmacion->codigo_operacion = WRITE_MEMORIA;
-				paquete_confirmacion->buffer = malloc(sizeof(t_buffer));
-				char* mensaje_confirmacion = "WRITE completado con éxito";
-				paquete_confirmacion->buffer->size = strlen(mensaje_confirmacion) + 1;
-				paquete_confirmacion->buffer->stream = malloc(paquete_confirmacion->buffer->size);
-				memcpy(paquete_confirmacion->buffer->stream, mensaje_confirmacion, paquete_confirmacion->buffer->size);
+				t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
+				paquete_confirmacion_write->codigo_operacion = WRITE_MEMORIA;
+				paquete_confirmacion_write->buffer = malloc(sizeof(t_buffer));
+				char* mensaje_confirmacion_write = "WRITE completado con éxito";
+				paquete_confirmacion_write->buffer->size = strlen(mensaje_confirmacion_write) + 1;
+				paquete_confirmacion_write->buffer->stream = malloc(paquete_confirmacion_write->buffer->size);
+				memcpy(paquete_confirmacion_write->buffer->stream, mensaje_confirmacion_write, paquete_confirmacion_write->buffer->size);
 
-				int bytes_confirmacion = paquete_confirmacion->buffer->size + 2 * sizeof(int);
-				void* a_enviar = serializar_paquete(paquete_confirmacion, bytes_confirmacion);
-				send(socket_cliente, a_enviar, bytes_confirmacion, 0);
+				int bytes_confirmacion_write = paquete_confirmacion_write->buffer->size + 2 * sizeof(int);
+				void* a_enviar_write = serializar_paquete(paquete_confirmacion_write, bytes_confirmacion_write);
+				send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
 				log_info(logger_memoria, "Enviando confirmación de WRITE a CPU");
-				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion);
-				free(a_enviar);
-				eliminar_paquete(paquete_confirmacion);
+				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
+				free(a_enviar_write);
+				eliminar_paquete(paquete_confirmacion_write);
 
 				free(paquete_write->buffer->stream);
 				free(paquete_write->buffer);
 				free(paquete_write);
+				break;
+			case READ_MEMORIA:
+				log_info(logger_memoria, "Recibí paquete de ejecución de READ");
+				t_paquete* paquete_read = recibir_paquete_instruccion(socket_cliente);
+				if (paquete_read == NULL) {
+					log_error(logger_memoria, "Fallo al recibir paquete de READ");
+					break;
+				}
+				manejar_lectura_memoria(socket_cliente, paquete_read, logger_memoria);
+			
+				// Enviar confirmación de éxito al cliente
+				t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
+				paquete_confirmacion_read->codigo_operacion = READ_MEMORIA;
+				paquete_confirmacion_read->buffer = malloc(sizeof(t_buffer));
+				char* mensaje_confirmacion_read = "READ completado con éxito";
+				paquete_confirmacion_read->buffer->size = strlen(mensaje_confirmacion_read) + 1;
+				paquete_confirmacion_read->buffer->stream = malloc(paquete_confirmacion_read->buffer->size);
+				memcpy(paquete_confirmacion_read->buffer->stream, mensaje_confirmacion_read, paquete_confirmacion_read->buffer->size);
+
+				int bytes_confirmacion_read = paquete_confirmacion_read->buffer->size + 2 * sizeof(int);
+				void* a_enviar_read = serializar_paquete(paquete_confirmacion_read, bytes_confirmacion_read);
+				send(socket_cliente, a_enviar_read, bytes_confirmacion_read, 0);
+				log_info(logger_memoria, "Enviando confirmación de READ a CPU");
+				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
+				free(a_enviar_read);
+				eliminar_paquete(paquete_confirmacion_read);
+
+				free(paquete_read->buffer->stream);
+				free(paquete_read->buffer);
+				free(paquete_read);
 				break;
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
@@ -231,6 +261,20 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* lo
 
     free(direccion);
     free(datos);
+}
+
+void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger) {
+    t_buffer* buffer = paquete->buffer;
+
+    int desplazamiento = 0;
+
+    char* direccion = leer_string_desde_buffer(buffer, &desplazamiento);
+
+    log_info(logger, "[MEMORIA] READ recibido - Direccion: %s", direccion);
+
+    // Aca va la lógica para leer el dato en memoria física (resta crear la tabla de páginas y la MMU)
+
+    free(direccion);
 }
 
 void enviar_respuesta_kernel(char* mensaje, int socket_cliente)

@@ -61,6 +61,9 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 - leer_string_desde_buffer en memoria-utils.c (esto seguro que puede reemplazarse)
 - Resta para completar el WRITE: crear struct de tabla de páginas para la memoria y funciones relacionadas al read/write, y crear MMU en la CPU
 
+# 57
+- Listo la ejecución completa de READ (basada en lo hecho en el WRITE)
+
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 

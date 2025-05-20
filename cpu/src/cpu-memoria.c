@@ -27,27 +27,52 @@ int manejar_conexion_memoria(){
 				manejar_respuesta_de_instruccion(paquete_instruccion);
 				break;
 		case WRITE_MEMORIA:
-			uint32_t size;
-				if (recv(fd_conexion_memoria, &size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+			uint32_t size_write;
+				if (recv(fd_conexion_memoria, &size_write, sizeof(uint32_t), MSG_WAITALL) <= 0) {
 					log_error(logger_cpu, "Error al recibir el tamaño del buffer de confirmación WRITE");
 					break;
 				}
 
 			// Recibir contenido del buffer
-			char* mensaje_confirmacion = malloc(size);
-				if (recv(fd_conexion_memoria, mensaje_confirmacion, size, MSG_WAITALL) <= 0) {
+			char* mensaje_confirmacion_write = malloc(size_write);
+				if (recv(fd_conexion_memoria, mensaje_confirmacion_write, size_write, MSG_WAITALL) <= 0) {
 					log_error(logger_cpu, "Error al recibir el mensaje de confirmación WRITE");
-					free(mensaje_confirmacion);
+					free(mensaje_confirmacion_write);
 					break;
 				}
 
-			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion);
+			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
 
 			pcb_actual->pc++;
 			sem_post(&sem_cpu);
     		pedir_instruccion_a_memoria(pcb_actual);
 
-			free(mensaje_confirmacion);
+			free(mensaje_confirmacion_write);
+			free(paquete->buffer);
+			free(paquete);
+			pthread_mutex_unlock(&mutex_cpu);
+			break;
+		case READ_MEMORIA:
+			uint32_t size_read;
+				if (recv(fd_conexion_memoria, &size_read, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+					log_error(logger_cpu, "Error al recibir el tamaño del buffer de confirmación READ");
+					break;
+				}
+			
+			char* mensaje_confirmacion_read = malloc(size_read);
+				if (recv(fd_conexion_memoria, mensaje_confirmacion_read, size_read, MSG_WAITALL) <= 0) {
+					log_error(logger_cpu, "Error al recibir el mensaje de confirmación READ");
+					free(mensaje_confirmacion_read);
+					break;
+				}
+
+			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
+
+			pcb_actual->pc++;
+			sem_post(&sem_cpu);
+    		pedir_instruccion_a_memoria(pcb_actual);
+
+			free(mensaje_confirmacion_read);
 			free(paquete->buffer);
 			free(paquete);
 			pthread_mutex_unlock(&mutex_cpu);
