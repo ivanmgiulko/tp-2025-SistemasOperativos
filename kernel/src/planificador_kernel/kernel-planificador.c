@@ -62,23 +62,9 @@ p_algoritmos devolver_algoritmo_planificacion(){
     return EXIT_FAILURE;
 }
 
-void iniciar_planificador_largo_plazo(){
-	char *leido;
-	bool lineaVacia = false;
-	do{
-		leido = readline("> ");
-		if(strcmp(leido, "") == 0){
-			lineaVacia = !lineaVacia;
-            // Se rompe el While e inicia el planificador a largo plazo
-		}else{
-			free(leido);
-		}
-	}while(!lineaVacia);
-	
-    iniciar_planificacion_largo_plazo();
-}
-
 void iniciar_planificacion_largo_plazo(){
+
+    _iniciar_cuando_apreta_enter();
 
     pthread_t hilo_planificador_corto_plazo;
     pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_corto_plazo, NULL);
@@ -102,7 +88,6 @@ void iniciar_planificacion_largo_plazo(){
     // t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
     // pasar_pcb_a_new(proceso_ejemplo4);
 
-        
     while(1){
 
         bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
@@ -123,9 +108,21 @@ void iniciar_planificacion_largo_plazo(){
 
 void iniciar_planificador_mediano_plazo() {
 
- while(1){
+    while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_blocked);
+
+        t_pcb* _proceso_bloquedo = pop_cola_mutex(estado_blocked);
+
+        /*
+        1. buscar el proceso en la lista de interfaces - ej: es encontrado en la parte de Mouse
+        2. deberiamos sacar de aca el tiempo, el socket_io, y sacar al proceso de la lista de esta interfaz
+        3. enviamos el proceso a bloquearse y esperamos a que vuelva para ser puesto en ready
+        */
+       
+        // Cuando finaliza un proceso de usar la IO, puedo usar el ?mismo? semaforo para que otro la use
+
+        // enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _syscall_io_recibida.tiempo, socket_io);
 
     }
 }
@@ -149,8 +146,6 @@ void iniciar_planificador_corto_plazo(){
             infoProceso->pid = pcb_en_exec->pid;
 
             enviar_proc_cpu(*infoProceso, socket_dispatch);
-
-            
         }
     }
 }
@@ -183,7 +178,7 @@ bool _verificar_cola_susp_ready_esta_vacia() {
 
 void pasar_pcb_a_new(t_pcb* pcb) 
 {
-    encolar_pcb(estado_new, pcb);
+    encolar_pcb_en_estado(estado_new, pcb);
     pcb->estadoProceso = NEW;
     log_info(logger_kernel, "## %d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
@@ -191,7 +186,7 @@ void pasar_pcb_a_new(t_pcb* pcb)
 
 void pasar_pcb_a_susp_ready(t_pcb* pcb) 
 {
-    encolar_pcb(estado_susp_ready, pcb);
+    encolar_pcb_en_estado(estado_susp_ready, pcb);
     pcb->estadoProceso = SUSP_READY;
     log_info(logger_kernel, "## %d Pasa al estado SUSP-READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_susp_ready); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
@@ -199,14 +194,14 @@ void pasar_pcb_a_susp_ready(t_pcb* pcb)
 
 void pasar_pcb_new_a_ready(t_pcb* pcb)
 { 
-    encolar_pcb(estado_ready, pcb);
+    encolar_pcb_en_estado(estado_ready, pcb);
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 
 void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
-    encolar_pcb(estado_ready, pcb);
+    encolar_pcb_en_estado(estado_ready, pcb);
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "## %d Pasa del estado SUSP-READY al estado READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_ready); 
@@ -214,13 +209,13 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
 
 void pasar_pcb_ready_a_exec(t_pcb* pcb) 
 { 
-    encolar_pcb(estado_exec, pcb);
+    encolar_pcb_en_estado(estado_exec, pcb);
     pcb->estadoProceso = EXEC;
     log_info(logger_kernel, "## %d Pasa del estado READY al estado EXEC", pcb->pid);
 }
 
 void pasar_de_exec_a_blocked(t_pcb* pcb){
-    encolar_pcb(estado_blocked, pcb);
+    encolar_pcb_en_estado(estado_blocked, pcb);
     pcb->estadoProceso = BLOCKED;
     log_info(logger_kernel, "## %d Pasa del estado EXEC al estado BLOCKED", pcb->pid);
 }
@@ -242,7 +237,7 @@ t_pcb* pop_cola_mutex(t_estado* cola_mutex)
     return pcb;
 }
 
-void encolar_pcb(t_estado* estado, t_pcb* pcb) 
+void encolar_pcb_en_estado(t_estado* estado, t_pcb* pcb) 
 {
     pthread_mutex_lock(&(estado->mutex));
     list_add(estado->cola, pcb);

@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 	crear_proceso_cero(argv[1], atoi(argv[2]));
 	
 	pthread_t hilo_planificador_largo_plazo;
- 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificador_largo_plazo, NULL);
+ 	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificacion_largo_plazo, NULL);
 	pthread_join(hilo_planificador_largo_plazo, NULL);
 	
 }

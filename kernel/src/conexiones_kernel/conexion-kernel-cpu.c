@@ -54,24 +54,26 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 // de la syscall IO recibo PID, DISPOSITIVO, TIEMPO
                 recibir_paquete(socket_interrupt, paquete);
 
-                pid = _deserializar_pid(offset, paquete);
-                offset += sizeof(int) * 2;
+                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
                 log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
 
-                // bool interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
+                // t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
-                // if(interfaz_disponible == true) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+                // if(interfaz_disponible != NULL) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+                    
                 //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
                 //     t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
 
-                //     encolar_pcb(estado_blocked, _proceso_a_bloquear); 
-                //     // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
+                //     encolar_pcb_en_interfaz(interfaz_disponible, _proceso_a_bloquear);
+                    
+                //     encolar_pcb_en_estado(estado_blocked, _proceso_a_bloquear); 
 
-                //     enviar_proceso_a_io_para_bloqueo(pid, _syscall_io_recibida.tiempo, socket_io);
+                //     sem_post(&sem_cantidad_pcbs_en_blocked);
+                //     // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
 
                 // } else {
                 //     char* ip_memoria = configuracion_kernel->IP_MEMORIA;

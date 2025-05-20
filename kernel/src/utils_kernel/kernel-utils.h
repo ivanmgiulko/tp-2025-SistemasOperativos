@@ -15,4 +15,6 @@
 
     void _enviar_desde_susp_ready_a_ready(bool , char* );
 
+    void _iniciar_cuando_apreta_enter();
+
 #endif // KERNEL_UTILS_H_

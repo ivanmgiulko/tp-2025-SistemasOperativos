@@ -41,6 +41,7 @@
     extern pthread_mutex_t mutex_pid;
     extern sem_t sem_cantidad_pcbs_en_new;
     extern sem_t sem_cantidad_pcbs_en_ready;
+    extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
     
     /**
@@ -92,7 +93,7 @@
     * @param estado struct que contiene la cola en cuestion y un semaforo
     * @param pcb proceso para ser encolado en la cola que le pasamos
 	*/
-    void encolar_pcb(t_estado* estado , t_pcb* pcb);
+    void encolar_pcb_en_estado(t_estado* estado , t_pcb* pcb);
 
     /**
 	* @brief crea el proceso 0, que es pasado por parametro por el ./bin/kernel

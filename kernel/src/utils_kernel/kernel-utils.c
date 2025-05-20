@@ -107,3 +107,18 @@ void _enviar_desde_susp_ready_a_ready(bool _cola_new_estaba_vacia, char* algorti
         }
     }
 }
+
+void _iniciar_cuando_apreta_enter() { 
+    char *leido;
+	bool lineaVacia = false;
+	do {
+		leido = readline("> ");
+		if(strcmp(leido, "") == 0){
+			lineaVacia = !lineaVacia;
+            // Se rompe el While e inicia el planificador a largo plazo
+		} else {
+			free(leido);
+		}
+	} while(!lineaVacia);
+}
+

@@ -37,6 +37,7 @@
 	 */
     typedef struct {
         char* nombre;
+		pthread_mutex_t mutex;
         t_list* procesos;
         int socket;
     } t_io;
@@ -66,6 +67,8 @@
 	 * @param char nombre de la interfaz que usa el proceso
 	 * @return devuelve TRUE si existe la lista que la pasamos, o FALSE caso contrario
 	 */
-    bool funcion_syscall_IO(char* nombreInterfaz);
+    t_io* funcion_syscall_IO(char* nombreInterfaz);
+
+	void encolar_pcb_en_interfaz(t_io* interfaz, t_pcb* pcb);
 
 #endif  /*CONEXION_KERNEL_IO_*/  

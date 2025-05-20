@@ -125,7 +125,12 @@ t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
     return list_find(lista_de_io, _es_el_io);
 }
 
-bool funcion_syscall_IO(char* nombreInterfaz) { 
-    t_io* io_buscada = buscar_io(lista_de_io, nombreInterfaz);
-    return io_buscada != NULL;
+t_io* funcion_syscall_IO(char* nombreInterfaz) { 
+    return buscar_io(lista_de_io, nombreInterfaz);
+}
+
+void encolar_pcb_en_interfaz(t_io* interfaz, t_pcb* pcb) {
+    pthread_mutex_lock(&(interfaz->mutex));
+    list_add(interfaz->procesos, pcb);
+    pthread_mutex_unlock(&(interfaz->mutex));
 }
