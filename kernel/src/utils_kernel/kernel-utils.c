@@ -122,3 +122,49 @@ void _iniciar_cuando_apreta_enter() {
 	} while(!lineaVacia);
 }
 
+t_io_kernel* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
+    bool flag = true;
+    int tamanio_lista = list_size(lista_base), cont = 0;
+    
+    do { 
+        t_io* _elemento_pivote = list_get(lista_de_io, cont);
+
+        t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
+
+        if(_proceso_encontrado == NULL) { 
+            cont++;
+        } else { 
+            flag = true;
+            t_io_kernel* _info_proceso = malloc(sizeof(t_io_kernel));
+            _info_proceso->socket_de_io = _elemento_pivote->socket;
+            _info_proceso->nombre = _elemento_pivote->nombre;
+            _info_proceso->tiempo = _proceso_encontrado->tiempo;
+            return _info_proceso;
+        }
+
+    } while(!flag && cont < tamanio_lista);
+
+}
+
+t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, uint8_t pid) {
+
+    bool _es_el_proceso(void* elemento) {
+        t_info_proceso_en_io* info_proc = (t_info_proceso_en_io*) elemento;
+        return info_proc->pid == pid;
+    }
+
+    return list_find(lista_procesos_de_io, _es_el_proceso);
+}
+
+// t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
+//     bool _es_el_io(void* elemento) {
+//         t_io* io = (t_io*) elemento;
+//         return string_contains(io->nombre, nombre_io);
+//     }
+
+//     return list_find(lista_de_io, _es_el_io);
+// }
+
+// t_io* funcion_syscall_IO(char* nombreInterfaz) { 
+//     return buscar_io(lista_de_io, nombreInterfaz);
+// }

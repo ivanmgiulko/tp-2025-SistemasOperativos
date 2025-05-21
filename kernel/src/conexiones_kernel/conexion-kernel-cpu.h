@@ -14,6 +14,8 @@
         int64_t tiempo;
     } t_syscall_io;
 
+	
+
     // Funciones 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde el CPU Interrupt

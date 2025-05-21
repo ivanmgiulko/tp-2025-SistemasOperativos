@@ -112,7 +112,11 @@ void iniciar_planificador_mediano_plazo() {
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_blocked);
 
-        t_pcb* _proceso_bloquedo = pop_cola_mutex(estado_blocked);
+        t_pcb* _proceso_bloquedo = peek_cola_mutex(estado_blocked);
+
+        t_io_kernel* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, _proceso_bloquedo->pid);
+
+        enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo, _io_que_usa_pcb_bloqueado->socket_de_io);
 
         /*
         1. buscar el proceso en la lista de interfaces - ej: es encontrado en la parte de Mouse
@@ -204,6 +208,13 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
     encolar_pcb_en_estado(estado_ready, pcb);
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "## %d Pasa del estado SUSP-READY al estado READY", pcb->pid);
+    sem_post(&sem_cantidad_pcbs_en_ready); 
+}
+
+void pasar_pcb_blocked_a_ready(t_pcb* pcb) { 
+    encolar_pcb_en_estado(estado_ready, pcb);
+    pcb->estadoProceso = READY;
+    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 

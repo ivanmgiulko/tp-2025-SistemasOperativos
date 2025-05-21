@@ -153,6 +153,8 @@
 	*/
     void pasar_pcb_ready_a_exec(t_pcb* pcb);
 
+    void pasar_pcb_blocked_a_ready(t_pcb* pcb);
+
     void pasar_pcb_a_susp_ready(t_pcb* pcb);
 
     /**

@@ -19,7 +19,7 @@ typedef struct {
 typedef struct {
     char* dispositivo;
     int tiempo;
-} t_param_io2;
+} t_param_io;
 
 typedef struct {
     char* archivo;
@@ -32,7 +32,7 @@ typedef struct {
 typedef union {
     t_param_write write;
     t_param_read read;
-    t_param_io2 io;
+    t_param_io io;
     t_param_goto go_to;
     t_param_init_proc init_proc;
     t_param_vacio vacio;

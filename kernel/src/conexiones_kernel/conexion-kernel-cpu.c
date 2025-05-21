@@ -35,7 +35,7 @@ void manejar_conexion_kernel_dispatch() {
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
-    int offset, pid, tamanio_pid;
+    int offset, pid, pc, tamanio_pid;
     while (1) {
         
         t_paquete* paquete = malloc(sizeof(t_paquete));
@@ -55,37 +55,46 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 recibir_paquete(socket_interrupt, paquete);
 
                 pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+
+                pc = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
                 log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
 
-                // t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
+                t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
-                // if(interfaz_disponible != NULL) { // La interfaz existe -> no contemplo casos de si ya esta siendo usada la IO
+                if(interfaz_disponible != NULL) { 
                     
-                //     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
+                    log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
-                //     t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
+                    t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
 
-                //     encolar_pcb_en_interfaz(interfaz_disponible, _proceso_a_bloquear);
-                    
-                //     encolar_pcb_en_estado(estado_blocked, _proceso_a_bloquear); 
+                    _proceso_a_bloquear->pc = pc;
 
-                //     sem_post(&sem_cantidad_pcbs_en_blocked);
-                //     // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
+                    t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));
+                    _info_proceso_bloqueado->pid = _proceso_a_bloquear->pid;
+                    _info_proceso_bloqueado->tiempo = _syscall_io_recibida.tiempo;
 
-                // } else {
-                //     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-                //     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-                //     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+                    encolar_pcb_en_interfaz(interfaz_disponible, _info_proceso_bloqueado);
+    
+                    encolar_pcb_en_estado(estado_blocked, _proceso_a_bloquear); 
 
-                //     // Falta realizar prueba
-                //     t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
-                //     enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
+                    sem_post(&sem_cantidad_pcbs_en_blocked);
+                    // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
 
-                //     manejar_conexion_kernel_memoria(fd_conexion_memoria);
-                // }
+                } else {
+
+                    char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                    int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+                    // Falta realizar prueba
+                    t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
+                    enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
+
+                    manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                }
 
                 eliminar_paquete(paquete);
                  
@@ -275,6 +284,16 @@ int _deserializar_pid(int offset, t_paquete* paquete)
     memcpy(&pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
 
     return pid;
+}
+
+int _deserializar_pc(int offset, t_paquete* paquete) 
+{ 
+    int pc = 0, tamanio_pc = 0;
+    // El PID es recibido como INT, pero deberia ser uint8_t    
+    memcpy(&tamanio_pc, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&pc, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+
+    return pc;
 }
 
 t_pcb* _sacar_pcb_de_exec(int pid) 

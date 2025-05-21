@@ -267,6 +267,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
 
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+
             int len_dispositivo = strlen(dispositivo) + 1; 
             agregar_a_paquete(paquete, dispositivo, len_dispositivo);
 
@@ -285,9 +287,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
 
             pcb_actual->pc++;
-             sem_wait(&sem_cpu);
+            // sem_wait(&sem_cpu);
 
-    pedir_instruccion_a_memoria(pcb_actual); 
+    // pedir_instruccion_a_memoria(pcb_actual); 
 
 			break;
 		case INSTR_INIT_PROC:

@@ -42,6 +42,8 @@
         int socket;
     } t_io;
 
+	
+
     /**
 	 * @brief inicia la lista que va a contener a las interfaces
 	 */
