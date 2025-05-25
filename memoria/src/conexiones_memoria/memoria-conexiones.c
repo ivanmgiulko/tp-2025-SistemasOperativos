@@ -48,6 +48,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					// le mandamos a Kernel el num de tabla de primer nivel
 
 					//Agrego el proceso (ver que pasa si hay error aca)
+					
 					agregar_proceso(proceso_a_inicializar);
 					//falta agregar caso de error para el log
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
@@ -219,7 +220,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	}
 
 	//Entra aca si Memoria del sistema no incializada o pid no encontrado
-	else if(respuesta->instruccion == NULL){
+	else if(strcmp(respuesta->instruccion, "NULL")== 0){
 	 	log_error(logger, "pid no encontrado o memoria_del_sistema/procesos no están inicializados");
 		return;
 	} 
