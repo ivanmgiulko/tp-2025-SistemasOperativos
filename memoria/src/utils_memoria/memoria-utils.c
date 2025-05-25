@@ -195,7 +195,7 @@ int finalizar_proceso(int pid) {
     }
 
     if (encontrado == -1) {
-        //printf("No se encontró el proceso con PID %d\n", pid);
+        log_error(logger_memoria, "No se encontró el proceso con PID %d\n", pid);
         return -1;
     }
 

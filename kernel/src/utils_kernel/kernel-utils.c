@@ -152,16 +152,3 @@ t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, u
 
     return list_find(lista_procesos_de_io, _es_el_proceso);
 }
-
-// t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
-//     bool _es_el_io(void* elemento) {
-//         t_io* io = (t_io*) elemento;
-//         return string_contains(io->nombre, nombre_io);
-//     }
-
-//     return list_find(lista_de_io, _es_el_io);
-// }
-
-// t_io* funcion_syscall_IO(char* nombreInterfaz) { 
-//     return buscar_io(lista_de_io, nombreInterfaz);
-// }

@@ -55,23 +55,21 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 
 				// Liberar memoria del paquete recibido
-				free(paquete->buffer->stream);
-				free(paquete->buffer);
-				free(paquete);
+				eliminar_paquete(paquete);
+				
 				break; 
 
 			case PROCESO_FINALIZAR:
 
-				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-				paquete->buffer->stream = malloc(paquete->buffer->size);
-				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+				recibir_paquete(socket_cliente, paquete);
 
 				t_pcbMemoria* proceso_a_finalizar = deserializarProceso(paquete->buffer);
 				cantMemoria += proceso_a_finalizar->tamanioMemoria;
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
-
+ 
 				int pidParaEliminar = proceso_a_finalizar->pid;
 				int pidEliminado = finalizar_proceso(pidParaEliminar);
+
 				if(pidEliminado != -1){
 					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 					enviar_proceso_a_finalizar_kernel(*proceso_a_finalizar, socket_cliente);
@@ -97,6 +95,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete_tmp->buffer->stream);
 				free(paquete_tmp->buffer);
 				free(paquete_tmp);
+
 				free(paquete->buffer->stream);
 				free(paquete->buffer);
 				free(paquete);

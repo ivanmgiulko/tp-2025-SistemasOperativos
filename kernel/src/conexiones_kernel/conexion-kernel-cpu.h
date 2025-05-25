@@ -48,11 +48,14 @@
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
 	t_syscall_io _deserializar_syscall_io(int , t_paquete* );
+
 	int _deserializar_pid(int offset, t_paquete* paquete);
 
 	bool _tiene_el_pid(void* ptr, void* data);
 
 	t_pcb* _sacar_pcb_de_exec(int pid);
+
+	void _enviar_a_finalizar_proceso(uint8_t pid);
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC

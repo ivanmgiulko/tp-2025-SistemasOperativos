@@ -322,7 +322,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             pcb_actual->pc++;
             sem_post(&sem_cpu);
-             sem_wait(&sem_cpu);
+            sem_wait(&sem_cpu);
 
     pedir_instruccion_a_memoria(pcb_actual); 
 			break;

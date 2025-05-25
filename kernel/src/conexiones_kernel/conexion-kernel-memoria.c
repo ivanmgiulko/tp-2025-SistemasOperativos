@@ -48,18 +48,16 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case PROCESO_FINALIZADO:
-			recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-			paquete->buffer->stream = malloc(paquete->buffer->size);
-			recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+			recibir_paquete(socket_cliente, paquete);
 			
 			t_pcbMemoria* proceso_finalizado = deserializarProceso(paquete->buffer);
 
 			log_info(logger_kernel, "## %d - Finaliza el proceso", proceso_finalizado->pid);
 			sem_post(&sem_hay_espacio_en_memoria);
+			sem_post(&bin_proceso_eliminar);
 			
-			free(paquete->buffer->stream);
-			free(paquete->buffer);
-			free(paquete);
+			eliminar_paquete(paquete);
+			
 			free(proceso_finalizado);
 
 			return EXIT_SUCCESS;

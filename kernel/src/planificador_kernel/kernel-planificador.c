@@ -18,6 +18,7 @@ sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t bin_proceso_bloqueado;
+sem_t bin_proceso_eliminar;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
 sem_t sem_hay_espacio_en_memoria;
@@ -55,6 +56,7 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_susp_ready, 0, 0);
 
     sem_init(&bin_proceso_bloqueado, 0, 1);
+    sem_init(&bin_proceso_eliminar, 0, 1);
 
     estado_new = inicializar_estado();
     estado_ready = inicializar_estado();
