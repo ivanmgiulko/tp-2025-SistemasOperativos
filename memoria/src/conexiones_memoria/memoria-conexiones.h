@@ -31,8 +31,6 @@
 
 	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger);
 
-	void manejar_confirmacion_operacion(int socket_cliente, op_code codigo_operacion, char* mensaje_confirmacion, t_log* logger);
-
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 	
 	void enviar_proceso_terminado(char* mensaje, int socket_cliente);

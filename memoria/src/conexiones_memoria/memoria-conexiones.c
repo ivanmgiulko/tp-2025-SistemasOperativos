@@ -55,7 +55,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 
 				// Liberar memoria del paquete recibido
-				eliminar_paquete(paquete);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break; 
 
 			case PROCESO_FINALIZAR:
@@ -92,8 +94,12 @@ int manejar_conexion_cliente(int socket_cliente){
 				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
 
 				// Libera el paquete
-				eliminar_paquete(paquete_tmp);
-				eliminar_paquete(paquete);
+				free(paquete_tmp->buffer->stream);
+				free(paquete_tmp->buffer);
+				free(paquete_tmp);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case WRITE_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
@@ -104,11 +110,29 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 				manejar_escritura_memoria(socket_cliente, paquete_write, logger_memoria);
 
-				// Manejamos lógica de envío de confirmación en esta función
-				manejar_confirmacion_operacion(socket_cliente, READ_MEMORIA, "READ completado con éxito", logger_memoria);
+				// Enviar confirmación de éxito al cliente
+				t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
+				paquete_confirmacion_write->codigo_operacion = WRITE_MEMORIA;
+				paquete_confirmacion_write->buffer = malloc(sizeof(t_buffer));
+				char* mensaje_confirmacion_write = "WRITE completado con éxito";
+				paquete_confirmacion_write->buffer->size = strlen(mensaje_confirmacion_write) + 1;
+				paquete_confirmacion_write->buffer->stream = malloc(paquete_confirmacion_write->buffer->size);
+				memcpy(paquete_confirmacion_write->buffer->stream, mensaje_confirmacion_write, paquete_confirmacion_write->buffer->size);
 
-				eliminar_paquete(paquete_write);
-				eliminar_paquete(paquete);
+				int bytes_confirmacion_write = paquete_confirmacion_write->buffer->size + 2 * sizeof(int);
+				void* a_enviar_write = serializar_paquete(paquete_confirmacion_write, bytes_confirmacion_write);
+				send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
+				log_info(logger_memoria, "Enviando confirmación de WRITE a CPU");
+				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
+				free(a_enviar_write);
+				eliminar_paquete(paquete_confirmacion_write);
+
+				free(paquete_write->buffer->stream);
+				free(paquete_write->buffer);
+				free(paquete_write);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case READ_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de READ");
@@ -119,10 +143,29 @@ int manejar_conexion_cliente(int socket_cliente){
 				}
 				manejar_lectura_memoria(socket_cliente, paquete_read, logger_memoria);
 			
-				manejar_confirmacion_operacion(socket_cliente, WRITE_MEMORIA, "WRITE completado con éxito", logger_memoria);
+				// Enviar confirmación de éxito al cliente
+				t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
+				paquete_confirmacion_read->codigo_operacion = READ_MEMORIA;
+				paquete_confirmacion_read->buffer = malloc(sizeof(t_buffer));
+				char* mensaje_confirmacion_read = "READ completado con éxito";
+				paquete_confirmacion_read->buffer->size = strlen(mensaje_confirmacion_read) + 1;
+				paquete_confirmacion_read->buffer->stream = malloc(paquete_confirmacion_read->buffer->size);
+				memcpy(paquete_confirmacion_read->buffer->stream, mensaje_confirmacion_read, paquete_confirmacion_read->buffer->size);
 
-				eliminar_paquete(paquete_read);
-				eliminar_paquete(paquete);
+				int bytes_confirmacion_read = paquete_confirmacion_read->buffer->size + 2 * sizeof(int);
+				void* a_enviar_read = serializar_paquete(paquete_confirmacion_read, bytes_confirmacion_read);
+				send(socket_cliente, a_enviar_read, bytes_confirmacion_read, 0);
+				log_info(logger_memoria, "Enviando confirmación de READ a CPU");
+				log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
+				free(a_enviar_read);
+				eliminar_paquete(paquete_confirmacion_read);
+
+				free(paquete_read->buffer->stream);
+				free(paquete_read->buffer);
+				free(paquete_read);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
@@ -281,24 +324,4 @@ void enviar_proceso_terminado(char* mensaje, int socket_cliente)
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
-}
-
-void manejar_confirmacion_operacion(int socket_cliente, op_code codigo_operacion, char* mensaje_confirmacion, t_log* logger) {
-    t_paquete* paquete_confirmacion = malloc(sizeof(t_paquete));
-    paquete_confirmacion->codigo_operacion = codigo_operacion;
-
-    paquete_confirmacion->buffer = malloc(sizeof(t_buffer));
-    paquete_confirmacion->buffer->size = strlen(mensaje_confirmacion) + 1;
-    paquete_confirmacion->buffer->stream = malloc(paquete_confirmacion->buffer->size);
-    memcpy(paquete_confirmacion->buffer->stream, mensaje_confirmacion, paquete_confirmacion->buffer->size);
-
-    int bytes_confirmacion = paquete_confirmacion->buffer->size + 2 * sizeof(int);
-    void* a_enviar = serializar_paquete(paquete_confirmacion, bytes_confirmacion);
-    send(socket_cliente, a_enviar, bytes_confirmacion, 0);
-
-    log_info(logger, "Enviando confirmación de %s a CPU", (codigo_operacion == WRITE_MEMORIA) ? "WRITE" : "READ");
-    log_info(logger, "Mensaje de confirmación: %s", mensaje_confirmacion);
-
-    free(a_enviar);
-    eliminar_paquete(paquete_confirmacion);
 }
