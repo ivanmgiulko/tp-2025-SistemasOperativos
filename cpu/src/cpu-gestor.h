@@ -11,7 +11,7 @@
 extern t_log* logger_cpu;
 
 extern sem_t sem_cpu;
-
+extern sem_t sem_cpu_kernel;
 extern pthread_mutex_t mutex_cpu;
 
 

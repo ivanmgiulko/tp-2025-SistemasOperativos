@@ -225,6 +225,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
+
             t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
             agregar_a_paquete(paquete_read, instruccion->parametros.read.direccion, strlen(instruccion->parametros.read.direccion) + 1);
             bytes = paquete_read->buffer->size + 2*sizeof(int);
@@ -237,7 +238,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
             eliminar_paquete(paquete);
-          
+           
 
 			break;
 		case INSTR_GOTO:
@@ -262,7 +263,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
             char* dispositivo = instruccion->parametros.io.dispositivo;
             int tiempo = instruccion->parametros.io.tiempo;
-          
+            pcb_actual->pc++;
             paquete->codigo_operacion = SYSCALL_IO;
             
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
@@ -286,7 +287,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
 
-            pcb_actual->pc++;
+            
             // sem_wait(&sem_cpu);
 
     // pedir_instruccion_a_memoria(pcb_actual); 

@@ -7,7 +7,7 @@
     #include <utils/serializacion/serializacion.h>
     #include <utils/contrato/contrato.h>
     #include <utils/utils.h>
-    
+
     /**
 	 * @file
 	 * @brief #include "memoria-gestor.h"

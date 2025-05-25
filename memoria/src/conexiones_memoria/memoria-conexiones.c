@@ -97,6 +97,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete_tmp->buffer->stream);
 				free(paquete_tmp->buffer);
 				free(paquete_tmp);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case WRITE_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
@@ -127,6 +130,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete_write->buffer->stream);
 				free(paquete_write->buffer);
 				free(paquete_write);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case READ_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de READ");
@@ -157,6 +163,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete_read->buffer->stream);
 				free(paquete_read->buffer);
 				free(paquete_read);
+				free(paquete->buffer->stream);
+				free(paquete->buffer);
+				free(paquete);
 				break;
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");

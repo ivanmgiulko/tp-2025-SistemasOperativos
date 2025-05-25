@@ -187,7 +187,8 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
 void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 	int socket_dispatch = *(int*)socket_cliente_ptr;
-	while (1) {
+    bool flag = false;
+	while (!flag) {
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_dispatch);
@@ -200,7 +201,8 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 			break;
 		case -1:
 			log_error(logger_kernel, "el cliente [CPU - Dispatch] se desconecto.");
-			return EXIT_FAILURE;
+            flag = true;
+			break;
 		default:
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");
 			break;

@@ -11,6 +11,7 @@
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
 sem_t sem_cpu;
+sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;

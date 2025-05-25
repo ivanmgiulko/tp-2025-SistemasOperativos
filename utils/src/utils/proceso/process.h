@@ -66,10 +66,13 @@ typedef struct  {
 
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
-t_pcb* iniciarPCB(char* path, int tamanio, int pid);
-void enviarProceso_A_Memoria(t_pcb proceso, int socket_cliente);
-void enviar_proceso_a_finalizar_Memoria(t_pcb proceso, int socket_cliente);
-t_pcbMemoria* deserializarProceso(t_buffer* buffer);
+t_pcb* iniciarPCB(char* , int , int );
+void enviarProceso_A_Memoria(t_pcb , int );
+void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
+
+//void enviar_proceso_a_finalizar_kernel(t_pcb , int );
+
+t_pcbMemoria* deserializarProceso(t_buffer* );
 
 t_contador* inicializar_contador();
 

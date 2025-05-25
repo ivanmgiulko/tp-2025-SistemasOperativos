@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 	
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
 	//sem_post(&sem_cpu);
-	
+	sem_post(&sem_cpu_kernel);
 	pthread_t hilo_cliente_cpuInt_akernel;
     pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
     pthread_detach(hilo_cliente_cpuInt_akernel);

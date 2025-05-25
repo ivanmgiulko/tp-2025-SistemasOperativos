@@ -76,17 +76,17 @@ void iniciar_planificacion_largo_plazo(){
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
 
-    // t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    // pasar_pcb_a_susp_ready(proceso_ejemplo1);
+    t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    pasar_pcb_a_susp_ready(proceso_ejemplo1);
 
-    // t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    // pasar_pcb_a_susp_ready(proceso_ejemplo2);        
+    t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    pasar_pcb_a_susp_ready(proceso_ejemplo2);        
 
-    // t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
-    // pasar_pcb_a_new(proceso_ejemplo3);
+    t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+    pasar_pcb_a_new(proceso_ejemplo3);
 
-    // t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
-    // pasar_pcb_a_new(proceso_ejemplo4);
+    t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+    pasar_pcb_a_new(proceso_ejemplo4);
 
     while(1){
 

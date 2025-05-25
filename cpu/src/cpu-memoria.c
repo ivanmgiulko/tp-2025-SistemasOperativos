@@ -79,6 +79,7 @@ int manejar_conexion_memoria(){
 			break;
 		case FIN_PID:
 			log_info(logger_cpu, "Recibi el fin de PID");
+			sem_post(&sem_cpu_kernel);
 			free(paquete->buffer);
 			free(paquete);
 			break;
