@@ -2,6 +2,7 @@
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
 t_memoria_del_sistema crear_memoria_del_sistema() {
     t_memoria_del_sistema memoria;
+    pthread_mutex_init(&memoria.mutex, NULL); 
     memoria.procesos = malloc(sizeof(t_proceso_en_memoria)); 
     memoria.cant_procesos = 0;
     return memoria;
@@ -165,13 +166,15 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
 void agregar_proceso(t_pcbMemoria* pcb) {
     int cant_inst = 0;
     log_debug(logger_memoria, "Path recibido en PCB: %s", pcb->pathArchivoPseudocodigo);
+
+    pthread_mutex_lock(&memoria_del_sistema->mutex);
+
     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
     
     if (!instrucciones){
         log_error(logger_memoria, "Error al cargar instrucciones, falla al crear proceso");
         return;
     } 
-
     memoria_del_sistema->procesos = realloc(memoria_del_sistema->procesos, (memoria_del_sistema->cant_procesos + 1) * sizeof(t_proceso_en_memoria));
 
     t_proceso_en_memoria nuevoProceso;
@@ -181,6 +184,9 @@ void agregar_proceso(t_pcbMemoria* pcb) {
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
+
+    pthread_mutex_unlock(&memoria_del_sistema->mutex);
+
 }
 
 int finalizar_proceso(int pid) {
@@ -200,6 +206,7 @@ int finalizar_proceso(int pid) {
     }
 
     // Liberar instrucciones del proceso
+    pthread_mutex_lock(&memoria_del_sistema->mutex); 
     for (int j = 0; j < memoria_del_sistema->procesos[encontrado].cant_instrucciones; j++) {
         free(memoria_del_sistema->procesos[encontrado].instrucciones[j]);
     }
@@ -220,6 +227,7 @@ int finalizar_proceso(int pid) {
         memoria_del_sistema->procesos = NULL;
     }
 
+    pthread_mutex_unlock(&memoria_del_sistema->mutex); 
     //printf("Proceso con PID %d liberado correctamente.\n", pid);
     return pid;
 }
@@ -235,21 +243,27 @@ char* obtener_instruccion(int pid, int pc) {
     // }
 
     //log_debug(logger_memoria, "Cant de procesos actual: %d", memoria_del_sistema->cant_procesos);
+    pthread_mutex_lock(&memoria_del_sistema->mutex);
+
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
         if (memoria_del_sistema->procesos[i].pid == pid) {
             log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
             if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
+                pthread_mutex_unlock(&memoria_del_sistema->mutex);
                 return memoria_del_sistema->procesos[i].instrucciones[pc];
             } else {  
                 //Si el pc es mayor o igual a la cant de instrucciones:
+                pthread_mutex_unlock(&memoria_del_sistema->mutex);
                 return "PC FINALIZADO"; 
             }            
         }
     }
+
+    pthread_mutex_unlock(&memoria_del_sistema->mutex);
     
     log_error(logger_memoria, "PID %d no encontrado", pid);
     log_error(logger_memoria, "cant procesos: %d", memoria_del_sistema->cant_procesos);
-    return NULL; // PID no encontrado
+    return "NULL"; // PID no encontrado
 }
 
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {

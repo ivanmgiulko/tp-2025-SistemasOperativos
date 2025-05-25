@@ -22,6 +22,7 @@ typedef struct {
 typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
+    pthread_mutex_t mutex; 
 } t_memoria_del_sistema;
 
 extern t_memoria_del_sistema* memoria_del_sistema; // variable global para almacenar la memoria del sistema
