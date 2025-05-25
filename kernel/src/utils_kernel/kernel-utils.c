@@ -122,7 +122,7 @@ void _iniciar_cuando_apreta_enter() {
 	} while(!lineaVacia);
 }
 
-t_io_kernel* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
+t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
     bool flag = true;
     int tamanio_lista = list_size(lista_base), cont = 0;
     
@@ -135,11 +135,8 @@ t_io_kernel* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
             cont++;
         } else { 
             flag = true;
-            t_io_kernel* _info_proceso = malloc(sizeof(t_io_kernel));
-            _info_proceso->socket_de_io = _elemento_pivote->socket;
-            _info_proceso->nombre = _elemento_pivote->nombre;
-            _info_proceso->tiempo = _proceso_encontrado->tiempo;
-            return _info_proceso;
+            _elemento_pivote->tiempo_ultimo_bloqueo = _proceso_encontrado->tiempo;  
+            return _elemento_pivote;
         }
 
     } while(!flag && cont < tamanio_lista);

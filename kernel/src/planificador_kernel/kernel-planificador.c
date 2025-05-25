@@ -17,6 +17,7 @@ t_contador* pid_contador;
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
+sem_t bin_proceso_bloqueado;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
 sem_t sem_hay_espacio_en_memoria;
@@ -47,6 +48,13 @@ void inicializar_estructuras()
     logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); 
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
+
+    sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
+    sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
+    sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
+    sem_init(&sem_cantidad_pcbs_en_susp_ready, 0, 0);
+
+    sem_init(&bin_proceso_bloqueado, 0, 1);
 
     estado_new = inicializar_estado();
     estado_ready = inicializar_estado();
@@ -111,19 +119,22 @@ void iniciar_planificador_mediano_plazo() {
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_blocked);
+        sem_wait(&bin_proceso_bloqueado);
 
         t_pcb* _proceso_bloquedo = peek_cola_mutex(estado_blocked);
 
-        t_io_kernel* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, _proceso_bloquedo->pid);
+        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, _proceso_bloquedo->pid);
 
-        enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo, _io_que_usa_pcb_bloqueado->socket_de_io);
+        if(_io_que_usa_pcb_bloqueado->enabled == true) {
+            _io_que_usa_pcb_bloqueado->enabled = false;
+            enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo_ultimo_bloqueo, _io_que_usa_pcb_bloqueado->socket);
+        } else { 
+            // El proceso sigue bloqueado
+            
+        }
 
-        /*
-        1. buscar el proceso en la lista de interfaces - ej: es encontrado en la parte de Mouse
-        2. deberiamos sacar de aca el tiempo, el socket_io, y sacar al proceso de la lista de esta interfaz
-        3. enviamos el proceso a bloquearse y esperamos a que vuelva para ser puesto en ready
-        */
        
+        
         // Cuando finaliza un proceso de usar la IO, puedo usar el ?mismo? semaforo para que otro la use
 
         // enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _syscall_io_recibida.tiempo, socket_io);

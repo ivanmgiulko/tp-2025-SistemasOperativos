@@ -43,6 +43,7 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
+    extern sem_t bin_proceso_bloqueado;
     
     /**
 	* @brief Inicializa el struct t_estado

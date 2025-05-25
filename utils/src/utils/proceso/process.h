@@ -64,6 +64,16 @@ typedef struct  {
     pthread_mutex_t mutex;
 } t_contador;
 
+typedef struct {
+    char* nombre;
+	pthread_mutex_t mutex;
+    t_list* procesos;
+    int socket;
+	uint64_t tiempo_ultimo_bloqueo;
+	bool enabled;
+} t_io;
+
+
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
 t_pcb* iniciarPCB(char* , int , int );

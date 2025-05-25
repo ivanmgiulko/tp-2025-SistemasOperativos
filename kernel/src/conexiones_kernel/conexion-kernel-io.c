@@ -46,7 +46,12 @@ int manejar_conexion_kernel_io(){
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
 			
+			t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, pid_desbloqueado);
+			_io_que_usa_pcb_bloqueado->enabled = true;
+
 			t_pcb* _proceso_desbloqueado = pop_cola_mutex(estado_blocked);
+			sem_post(&bin_proceso_bloqueado);
+
 
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
@@ -112,6 +117,8 @@ void inicializar_io(char* nombre_io, int socket_io) {
     io->nombre = nombre_io;
     io->procesos = list_create();
     io->socket = socket_io;
+	io->enabled = true;
+	io->tiempo_ultimo_bloqueo = 0;
     list_add(lista_de_io, io);
 
     log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
