@@ -72,7 +72,9 @@ int main(int argc, char* argv[]){
 	pcb_actual->pid = 0;
 	pcb_actual->pc = 0;
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
-	
+	sem_init(&sem_cpu,0,0);
+	sem_init(&sem_cpu_kernel,0,0);
+	pthread_mutex_init(&mutex_cpu, NULL);
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
 	//sem_post(&sem_cpu);
 	sem_post(&sem_cpu_kernel);
