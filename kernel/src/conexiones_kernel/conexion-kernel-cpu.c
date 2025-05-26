@@ -69,7 +69,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
                     t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
-
                     _proceso_a_bloquear->pc = pc;
 
                     t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));

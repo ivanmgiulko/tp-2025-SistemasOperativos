@@ -144,7 +144,7 @@ void iniciar_planificador_mediano_plazo() {
     }
 }
 
-// CONSUMIDOR
+// CONSUMIDOr
 void iniciar_planificador_corto_plazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
@@ -152,15 +152,15 @@ void iniciar_planificador_corto_plazo(){
         
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
             
-            t_pcb* pcb_en_ready = pop_cola_mutex(estado_ready);   
+            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
-            pasar_pcb_ready_a_exec(pcb_en_ready);
+            pasar_pcb_ready_a_exec(pcb_a_operar);
             
-            t_pcb* pcb_en_exec = peek_cola_mutex(estado_exec);
+            //t_pcb* pcb_en_exec = peek_cola_mutex(estado_exec);
 
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
-            infoProceso->pc = pcb_en_exec->pc;
-            infoProceso->pid = pcb_en_exec->pid;
+            infoProceso->pc = pcb_a_operar->pc;
+            infoProceso->pid = pcb_a_operar->pid;
 
             enviar_proc_cpu(*infoProceso, socket_dispatch);
         }

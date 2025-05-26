@@ -1,7 +1,6 @@
 #include "cpu-k-dispatch.h"
 
 int manejar_conexion_kernel_dispatch(){
-	sem_wait(&sem_cpu_kernel);
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
@@ -14,7 +13,8 @@ int manejar_conexion_kernel_dispatch(){
 				break;
 				
 			case INFO_PROC_EXEC:
-				
+				sem_wait(&sem_cpu_kernel);
+
 				recv(fd_conexion_kernel_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);

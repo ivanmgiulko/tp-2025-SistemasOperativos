@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 
     log_info(logger_memoria, "Servidor de memoria iniciado con exito");
     
-    //CREACION DE HILO PARA EL SERVIDOR DE MEMORIA
+    //CREACION DE HILO PARA EL SERVIDOR DE MEMORI
     pthread_t hilo_servidor;
     pthread_create(&hilo_servidor, NULL, (void*)manejar_hilos_clientes, (void*)server_memoria_fd);
     pthread_join(hilo_servidor, NULL);

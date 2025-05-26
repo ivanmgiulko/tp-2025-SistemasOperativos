@@ -167,7 +167,6 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     int cant_inst = 0;
     log_debug(logger_memoria, "Path recibido en PCB: %s", pcb->pathArchivoPseudocodigo);
 
-    pthread_mutex_lock(&memoria_del_sistema->mutex);
 
     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
     
@@ -185,7 +184,6 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
 
-    pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
 }
 
@@ -208,8 +206,10 @@ int finalizar_proceso(int pid) {
     // Liberar instrucciones del proceso
     pthread_mutex_lock(&memoria_del_sistema->mutex); 
     for (int j = 0; j < memoria_del_sistema->procesos[encontrado].cant_instrucciones; j++) {
+     //   log_trace(logger_memoria, "libero instruccion %s del proceso con PID %d", memoria_del_sistema->procesos[encontrado].instrucciones[j], pid);
         free(memoria_del_sistema->procesos[encontrado].instrucciones[j]);
     }
+  //  log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
 
     // Desplazar los procesos siguientes para llenar el hueco

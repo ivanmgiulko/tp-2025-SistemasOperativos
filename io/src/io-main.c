@@ -25,7 +25,6 @@ int main(int argc, char* argv[]) {
 	
     // Creamos una conexión hacia el servidor, en este caso el KERNEL
 	conexion_kernel_fd = crear_conexion(ip_kernel, puerto_kernel);
-
 	// Enviamos al servidor el valor de CLAVE como mensaje
 	enviar_nombre_interfaz(io_nombre, conexion_kernel_fd);
 	

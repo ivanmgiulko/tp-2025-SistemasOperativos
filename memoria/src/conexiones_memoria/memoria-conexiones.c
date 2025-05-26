@@ -25,7 +25,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 				
 			case PROCESO_MEMORIA:
-				
+				pthread_mutex_lock(&memoria_del_sistema->mutex);
 				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
 				paquete->buffer->stream = malloc(paquete->buffer->size);
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
@@ -54,6 +54,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
+				pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
 				// Liberar memoria del paquete recibido
 				eliminar_paquete(paquete);
@@ -69,6 +70,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
  
 				int pidParaEliminar = proceso_a_finalizar->pid;
+				log_debug(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);
 				int pidEliminado = finalizar_proceso(pidParaEliminar);
 
 				if(pidEliminado != -1){
@@ -81,7 +83,6 @@ int manejar_conexion_cliente(int socket_cliente){
 					enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
 				}
 				break; 
-
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
 				t_paquete* paquete_tmp = recibir_paquete_instruccion(socket_cliente);
@@ -200,7 +201,6 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	if(strcmp(respuesta->instruccion, "PC FINALIZADO")== 0){
 	
 		log_info(logger, "No hay más instrucciones a ejecutar para este proceso");
-
 		log_debug(logger, "Serializando paquete:");
 		log_debug(logger, "Código de operación: %d", FIN_PID);
 

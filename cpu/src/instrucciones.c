@@ -194,8 +194,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
         log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo));            
             pcb_actual->pc++;
-            sem_post(&sem_cpu);
-            sem_wait(&sem_cpu);
+            
             pedir_instruccion_a_memoria(pcb_actual);
 
             eliminar_paquete(paquete);
@@ -246,9 +245,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
               //  pcb_actual->pc = instruccion->parametros.go_to.valor;
             pcb_actual->pc++;
-            sem_post(&sem_cpu);
-            sem_wait(&sem_cpu);
-
+            
             pedir_instruccion_a_memoria(pcb_actual); 
             eliminar_paquete(paquete);
 
@@ -286,7 +283,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_io);
 
             log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
-
+            sem_post(&sem_cpu_kernel);
             
             // sem_wait(&sem_cpu);
 
@@ -321,9 +318,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "Enviando SYSCALL_INIT_PROC a Kernel");
 
             pcb_actual->pc++;
-            sem_post(&sem_cpu);
-            sem_wait(&sem_cpu);
-
+           
     pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		case INSTR_DUMP_MEMORY:
@@ -367,9 +362,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             pcb_actual->pc++;
-             sem_wait(&sem_cpu);
+            
 
-    pedir_instruccion_a_memoria(pcb_actual); 
+            pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 
