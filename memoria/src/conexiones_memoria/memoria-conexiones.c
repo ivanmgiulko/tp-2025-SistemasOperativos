@@ -76,7 +76,11 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 				//enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
-				enviar_proceso_a_finalizar_kernel(proceso_a_finalizar, socket_cliente);
+				int bytes = 0;
+				t_paquete* paquete_proceso_eliminado = malloc(sizeof(t_paquete));
+				crear_buffer(paquete_proceso_eliminado);
+				
+				enviar_proceso_terminado(pidEliminado, paquete_proceso_eliminado, socket_cliente, &bytes);
 				
 				// esto me dijo vini que no tiene que pasar nunca
 				// else{
@@ -310,22 +314,16 @@ void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-void enviar_proceso_terminado(char* mensaje, int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
+void enviar_proceso_terminado(uint8_t pid, t_paquete* paquete, int socket_cliente, int bytes) {
+    paquete->codigo_operacion = PROCESO_FINALIZADO;
+    agregar_a_paquete(paquete, &pid, sizeof(int));
+    bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
+    void* paquete_exit = serializar_paquete(paquete, bytes);
+            
+    send(socket_cliente, paquete_exit, bytes, 0);
 
-	paquete->codigo_operacion = PROCESO_FINALIZADO;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(mensaje) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
+    free(paquete_exit);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }

@@ -80,7 +80,7 @@ t_pcb* iniciarPCB(char* , int , int );
 void enviarProceso_A_Memoria(t_pcb , int );
 void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
 
-//void enviar_proceso_a_finalizar_kernel(t_pcb , int );
+// void enviar_proceso_a_finalizar_kernel(t_paquete, int, int);
 
 t_pcbMemoria* deserializarProceso(t_buffer* );
 

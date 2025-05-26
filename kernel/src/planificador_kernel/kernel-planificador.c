@@ -156,11 +156,11 @@ void iniciar_planificador_corto_plazo(){
             pasar_pcb_ready_a_exec(pcb_a_operar);
             
             //t_pcb* pcb_en_exec = peek_cola_mutex(estado_exec);
-
+            
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
-
+            
             enviar_proc_cpu(*infoProceso, socket_dispatch);
         }
     }

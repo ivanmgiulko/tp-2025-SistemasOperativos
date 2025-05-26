@@ -105,3 +105,18 @@ CHECKPOINT 2
         - Devolver un valor fijo de espacio libre (mock)
 
     Módulo IO: Completo  [HECHO]
+
+
+
+
+==================================================================================================================================================================================================================
+
+- KERNEL:
+        - Crear estrucuras para almacenar CPUS (Socket, Estado, Proceso que se esta ejecutando (?))
+            Funcionalidad: Al iniciar una nueva conexión de CPU, se deberá encolar el socket de conexion a la lista de CPUS conectadas.
+                           En planificador a corto plazo, antes de enviar un proceso, deberemos buscar el socket de conexion de alguna CPU disponible
+                           NO ENCUENTRA CPU: Vuelve a READY o SUSP READY (ver cual)
+                           ENCUENTRA CPU: READY a EXEC y flaguea la CPU como NO OPERATIVA
+
+- CPU: 
+        - Eliminar semaforo que maneja cuando NO le llega un proceso, dado que es un caso imposible habiendo implementado lo anterior.

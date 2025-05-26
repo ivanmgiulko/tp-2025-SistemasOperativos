@@ -254,7 +254,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			////////////////////////////
 			/////////SYSCALLS///////////
 			////////////////////////////
-		
+                        
 		case INSTR_IO:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
 				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
@@ -357,11 +357,13 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             send(fd_conexion_kernel_interrupt, paquete_exit, bytes, 0);
 
             eliminar_paquete(paquete);
-
             free(paquete_exit);
+
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             
+            pcb_actual->pc++;
+            pedir_instruccion_a_memoria(pcb_actual);
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 

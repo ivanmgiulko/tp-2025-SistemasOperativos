@@ -228,6 +228,7 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    log_trace(logger_kernel, "ENVIANDO AFAERTE");
     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
 
     free(a_enviar);
