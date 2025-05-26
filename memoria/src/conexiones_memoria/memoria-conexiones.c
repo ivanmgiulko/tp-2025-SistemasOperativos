@@ -76,12 +76,11 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 				//enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
-				int bytes = 0;
 				t_paquete* paquete_proceso_eliminado = malloc(sizeof(t_paquete));
 				crear_buffer(paquete_proceso_eliminado);
 				
-				enviar_proceso_terminado(pidEliminado, paquete_proceso_eliminado, socket_cliente, &bytes);
-				
+				enviar_proceso_terminado(pidEliminado, paquete_proceso_eliminado, socket_cliente);
+			
 				// esto me dijo vini que no tiene que pasar nunca
 				// else{
 				// 	log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);
@@ -314,9 +313,10 @@ void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
 	eliminar_paquete(paquete);
 }
 
-void enviar_proceso_terminado(uint8_t pid, t_paquete* paquete, int socket_cliente, int bytes) {
+void enviar_proceso_terminado(uint8_t pid, t_paquete* paquete, int socket_cliente) {
+	int bytes=	0;
     paquete->codigo_operacion = PROCESO_FINALIZADO;
-    agregar_a_paquete(paquete, &pid, sizeof(int));
+    agregar_a_paquete(paquete, &pid, sizeof(uint8_t));
     bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
     void* paquete_exit = serializar_paquete(paquete, bytes);
             

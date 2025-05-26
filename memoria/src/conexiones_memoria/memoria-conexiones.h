@@ -33,7 +33,7 @@
 
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 
-    void enviar_proceso_terminado(uint8_t, t_paquete* , int , int );
+    void enviar_proceso_terminado(uint8_t, t_paquete* , int );
 
 	
 #endif // MEMORIA_CONEXIONES_H_
