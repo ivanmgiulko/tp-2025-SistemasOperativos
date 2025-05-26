@@ -243,8 +243,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 		case INSTR_GOTO:
             log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> con parametros %d",
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
-              //  pcb_actual->pc = instruccion->parametros.go_to.valor;
-            pcb_actual->pc++;
+            pcb_actual->pc = instruccion->parametros.go_to.valor;
+            //pcb_actual->pc++;
             
             pedir_instruccion_a_memoria(pcb_actual); 
             eliminar_paquete(paquete);
@@ -361,10 +361,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_exit);
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
-            pcb_actual->pc++;
             
-
-            pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 

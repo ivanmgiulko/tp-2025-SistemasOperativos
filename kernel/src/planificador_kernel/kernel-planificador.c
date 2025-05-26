@@ -67,7 +67,6 @@ void inicializar_estructuras()
     estado_exit = inicializar_estado();
 }
 
-
 p_algoritmos devolver_algoritmo_planificacion(){
     return EXIT_FAILURE;
 }

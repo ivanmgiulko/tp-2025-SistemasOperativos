@@ -35,5 +35,7 @@
 	
 	void enviar_proceso_terminado(char* mensaje, int socket_cliente);
 
-    
+    void enviar_proceso_a_finalizar_kernel(t_pcbMemoria*, int socket_cliente);
+
+	
 #endif // MEMORIA_CONEXIONES_H_

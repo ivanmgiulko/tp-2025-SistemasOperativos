@@ -206,10 +206,10 @@ int finalizar_proceso(int pid) {
     // Liberar instrucciones del proceso
     pthread_mutex_lock(&memoria_del_sistema->mutex); 
     for (int j = 0; j < memoria_del_sistema->procesos[encontrado].cant_instrucciones; j++) {
-     //   log_trace(logger_memoria, "libero instruccion %s del proceso con PID %d", memoria_del_sistema->procesos[encontrado].instrucciones[j], pid);
+        log_trace(logger_memoria, "libero instruccion %s del proceso con PID %d", memoria_del_sistema->procesos[encontrado].instrucciones[j], pid);
         free(memoria_del_sistema->procesos[encontrado].instrucciones[j]);
     }
-  //  log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
+    log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
 
     // Desplazar los procesos siguientes para llenar el hueco

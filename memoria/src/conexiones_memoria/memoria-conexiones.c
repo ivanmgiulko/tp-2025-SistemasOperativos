@@ -31,11 +31,11 @@ int manejar_conexion_cliente(int socket_cliente){
 				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 
 				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
-				log_debug(logger_memoria, "PID recibido: %d", proceso_a_inicializar->pid);
+				log_trace(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
 
-				log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
+				//log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 				cantMemoria -= proceso_a_inicializar->tamanioMemoria;
-				log_debug(logger_memoria, "Cantidad de memoria despues: %d", cantMemoria);
+				log_warning(logger_memoria, "Cantidad de memoria restante: %d", cantMemoria);
 				
 				if(cantMemoria < 0) {
 					// NO hay memoria para este proceso
@@ -66,22 +66,24 @@ int manejar_conexion_cliente(int socket_cliente){
 				recibir_paquete(socket_cliente, paquete);
 
 				t_pcbMemoria* proceso_a_finalizar = deserializarProceso(paquete->buffer);
-				cantMemoria += proceso_a_finalizar->tamanioMemoria;
-				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
  
 				int pidParaEliminar = proceso_a_finalizar->pid;
-				log_debug(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);
+				log_warning(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);
 				int pidEliminado = finalizar_proceso(pidParaEliminar);
 
-				if(pidEliminado != -1){
-					log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
-					enviar_proceso_a_finalizar_kernel(*proceso_a_finalizar, socket_cliente);
-				}
-				else{
-					log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);
-					//Aca hay que ver que pasa en el lado de kernell en el caso de que no se elimine y como avisarles
-					enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
-				}
+				cantMemoria += proceso_a_finalizar->tamanioMemoria;
+				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
+
+				log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
+				//enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
+				enviar_proceso_a_finalizar_kernel(proceso_a_finalizar, socket_cliente);
+				
+				// esto me dijo vini que no tiene que pasar nunca
+				// else{
+				// 	log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);
+				// 	//Aca hay que ver que pasa en el lado de kernell en el caso de que no se elimine y como avisarles
+				// 	enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
+				// }
 				break; 
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
@@ -102,6 +104,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete->buffer);
 				free(paquete);
 				break;
+
 			case WRITE_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
 				t_paquete* paquete_write = recibir_paquete_instruccion(socket_cliente);
@@ -168,6 +171,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				free(paquete->buffer);
 				free(paquete);
 				break;
+
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
 				log_error(logger_memoria, "el cliente se desconecto.");
@@ -196,7 +200,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
-	respuesta->instruccion = obtener_instruccion(peticion->pid, peticion->pc);
+	respuesta->instruccion = string_duplicate(obtener_instruccion(peticion->pid, peticion->pc));
 	//Entra a este if cuando el pc es mayor a cant de instrucciones
 	if(strcmp(respuesta->instruccion, "PC FINALIZADO")== 0){
 	
