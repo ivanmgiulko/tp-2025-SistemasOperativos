@@ -23,7 +23,7 @@ void enviar_nombre_interfaz(char* mensaje, int socket_cliente) {
 	} else {
 		log_error(logger_io, "Handshake con [KERNEL] fallido!");
 		free(mensaje_handshake);
-		return EXIT_FAILURE;
+		abort();
 	}
 	
 	free(mensaje_handshake);
@@ -75,14 +75,13 @@ int manejar_conexion_io(int socket_cliente){
 			break;
 
 		case PROCESO_BLOQUEADO:
-			recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-			paquete->buffer->stream = malloc(paquete->buffer->size);
-			recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
-			t_info_proceso* proceso_bloqueado = recibir_proceso_bloqueado(paquete->buffer);
-			log_debug(logger_io, "Llego el PID: %d | El tiempo: %d", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
+			recibir_paquete(socket_cliente, paquete);
 
-			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %d", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
-			int dormir = usleep(proceso_bloqueado->tiempo);
+			t_info_proceso* proceso_bloqueado = recibir_proceso_bloqueado(paquete->buffer);
+			log_debug(logger_io, "Llego el PID: %d | El tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
+
+			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
+			usleep(proceso_bloqueado->tiempo);
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
 			enviar_respuesta_kernel_IO(socket_cliente, proceso_bloqueado->pid);

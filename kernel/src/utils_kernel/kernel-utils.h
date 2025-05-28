@@ -17,11 +17,6 @@
 
     void _iniciar_cuando_apreta_enter();
 
-    typedef struct {
-        uint8_t pid;
-		int64_t tiempo;
-    } t_info_proceso_en_io;
-
     t_io* buscar_io_en_lista(t_list*, uint8_t);
 
     t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* , uint8_t );

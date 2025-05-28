@@ -25,7 +25,7 @@
         char *ESTIMACION_INICIAL;
         char *TIEMPO_SUSPENSION;
         char *LOG_LEVEL;
-    }t_kernel_config;
+    } t_kernel_config;
 
     /**
 	* @brief Crea el config que tiene el Kernel asociado para poder utilizar los datos de este

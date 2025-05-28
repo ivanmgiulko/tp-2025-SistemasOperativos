@@ -96,10 +96,9 @@ void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cl
 }
 
 uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) { 
-	uint8_t* pid = malloc(sizeof(uint8_t));
-    void* stream = buffer->stream;
-
-    memcpy(&(pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+	uint8_t pid;
+    
+    memcpy(&pid, buffer->stream, sizeof(uint8_t)); buffer->stream += sizeof(uint8_t);
     
     return pid;
 }
@@ -139,7 +138,7 @@ t_io* funcion_syscall_IO(char* nombreInterfaz) {
     return buscar_io(lista_de_io, nombreInterfaz);
 }
 
-void encolar_pcb_en_interfaz(t_io* interfaz, t_pcb* pcb) {
+void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb) {
     pthread_mutex_lock(&(interfaz->mutex));
     list_add(interfaz->procesos, pcb);
     pthread_mutex_unlock(&(interfaz->mutex));

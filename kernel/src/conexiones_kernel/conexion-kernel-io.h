@@ -66,6 +66,6 @@
 	 */
     t_io* funcion_syscall_IO(char* nombreInterfaz);
 
-	void encolar_pcb_en_interfaz(t_io* interfaz, t_pcb* pcb);
+	void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb);
 
 #endif  /*CONEXION_KERNEL_IO_*/  

@@ -48,7 +48,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case PROCESO_FINALIZADO:
-			log_info(logger_kernel, "CHUCHA PE DESERIALIZA ");
 			recibir_paquete(socket_cliente, paquete);
 			int offset = 0;
 			uint8_t  pid = _deserializar_pid(offset, paquete);

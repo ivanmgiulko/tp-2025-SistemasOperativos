@@ -140,7 +140,7 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
         }
 
     } while(!flag && cont < tamanio_lista);
-
+    return NULL;
 }
 
 t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, uint8_t pid) {
