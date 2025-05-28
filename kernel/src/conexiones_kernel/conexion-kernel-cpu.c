@@ -9,9 +9,9 @@ void manejar_conexion_kernel_interrupt() {
             continue;
         }
 
-        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_interrupt, 1);
+        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_interrupt, SOCKET_INTERRUPT);
 
-        _agregar_cpu_en_lista_cpus(id_cpu);
+        _agregar_socket_en_cpu(id_cpu, SOCKET_INTERRUPT, socket_interrupt);
 
         pthread_t hilo_cliente_interrupt;
         pthread_create(&hilo_cliente_interrupt, NULL, (void*)manejar_cliente_interrupt, (void*)&socket_interrupt);
@@ -27,9 +27,9 @@ void manejar_conexion_kernel_dispatch() {
             continue;
         }
 
-        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_dispatch, 2);
+        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_dispatch, SOCKET_DISPATCH);
 
-        _agregar_cpu_en_lista_cpus(id_cpu);
+        _agregar_socket_en_cpu(id_cpu, SOCKET_DISPATCH, socket_dispatch);
 
         // Crear un hilo para manejar la conexión del cliente
         pthread_t hilo_cliente_dispatch;
@@ -340,11 +340,11 @@ uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
         
     if (handshake < 256 && handshake >= 0) {
         switch (parte_cpu) {
-        case 1:
+        case SOCKET_INTERRUPT:
             log_debug(logger_kernel, "Nueva conexión en Interrupt: socket %d", socket_cliente_cpu);
             break;
         
-        case 2:
+        case SOCKET_DISPATCH:
             log_debug(logger_kernel, "Nueva conexión en Dispatch: socket %d", socket_cliente_cpu);
             break;
         }
@@ -356,28 +356,42 @@ uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
     return handshake;
 }
 
-void _agregar_cpu_en_lista_cpus(uint8_t id_cpu) {
+void _agregar_socket_en_cpu(uint8_t id_cpu, t_sockets_cpu tipo_socket, int valor_socket) {
 
-    t_cpu_conectada* cpu_a_utilizar = malloc(sizeof(t_cpu_conectada));
-
-    cpu_a_utilizar = devolver_cpu(id_cpu);
+    t_cpu_conectada* cpu_a_utilizar = _buscar_cpu_en_lista(id_cpu);
 
     if(cpu_a_utilizar == NULL) { 
-        cpu_a_utilizar->id_cpu = id_cpu;
-        // agregar_socket_en_cpu(cpu_a_utilizar, socket)
-        
-
-
+        cpu_a_utilizar = _agregar_cpu_en_lista(id_cpu);
     }
-    /*
-    1. Agarrar la lista y buscar si ya esta el id_cpu
-        1.1 si no esta el id, crear un t_cpu_conectada y agregarla a la lista
-        1.2 si ya esta el id, agregar el socket de los 2 que falta
-    */
 
+    switch (tipo_socket) {
+        case SOCKET_INTERRUPT:
+            cpu_a_utilizar->socket_interrupt = valor_socket; // Asignar el socket de interrupt
+            break;
+        
+        case SOCKET_DISPATCH:
+            cpu_a_utilizar->socket_dispatch = valor_socket; // Asignar el socket de dispatch
+            break;
+    }
 }
 
-t_cpu_conectada* devolver_cpu(uint8_t id_cpu){
+t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu) {
+
+    t_cpu_conectada* cpu_agregada = malloc(sizeof(t_cpu_conectada));
+
+    cpu_agregada->id_cpu = id_cpu;
+    cpu_agregada->socket_interrupt = -1; // Inicializar el socket de interrupt
+    cpu_agregada->socket_dispatch = -1; // Inicializar el socket de dispatch
+    cpu_agregada->pid_en_cpu = 0; // Inicializar el PID en CPU
+    
+    // PROTEGER CON MUTEX
+    list_add(lista_cpus, cpu_agregada);
+    // PROTEGER CON MUTEX
+
+    return cpu_agregada;
+}
+
+t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu){
 
     bool _cpu_tiene_id(void* ptr) {
         t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;

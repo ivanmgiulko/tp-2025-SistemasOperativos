@@ -9,6 +9,11 @@
 	 * @brief #include "conexiones_kernel/conexion-kernel-cpu.h"
 	 */
 
+	 typedef enum{
+		SOCKET_INTERRUPT,
+		SOCKET_DISPATCH
+	 }t_sockets_cpu;
+
 	typedef struct { 
 		int socket_interrupt;
 		int socket_dispatch;
@@ -66,6 +71,15 @@
 	uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu);
 
 	void _agregar_cpu_en_lista_cpus(uint8_t);
+
+	void _agregar_socket_en_cpu(uint8_t, t_sockets_cpu, int);
+
+	uint8_t _recibir_handshake_de_cpu(int , int );
+
+	t_cpu_conectada* _agregar_cpu_en_lista(uint8_t );
+
+	t_cpu_conectada* _buscar_cpu_en_lista(uint8_t);
+
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC
