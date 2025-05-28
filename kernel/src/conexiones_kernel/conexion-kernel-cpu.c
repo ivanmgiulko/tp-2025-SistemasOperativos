@@ -9,7 +9,9 @@ void manejar_conexion_kernel_interrupt() {
             continue;
         }
 
-        _recibir_handshake_de_cpu(socket_interrupt, 1);
+        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_interrupt, 1);
+
+        _agregar_cpu_en_lista_cpus(id_cpu);
 
         pthread_t hilo_cliente_interrupt;
         pthread_create(&hilo_cliente_interrupt, NULL, (void*)manejar_cliente_interrupt, (void*)&socket_interrupt);
@@ -25,7 +27,9 @@ void manejar_conexion_kernel_dispatch() {
             continue;
         }
 
-        _recibir_handshake_de_cpu(socket_dispatch, 2);
+        uint8_t id_cpu = _recibir_handshake_de_cpu(socket_dispatch, 2);
+
+        _agregar_cpu_en_lista_cpus(id_cpu);
 
         // Crear un hilo para manejar la conexión del cliente
         pthread_t hilo_cliente_dispatch;
@@ -33,7 +37,6 @@ void manejar_conexion_kernel_dispatch() {
         pthread_detach(hilo_cliente_dispatch);
     }
 }
-
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
@@ -74,7 +77,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     _proceso_a_bloquear->pc = pc;
 
                     t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));
-                    _info_proceso_bloqueado->pid = _proceso_a_bloquear->pid;
+                    _info_proceso_bloqueado->pid    = _proceso_a_bloquear->pid;
                     _info_proceso_bloqueado->tiempo = _syscall_io_recibida.tiempo;
 
                     encolar_pcb_en_interfaz(interfaz_disponible, _info_proceso_bloqueado);
@@ -326,10 +329,10 @@ void _enviar_a_finalizar_proceso(uint8_t pid)
 
 }
 
-void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
+uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
     size_t bytes;
 
-    uint8_t handshake;
+    uint8_t handshake;  // Valor del CPU ID
     uint8_t resultOk = 0;
     uint8_t resultError = -1;
 
@@ -350,5 +353,37 @@ void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
         bytes = send(socket_cliente_cpu, &resultError, sizeof(uint8_t), 0);
     }
 
-    // aca habria que hacer el manejo de del CPU ID?
+    return handshake;
+}
+
+void _agregar_cpu_en_lista_cpus(uint8_t id_cpu) {
+
+    t_cpu_conectada* cpu_a_utilizar = malloc(sizeof(t_cpu_conectada));
+
+    cpu_a_utilizar = devolver_cpu(id_cpu);
+
+    if(cpu_a_utilizar == NULL) { 
+        cpu_a_utilizar->id_cpu = id_cpu;
+        // agregar_socket_en_cpu(cpu_a_utilizar, socket)
+        
+
+
+    }
+    /*
+    1. Agarrar la lista y buscar si ya esta el id_cpu
+        1.1 si no esta el id, crear un t_cpu_conectada y agregarla a la lista
+        1.2 si ya esta el id, agregar el socket de los 2 que falta
+    */
+
+}
+
+t_cpu_conectada* devolver_cpu(uint8_t id_cpu){
+
+    bool _cpu_tiene_id(void* ptr) {
+        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
+        return cpu->id_cpu == id_cpu;
+    }
+
+    return list_find(lista_cpus, _cpu_tiene_id);
+
 }

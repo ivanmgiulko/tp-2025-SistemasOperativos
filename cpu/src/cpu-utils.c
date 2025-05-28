@@ -103,5 +103,4 @@ void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
 		log_error(logger_cpu, "Handshake con [KERNEL] fallido!");
 		abort();
 	}
-
 }

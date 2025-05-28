@@ -46,7 +46,7 @@ int manejar_conexion_kernel_io(){
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
 			
-			t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, pid_desbloqueado);
+			t_io* _io_que_usa_pcb_bloqueado    = buscar_io_en_lista(lista_de_io, pid_desbloqueado);
 			_io_que_usa_pcb_bloqueado->enabled = true;
 
 			t_pcb* _proceso_desbloqueado = pop_cola_mutex(estado_blocked);
