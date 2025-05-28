@@ -233,9 +233,7 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
 
     free(a_enviar);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+    eliminar_paquete(paquete);
 }
 
 t_pcb* proceso_syscall_prueba(t_buffer* buffer) { 
@@ -313,8 +311,8 @@ t_pcb* _sacar_pcb_de_exec(int pid)
     return _proceso_a_bloquear;
 }
 
-void _enviar_a_finalizar_proceso(uint8_t pid) { 
-    
+void _enviar_a_finalizar_proceso(uint8_t pid) 
+{ 
     sem_wait(&bin_proceso_eliminar);
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
@@ -337,7 +335,7 @@ void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
 
     bytes = recv(socket_cliente_cpu, &handshake, sizeof(uint8_t), MSG_WAITALL);
         
-    if (handshake < 255) {
+    if (handshake < 256 && handshake >= 0) {
         switch (parte_cpu) {
         case 1:
             log_debug(logger_kernel, "Nueva conexión en Interrupt: socket %d", socket_cliente_cpu);
@@ -347,10 +345,10 @@ void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
             log_debug(logger_kernel, "Nueva conexión en Dispatch: socket %d", socket_cliente_cpu);
             break;
         }
-        
         bytes = send(socket_cliente_cpu, &resultOk, sizeof(uint8_t), 0);
     } else {
         bytes = send(socket_cliente_cpu, &resultError, sizeof(uint8_t), 0);
     }
 
+    // aca habria que hacer el manejo de del CPU ID?
 }

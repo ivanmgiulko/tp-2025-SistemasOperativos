@@ -46,6 +46,8 @@ void inicializar_estructuras()
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
 
+    lista_cpus = list_create();
+
     // INICIAMOS SEMAFOROS
     sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);

@@ -9,12 +9,19 @@
 	 * @brief #include "conexiones_kernel/conexion-kernel-cpu.h"
 	 */
 
+	typedef struct { 
+		int socket_interrupt;
+		int socket_dispatch;
+		uint8_t id_cpu;
+		uint8_t pid_en_cpu;
+		bool disponible;
+	} t_cpu_conectada;
+
+	// STRUCTS PARA MANEJAR LAS SYSCALLS
 	typedef struct {
         char* dispositivo;
         int64_t tiempo;
     } t_syscall_io;
-
-	
 
     // Funciones 
     /**
@@ -57,7 +64,7 @@
 
 	void _enviar_a_finalizar_proceso(uint8_t pid);
 
-	void _handshake_desde_cpu(int socket_cliente, char* parte_de_cpu);
+	void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu);
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC

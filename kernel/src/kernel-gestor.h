@@ -33,6 +33,7 @@
 
     // LISTAS
     extern t_list* lista_de_io;
+    extern t_list* lista_cpus;
 
     //CONEXIONES
     extern int fd_server_io;

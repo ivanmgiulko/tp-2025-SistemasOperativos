@@ -59,9 +59,9 @@ typedef struct
 } t_pcbMemoria; // Esto es lo que Memoria debe saber del PCB que es enviado desde Kernel
 
 typedef struct {
-        uint8_t pid;
-		int64_t tiempo;
-    } t_info_proceso_en_io;
+    uint8_t pid;
+	int64_t tiempo;
+} t_info_proceso_en_io;
 
 typedef struct  {
     int valor;
