@@ -68,6 +68,10 @@ typedef struct  {
     pthread_mutex_t mutex;
 } t_contador;
 
+/**
+	 * @struct t_io
+	 * @brief asocia un modulo IO a su lista de procesos pendientes de ejecucion
+	 */
 typedef struct {
     char* nombre;
 	pthread_mutex_t mutex;

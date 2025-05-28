@@ -1,4 +1,5 @@
 #include "conexion-kernel-io.h"
+
 int manejar_conexion_kernel_io(){
     socket_io = esperar_cliente(fd_server_io, logger_kernel);
 	
@@ -18,13 +19,14 @@ int manejar_conexion_kernel_io(){
 	// Enviar respuesta al cliente
 	send(socket_io, &resultado_handshake_exitoso, sizeof(int32_t), 0);
 
-	if(lista_de_io == NULL){
-		inicializar_lista_io();
-	}
-
 	char* nombre_io = malloc(tamanio_interfaz + 1);
 	memcpy(nombre_io, stream, tamanio_interfaz);
 	nombre_io[tamanio_interfaz] = '\0';  // Asegurarse de que termine en \0
+
+	// Si la lista de interfaces ya fue iniciada, no se crea de nuevo
+	if(lista_de_io == NULL){
+		inicializar_lista_io();
+	}
 
 	inicializar_io(nombre_io, socket_io);
 
@@ -39,9 +41,7 @@ int manejar_conexion_kernel_io(){
 			recibir_mensaje(socket_io, logger_kernel);
 			break;
 		case PROCESO_DESBLOQUEADO:
-			recv(socket_io, &(paquete->buffer->size), sizeof(uint32_t), 0);
-			paquete->buffer->stream = malloc(paquete->buffer->size);
-			recv(socket_io, paquete->buffer->stream, paquete->buffer->size, 0);
+			recibir_paquete(socket_io, paquete);
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
@@ -90,9 +90,7 @@ void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cl
     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
 
     free(a_enviar);
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+    eliminar_paquete(paquete);
 }
 
 uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) { 
@@ -121,8 +119,7 @@ void inicializar_io(char* nombre_io, int socket_io) {
     list_add(lista_de_io, io);
 
     log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
-    // t_io* io_encontrado = list_get(lista_de_io, 0);
-    // log_info(logger_kernel, "Nombre %s", io_encontrado->nombre);
+    
  }
 
 t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {

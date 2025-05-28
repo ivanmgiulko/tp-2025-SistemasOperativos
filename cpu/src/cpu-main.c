@@ -5,10 +5,7 @@ int main(int argc, char* argv[]){
 		return EXIT_FAILURE;
 	}
 	char* cpu_id = argv[1];
-	char* valor_prueba_interrupt = "Conectado a KERNEL desde INTERRUPT";
-	char* valor_prueba_dispatch = "Conectado a KERNEL desde DISPATCH";
-	char* valor_prueba_memoria = "Conectado a MEMORIA desde CPU";
-   
+
 	t_config* config_cpu = iniciar_config("./cpu.config");
     
 	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
@@ -34,43 +31,21 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
 	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
-//	IP_MEMORIA=127.0.0.4
-//	PUERTO_MEMORIA=40074
+
+	//	IP_MEMORIA=127.0.0.4
+	//	PUERTO_MEMORIA=40074
     // CREAMOS CONEXIONES DE DISPATCH E INTERRUPT HACIA EL KERNEL y asia memoria
-	log_info(logger_cpu, "Intentando conectarse al PUERTO INTERRUPT del KERNEL");
-	fd_conexion_kernel_interrupt = crear_conexion(ip_kernel, puerto_kernel_interrupt);
-	log_info(logger_cpu, "NOS CONECTAMOS AL KERNEL DESDE INTERRUPT!");
+	
+	_crear_conexion_kernel_interrupt(ip_kernel, puerto_kernel_interrupt, cpu_id);
+	
+	_crear_conexion_kernel_dispatch(ip_kernel, puerto_kernel_dispatch, cpu_id);
 
-	log_trace(logger_cpu, "Intentando conectarse al PUERTO DISPATCH del KERNEL");
-	fd_conexion_kernel_dispatch = crear_conexion(ip_kernel, puerto_kernel_dispatch);
-	log_trace(logger_cpu, "NOS CONECTAMOS AL KERNEL DESDE DISPATCH!");
+	_crear_conexion_cpu_memoria(ip_memoria, puerto_memoria);
 
-	log_info(logger_cpu, "Intentando conectarse a la MEMORIA");
-	fd_conexion_memoria = crear_conexion(ip_kernel, puerto_memoria);
-	log_info(logger_cpu, "NOS CONECTAMOS A LA MEMORIA");
-	// VALIDAMOS LOS FILE DESCRIPTORS DE LAS CONEXIONES AL KERNEL
-	if(fd_conexion_kernel_interrupt == -1){
-			log_error(logger_cpu, "Error al iniciar conexion de interrupt");
-			abort();
-		}
-
-	if(fd_conexion_kernel_dispatch == -1){
-        log_error(logger_cpu, "Error al iniciar conexion de dispatch");
-        abort();
-    }
-
-	if(fd_conexion_memoria == -1){
-			log_error(logger_cpu, "Error al iniciar conexion de MEMORIA");
-			abort();
-		}
-	// ENVIAMOS MENSAJES DE PRUEBA A AMBAS CONEXIONES DEL KERNEL
-	enviar_mensaje(valor_prueba_interrupt, fd_conexion_kernel_interrupt);
-	enviar_mensaje(valor_prueba_dispatch, fd_conexion_kernel_dispatch);
-	enviar_mensaje(cpu_id, fd_conexion_kernel_dispatch);
-	enviar_mensaje(valor_prueba_memoria, fd_conexion_memoria);
 	pcb_actual = malloc(sizeof(t_peticion_instruccion));
 	pcb_actual->pid = 0;
 	pcb_actual->pc = 0;
+
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	sem_init(&sem_cpu,0,0);
 	sem_init(&sem_cpu_kernel,0,1);

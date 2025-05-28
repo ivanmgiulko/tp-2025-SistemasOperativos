@@ -57,6 +57,8 @@
 
 	void _enviar_a_finalizar_proceso(uint8_t pid);
 
+	void _handshake_desde_cpu(int socket_cliente, char* parte_de_cpu);
+
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC
 	* @param t_buffer*: Contenido del proceso a poner en NEW

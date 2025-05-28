@@ -8,7 +8,8 @@ void manejar_conexion_kernel_interrupt() {
             log_error(logger_kernel, "Error al aceptar cliente en interrupt");
             continue;
         }
-        log_debug(logger_kernel, "Nueva conexión en interrupt: socket %d", socket_interrupt);
+
+        _recibir_handshake_de_cpu(socket_interrupt, 1);
 
         pthread_t hilo_cliente_interrupt;
         pthread_create(&hilo_cliente_interrupt, NULL, (void*)manejar_cliente_interrupt, (void*)&socket_interrupt);
@@ -23,7 +24,8 @@ void manejar_conexion_kernel_dispatch() {
             log_error(logger_kernel, "Error al aceptar cliente en dispatch");
             continue;
         }
-        log_debug(logger_kernel, "Nueva conexión en dispatch: socket %d", socket_dispatch);
+
+        _recibir_handshake_de_cpu(socket_dispatch, 2);
 
         // Crear un hilo para manejar la conexión del cliente
         pthread_t hilo_cliente_dispatch;
@@ -323,5 +325,32 @@ void _enviar_a_finalizar_proceso(uint8_t pid) {
     enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
 
     manejar_conexion_kernel_memoria(fd_conexion_memoria);
+
+}
+
+void _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
+    size_t bytes;
+
+    uint8_t handshake;
+    uint8_t resultOk = 0;
+    uint8_t resultError = -1;
+
+    bytes = recv(socket_cliente_cpu, &handshake, sizeof(uint8_t), MSG_WAITALL);
+        
+    if (handshake < 255) {
+        switch (parte_cpu) {
+        case 1:
+            log_debug(logger_kernel, "Nueva conexión en Interrupt: socket %d", socket_cliente_cpu);
+            break;
+        
+        case 2:
+            log_debug(logger_kernel, "Nueva conexión en Dispatch: socket %d", socket_cliente_cpu);
+            break;
+        }
+        
+        bytes = send(socket_cliente_cpu, &resultOk, sizeof(uint8_t), 0);
+    } else {
+        bytes = send(socket_cliente_cpu, &resultError, sizeof(uint8_t), 0);
+    }
 
 }

@@ -1,9 +1,5 @@
 #include "kernel-planificador.h"
 
-void decir_algoritmo(){
-    printf("%s", configuracion_kernel->ALGORITMO_INGRESO_A_READY);
-}
-
 t_estado* estado_new;
 t_estado* estado_ready;
 t_estado* estado_susp_ready;
@@ -50,6 +46,7 @@ void inicializar_estructuras()
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
 
+    // INICIAMOS SEMAFOROS
     sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
@@ -58,6 +55,7 @@ void inicializar_estructuras()
     sem_init(&bin_proceso_bloqueado, 0, 1);
     sem_init(&bin_proceso_eliminar, 0, 1);
 
+    // INICIAMOS LOS ESTADOS DE LOS PROCESOS
     estado_new = inicializar_estado();
     estado_ready = inicializar_estado();
     estado_susp_ready = inicializar_estado();
@@ -65,10 +63,6 @@ void inicializar_estructuras()
     estado_blocked = inicializar_estado();
     estado_susp_blocked = inicializar_estado();
     estado_exit = inicializar_estado();
-}
-
-p_algoritmos devolver_algoritmo_planificacion(){
-    return EXIT_FAILURE;
 }
 
 void iniciar_planificacion_largo_plazo(){
@@ -131,15 +125,9 @@ void iniciar_planificador_mediano_plazo() {
             enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo_ultimo_bloqueo, _io_que_usa_pcb_bloqueado->socket);
         } else { 
             // El proceso sigue bloqueado
+            // Logica de mediano plazo
             
         }
-
-       
-        
-        // Cuando finaliza un proceso de usar la IO, puedo usar el ?mismo? semaforo para que otro la use
-
-        // enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _syscall_io_recibida.tiempo, socket_io);
-
     }
 }
 

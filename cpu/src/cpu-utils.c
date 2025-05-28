@@ -52,3 +52,56 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 	free(respuesta->instruccion);
 	free(respuesta);
 }
+
+void _crear_conexion_kernel_interrupt(char* ip_kernel, char* puerto_kernel_interrupt, char* cpu_id) 
+{ 
+	fd_conexion_kernel_interrupt = crear_conexion(ip_kernel, puerto_kernel_interrupt);
+	
+	if(fd_conexion_kernel_interrupt == -1){
+		log_error(logger_cpu, "Error al iniciar conexion de interrupt");
+		abort();
+	}
+
+	_handshake_kernel_con_cpu_id(fd_conexion_kernel_interrupt, cpu_id);
+}
+
+void _crear_conexion_kernel_dispatch(char* ip_kernel, char* puerto_kernel_dispatch, char* cpu_id) 
+{ 
+	fd_conexion_kernel_dispatch = crear_conexion(ip_kernel, puerto_kernel_dispatch);
+
+	if(fd_conexion_kernel_dispatch == -1){
+        log_error(logger_cpu, "Error al iniciar conexion de dispatch");
+        abort();
+    }
+
+	_handshake_kernel_con_cpu_id(fd_conexion_kernel_dispatch, cpu_id);
+}
+
+void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) { 
+	fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+	
+	if(fd_conexion_memoria == -1){
+		log_error(logger_cpu, "Error al iniciar conexion de MEMORIA");
+		abort();
+	}
+	
+	enviar_mensaje("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+}
+
+void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
+	size_t bytes;
+
+	uint8_t handshake = atoi(cpu_id);
+	uint8_t result;
+
+	bytes = send(fd_conexion, &handshake, sizeof(uint8_t), 0);
+	bytes = recv(fd_conexion, &result, sizeof(uint8_t), MSG_WAITALL);
+
+	if (result == 0) {
+    	log_debug(logger_cpu, "Handshake con [KERNEL] exitoso!");
+	} else {
+		log_error(logger_cpu, "Handshake con [KERNEL] fallido!");
+		abort();
+	}
+
+}

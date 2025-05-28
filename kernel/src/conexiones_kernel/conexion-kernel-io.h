@@ -31,14 +31,8 @@
 	*/
 	uint8_t _recibir_proceso_bloqueado(t_buffer* buffer);
 
-	/**
-	 * @struct t_io
-	 * @brief asocia un modulo IO a su lista de procesos pendientes de ejecucion
-	 */
-    
-
 	
-
+    
     /**
 	 * @brief inicia la lista que va a contener a las interfaces
 	 */

@@ -85,12 +85,6 @@
     void iniciar_planificador_corto_plazo();
 
     /**
-	* @brief Indica el algortimo que se utiliza a la hora de ejecutar el planificador de largo plazo
-    *        (El algortimo es sacado del .config del Kernel)
-	*/
-    void decir_algoritmo();
-
-    /**
 	* @brief encola el proceso en la cola (dentro del struct t_estado) que nosotros le pasemos.
     * @param estado struct que contiene la cola en cuestion y un semaforo
     * @param pcb proceso para ser encolado en la cola que le pasamos
