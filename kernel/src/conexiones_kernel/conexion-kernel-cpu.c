@@ -56,16 +56,18 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 break;
             
             case SYSCALL_IO:
-                // de la syscall IO recibo PID, DISPOSITIVO, TIEMPO
+            
                 recibir_paquete(socket_interrupt, paquete);
 
-                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;                        
 
-                pc = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
                 log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
+
+                liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
                 t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
@@ -103,7 +105,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
                     // _enviar_a_finalizar_proceso(pid);
-                     
                 }
 
                 eliminar_paquete(paquete);
@@ -154,10 +155,16 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                pid = _deserializar_pid(offset, paquete);
+                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
-                
+
+                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
+
+                // Sacamos el proceso del estado exec y lo ponemos en blocked
+                // Habria que mandarlo a Memoria y ahi que lo devuelva conexion-kernel-memorica.c
+                // Hacemos ahi lo que diga la syscall, y de ahi se pasa a EXIT o vuelve a Ready
+
                 eliminar_paquete(paquete);
                 break;
 
@@ -168,6 +175,8 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 pid = _deserializar_pid(offset, paquete);
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: EXIT", pid);
+
+                liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
                 _enviar_a_finalizar_proceso(pid);
                 
@@ -375,29 +384,51 @@ void _agregar_socket_en_cpu(uint8_t id_cpu, t_sockets_cpu tipo_socket, int valor
     }
 }
 
-t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu) {
-
+t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu) 
+{
     t_cpu_conectada* cpu_agregada = malloc(sizeof(t_cpu_conectada));
 
     cpu_agregada->id_cpu = id_cpu;
-    cpu_agregada->socket_interrupt = -1; // Inicializar el socket de interrupt
-    cpu_agregada->socket_dispatch = -1; // Inicializar el socket de dispatch
-    cpu_agregada->pid_en_cpu = 0; // Inicializar el PID en CPU
+    cpu_agregada->socket_interrupt = -1; 
+    cpu_agregada->socket_dispatch  = -1; 
+    cpu_agregada->pid_en_cpu       = -1; 
     
     // PROTEGER CON MUTEX
     list_add(lista_cpus, cpu_agregada);
     // PROTEGER CON MUTEX
+    sem_post(&bin_cpu_disponible); // Posteo en base a los cpus disponibles -> 50000000 DE IQ
 
     return cpu_agregada;
 }
 
-t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu){
-
+t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)
+{
     bool _cpu_tiene_id(void* ptr) {
         t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
         return cpu->id_cpu == id_cpu;
     }
 
     return list_find(lista_cpus, _cpu_tiene_id);
+}
 
+t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid)
+{
+    bool _cpu_tiene_pid(void* ptr) {
+        t_cpu_conectada* cpu_con_proceso = (t_cpu_conectada*) ptr;
+        return cpu_con_proceso->pid_en_cpu == pid;
+    }
+
+    return list_find(lista_cpus, _cpu_tiene_pid);
+}
+
+void liberar_cpu_de_proceso(uint8_t pid) 
+{
+    t_cpu_conectada* cpu_a_liberar = malloc(sizeof(t_cpu_conectada));
+    
+    cpu_a_liberar = _buscar_proceso_en_lista_cpu(pid);
+    cpu_a_liberar->pid_en_cpu = -1;
+
+    log_debug(logger_kernel, "Se libero un CPU CARAJO");
+
+    sem_post(&bin_cpu_disponible);
 }

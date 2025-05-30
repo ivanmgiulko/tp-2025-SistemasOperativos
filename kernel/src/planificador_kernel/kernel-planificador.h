@@ -13,6 +13,7 @@
 	 * @brief similar al concepto de Monitor. Asocia una cola a un mutex
 	 */
     
+    extern t_list* lista_cpus;
 
     /**
 	 * @enum p_algoritmos
@@ -43,8 +44,13 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
+
+    extern sem_t mutex_lista_cpus;
+
     extern sem_t bin_proceso_bloqueado;
     extern sem_t bin_proceso_eliminar;
+    extern sem_t bin_cpu_disponible;
+    
     
     /**
 	* @brief Inicializa el struct t_estado
@@ -179,6 +185,8 @@
     void _enviar_proceso_susp_ready_a_cola_ready();
 
     bool _verificar_cola_susp_ready_esta_vacia();
+
+    t_cpu_conectada* _buscar_cpu_libre();
 
 #endif
 

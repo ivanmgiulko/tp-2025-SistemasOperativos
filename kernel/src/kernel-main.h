@@ -29,8 +29,6 @@
     t_log* logger_kernel;
 
     // LISTAS
-    t_list* lista_interfaces;
-    t_list* lista_cpus;
 
     // CONEXIONES
     int fd_server_io;

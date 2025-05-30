@@ -10,12 +10,17 @@ t_estado* estado_exit;
 
 t_contador* pid_contador;
 
+
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
+sem_t sem_cantidad_pcbs_en_susp_ready;
+
+sem_t mutex_lista_cpus;
+
 sem_t bin_proceso_bloqueado;
 sem_t bin_proceso_eliminar;
-sem_t sem_cantidad_pcbs_en_susp_ready;
+sem_t bin_cpu_disponible;
 
 sem_t sem_hay_espacio_en_memoria;
 
@@ -40,6 +45,8 @@ int asignar_pid(){
     return valor_pid;
 }
 
+t_list* lista_cpus = NULL;
+
 void inicializar_estructuras()
 {
     logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); 
@@ -54,17 +61,21 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_susp_ready, 0, 0);
 
+    sem_init(&mutex_lista_cpus);
+
     sem_init(&bin_proceso_bloqueado, 0, 1);
     sem_init(&bin_proceso_eliminar, 0, 1);
+    sem_init(&bin_cpu_disponible, 0, 0);
+
 
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
-    estado_new = inicializar_estado();
-    estado_ready = inicializar_estado();
-    estado_susp_ready = inicializar_estado();
-    estado_exec = inicializar_estado();
-    estado_blocked = inicializar_estado();
+    estado_new          = inicializar_estado();
+    estado_ready        = inicializar_estado();
+    estado_susp_ready   = inicializar_estado();
+    estado_exec         = inicializar_estado();
+    estado_blocked      = inicializar_estado();
     estado_susp_blocked = inicializar_estado();
-    estado_exit = inicializar_estado();
+    estado_exit         = inicializar_estado();
 }
 
 void iniciar_planificacion_largo_plazo(){
@@ -81,17 +92,26 @@ void iniciar_planificacion_largo_plazo(){
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
 
-    t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    pasar_pcb_a_susp_ready(proceso_ejemplo1);
+    // t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    // pasar_pcb_a_susp_ready(proceso_ejemplo1);
 
-    t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    pasar_pcb_a_susp_ready(proceso_ejemplo2);        
+    // t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    // pasar_pcb_a_susp_ready(proceso_ejemplo2);        
 
     t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
     pasar_pcb_a_new(proceso_ejemplo3);
 
     t_pcb* proceso_ejemplo4 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
     pasar_pcb_a_new(proceso_ejemplo4);
+
+    t_pcb* proceso_ejemplo5 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+    pasar_pcb_a_new(proceso_ejemplo5);
+
+    t_pcb* proceso_ejemplo6 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+    pasar_pcb_a_new(proceso_ejemplo6);
+
+    t_pcb* proceso_ejemplo7 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
+    pasar_pcb_a_new(proceso_ejemplo7);
 
     while(1){
 
@@ -141,17 +161,22 @@ void iniciar_planificador_corto_plazo(){
         
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
             
+            t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+            
+            sem_wait(&bin_cpu_disponible); // Deberia estar iniciado con la cantidad de CPU disponibles
+        
             t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
             pasar_pcb_ready_a_exec(pcb_a_operar);
             
-            //t_pcb* pcb_en_exec = peek_cola_mutex(estado_exec);
-            
             t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
-            
-            enviar_proc_cpu(*infoProceso, socket_dispatch);
+
+            cpu_libre = _buscar_cpu_libre();
+            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+
+            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
         }
     }
 }
@@ -317,4 +342,15 @@ void _enviar_proceso_susp_ready_a_cola_ready()
         sem_wait(&sem_hay_espacio_en_memoria);        // Espera el semaforo desde kernel-memoria
         sem_post(&sem_cantidad_pcbs_en_susp_ready);   // comienzo de nuevo el while para que ponga al proceso en Ready
     }
+}
+
+t_cpu_conectada* _buscar_cpu_libre() { 
+
+    bool _cpu_esta_libre(void* ptr) {
+        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
+        return cpu->pid_en_cpu == -1;
+    }
+
+    return list_find(lista_cpus, _cpu_esta_libre);
+
 }

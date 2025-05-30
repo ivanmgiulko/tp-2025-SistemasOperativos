@@ -257,9 +257,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                         
 		case INSTR_IO:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
-				instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
+			instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
+
             char* dispositivo = instruccion->parametros.io.dispositivo;
             int tiempo = instruccion->parametros.io.tiempo;
+
             pcb_actual->pc++;
             paquete->codigo_operacion = SYSCALL_IO;
             
@@ -292,7 +294,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 		case INSTR_INIT_PROC:
 			log_info(logger_cpu, "syscall detectada... parametros %s %d",
-				instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
+			instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
             char* archivo = instruccion->parametros.init_proc.archivo;
             int tamanio = instruccion->parametros.init_proc.tamanio;
           
@@ -322,12 +324,17 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     pedir_instruccion_a_memoria(pcb_actual); 
 			break;
 		case INSTR_DUMP_MEMORY:
+
 			log_info(logger_cpu, "syscall detectada... parametros ");
 
-            
+            pcb_actual->pc++;
 
             paquete->codigo_operacion = SYSCALL_DUMP_MEMORY;
+
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+
             bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
             void* paquete_dump_memory = serializar_paquete(paquete, bytes);
             
@@ -339,8 +346,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             log_info(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
 
-            pcb_actual->pc++;
-             sem_wait(&sem_cpu);
+            sem_wait(&sem_cpu);
 
     pedir_instruccion_a_memoria(pcb_actual); 
 			break;
@@ -348,9 +354,14 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
 			log_info(logger_cpu, "syscall detectada... parametros ");
 
+            pcb_actual->pc++;
 
             paquete->codigo_operacion = SYSCALL_EXIT;
+
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+
             bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
             void* paquete_exit = serializar_paquete(paquete, bytes);
             

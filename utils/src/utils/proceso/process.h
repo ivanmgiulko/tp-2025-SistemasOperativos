@@ -68,6 +68,13 @@ typedef struct  {
     pthread_mutex_t mutex;
 } t_contador;
 
+typedef struct { 
+	int socket_interrupt;
+	int socket_dispatch;
+	uint8_t id_cpu;
+	int8_t pid_en_cpu;
+} t_cpu_conectada;
+
 /**
 	 * @struct t_io
 	 * @brief asocia un modulo IO a su lista de procesos pendientes de ejecucion
