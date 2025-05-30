@@ -164,7 +164,8 @@ void iniciar_planificador_corto_plazo(){
             t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
             
             sem_wait(&bin_cpu_disponible); // Deberia estar iniciado con la cantidad de CPU disponibles
-        
+            cpu_libre = _buscar_cpu_libre();
+
             t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
             pasar_pcb_ready_a_exec(pcb_a_operar);
@@ -173,7 +174,6 @@ void iniciar_planificador_corto_plazo(){
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
 
-            cpu_libre = _buscar_cpu_libre();
             cpu_libre->pid_en_cpu = pcb_a_operar->pid;
 
             enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
