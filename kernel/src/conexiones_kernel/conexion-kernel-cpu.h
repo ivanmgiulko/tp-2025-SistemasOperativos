@@ -51,7 +51,7 @@
 
 	t_pcb* _sacar_pcb_de_exec(int pid);
 
-	void _enviar_a_finalizar_proceso(uint8_t pid);
+	void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc);
 
 	uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu);
 

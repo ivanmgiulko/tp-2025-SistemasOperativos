@@ -91,20 +91,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 } else {
 
-                    char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-                    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-                    int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-
-                    // Falta realizar prueba
-                    t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
-
-                    _proceso_a_terminar->pc = pc;
-
-                    enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
-
-                    manejar_conexion_kernel_memoria(fd_conexion_memoria);
-
-                    // _enviar_a_finalizar_proceso(pid);
+                    _enviar_a_finalizar_proceso(pid, pc);
                 }
 
                 eliminar_paquete(paquete);
@@ -172,13 +159,15 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                pid = _deserializar_pid(offset, paquete);
+                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+                
+                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: EXIT", pid);
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                _enviar_a_finalizar_proceso(pid);
+                _enviar_a_finalizar_proceso(pid, pc);
                 
                 eliminar_paquete(paquete);
                 break;
@@ -323,7 +312,7 @@ t_pcb* _sacar_pcb_de_exec(int pid)
     return _proceso_a_bloquear;
 }
 
-void _enviar_a_finalizar_proceso(uint8_t pid) 
+void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc)
 { 
     sem_wait(&bin_proceso_eliminar);
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
@@ -332,6 +321,9 @@ void _enviar_a_finalizar_proceso(uint8_t pid)
 
     // Falta realizar prueba
     t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
+
+    _proceso_a_terminar->pc = pc;
+
     enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
 
     manejar_conexion_kernel_memoria(fd_conexion_memoria);
