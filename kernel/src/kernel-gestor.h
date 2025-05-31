@@ -1,7 +1,7 @@
 #ifndef KERNEL_GESTOR_H_
 #define KERNEL_GESTOR_H_
 
-    #include <./utils/utils.h>
+    #include <utils/utils.h>
     #include <utils/proceso/process.h>
     #include <utils/serializacion/serializacion.h>
     #include <utils/cliente/client.h>
@@ -14,6 +14,8 @@
     #include "conexiones_kernel/conexion-kernel-memoria.h"
     #include "conexiones_kernel/conexion-kernel-cpu.h"
     #include "conexiones_kernel/conexion-kernel-io.h"
+
+    #include <utils/kernel-utils/kernel-structs-enums.h>
 
     /**
 	 * @file
@@ -32,8 +34,8 @@
     extern t_log* logger_kernel;
 
     // LISTAS
-    extern t_list* lista_de_io;
-    extern t_list* lista_cpus;
+    extern t_lista_io* lista_de_io;
+    extern t_lista_cpus* lista_cpus;
 
     //CONEXIONES
     extern int fd_server_io;

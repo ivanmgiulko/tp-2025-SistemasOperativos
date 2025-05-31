@@ -3,23 +3,12 @@
 
     #include "kernel-gestor.h"
 	#include "conexion-kernel-io.h"
+	#include <utils/kernel-utils/kernel-structs-enums.h>
 
     /**
 	 * @file
 	 * @brief #include "conexiones_kernel/conexion-kernel-cpu.h"
 	 */
-
-	 typedef enum{
-		SOCKET_INTERRUPT,
-		SOCKET_DISPATCH
-	 }t_sockets_cpu;
-
-
-	// STRUCTS PARA MANEJAR LAS SYSCALLS
-	typedef struct {
-        char* dispositivo;
-        int64_t tiempo;
-    } t_syscall_io;
 
     // Funciones 
     /**
@@ -55,6 +44,8 @@
 	t_syscall_io _deserializar_syscall_io(int , t_paquete* );
 
 	int _deserializar_pid(int offset, t_paquete* paquete);
+
+	int _deserializar_pc(int offset, t_paquete* paquete);
 
 	bool _tiene_el_pid(void* ptr, void* data);
 

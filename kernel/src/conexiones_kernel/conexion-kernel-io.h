@@ -2,13 +2,14 @@
 #define CONEXION_KERNEL_IO_
     
     #include "kernel-gestor.h"
+	#include <utils/kernel-utils/kernel-structs-enums.h>
 	
     /**
 	 * @file
 	 * @brief #include "conexiones_kernel/conexion-kernel-io.h"
 	 */
 
-	extern t_list* lista_de_io;
+	extern t_lista_io* lista_de_io;
 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde la IO
@@ -30,9 +31,7 @@
 	* @return el PID dle proceso recien desbloqueado
 	*/
 	uint8_t _recibir_proceso_bloqueado(t_buffer* buffer);
-
 	
-    
     /**
 	 * @brief inicia la lista que va a contener a las interfaces
 	 */

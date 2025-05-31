@@ -46,9 +46,13 @@ int manejar_conexion_kernel_io(){
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
 			
-			t_io* _io_que_usa_pcb_bloqueado    = buscar_io_en_lista(lista_de_io, pid_desbloqueado);
+			pthread_mutex_lock(&lista_de_io->mutex_lista);
+			t_io* _io_que_usa_pcb_bloqueado    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado);
 			_io_que_usa_pcb_bloqueado->enabled = true;
+			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
+			list_remove(_io_que_usa_pcb_bloqueado->procesos, 0);
+			
 			t_pcb* _proceso_desbloqueado = pop_cola_mutex(estado_blocked);
 			sem_post(&bin_proceso_bloqueado);
 
@@ -101,10 +105,12 @@ uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) {
     return pid;
 }
 
-t_list* lista_de_io = NULL;
+t_lista_io* lista_de_io = NULL;
 
 void inicializar_lista_io() {
-    lista_de_io = list_create();
+	lista_de_io = malloc(sizeof(t_lista_io));
+    lista_de_io->lista_ios = list_create();
+	pthread_mutex_init(&lista_de_io->mutex_lista, NULL);
     log_info(logger_kernel, "Lista de IO inicializada");
 }
 
@@ -116,7 +122,7 @@ void inicializar_io(char* nombre_io, int socket_io) {
     io->socket = socket_io;
 	io->enabled = true;
 	io->tiempo_ultimo_bloqueo = 0;
-    list_add(lista_de_io, io);
+    list_add(lista_de_io->lista_ios, io);
 
     log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
     
@@ -132,11 +138,11 @@ t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
 }
 
 t_io* funcion_syscall_IO(char* nombreInterfaz) { 
-    return buscar_io(lista_de_io, nombreInterfaz);
+    return buscar_io(lista_de_io->lista_ios, nombreInterfaz);
 }
 
 void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb) {
-    pthread_mutex_lock(&(interfaz->mutex));
+    pthread_mutex_lock(&(lista_de_io->mutex_lista));
     list_add(interfaz->procesos, pcb);
-    pthread_mutex_unlock(&(interfaz->mutex));
+    pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 }

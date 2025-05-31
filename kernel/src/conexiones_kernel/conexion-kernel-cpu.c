@@ -339,13 +339,12 @@ void _enviar_a_finalizar_proceso(uint8_t pid)
 }
 
 uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
-    size_t bytes;
 
     uint8_t handshake;  // Valor del CPU ID
     uint8_t resultOk = 0;
     uint8_t resultError = -1;
 
-    bytes = recv(socket_cliente_cpu, &handshake, sizeof(uint8_t), MSG_WAITALL);
+    recv(socket_cliente_cpu, &handshake, sizeof(uint8_t), MSG_WAITALL);
         
     if (handshake < 256 && handshake >= 0) {
         switch (parte_cpu) {
@@ -357,9 +356,9 @@ uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
             log_debug(logger_kernel, "Nueva conexión en Dispatch: socket %d", socket_cliente_cpu);
             break;
         }
-        bytes = send(socket_cliente_cpu, &resultOk, sizeof(uint8_t), 0);
+        send(socket_cliente_cpu, &resultOk, sizeof(uint8_t), 0);
     } else {
-        bytes = send(socket_cliente_cpu, &resultError, sizeof(uint8_t), 0);
+        send(socket_cliente_cpu, &resultError, sizeof(uint8_t), 0);
     }
 
     return handshake;
@@ -394,7 +393,7 @@ t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu)
     cpu_agregada->pid_en_cpu       = -1; 
     
     // PROTEGER CON MUTEX
-    list_add(lista_cpus, cpu_agregada);
+    list_add(lista_cpus->lista_cpus, cpu_agregada);
     // PROTEGER CON MUTEX
     sem_post(&bin_cpu_disponible); // Posteo en base a los cpus disponibles -> 50000000 DE IQ
 
@@ -408,7 +407,7 @@ t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)
         return cpu->id_cpu == id_cpu;
     }
 
-    return list_find(lista_cpus, _cpu_tiene_id);
+    return list_find(lista_cpus->lista_cpus, _cpu_tiene_id);
 }
 
 t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid)
@@ -418,15 +417,17 @@ t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid)
         return cpu_con_proceso->pid_en_cpu == pid;
     }
 
-    return list_find(lista_cpus, _cpu_tiene_pid);
+    return list_find(lista_cpus->lista_cpus, _cpu_tiene_pid);
 }
 
 void liberar_cpu_de_proceso(uint8_t pid) 
 {
     t_cpu_conectada* cpu_a_liberar = malloc(sizeof(t_cpu_conectada));
     
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
     cpu_a_liberar = _buscar_proceso_en_lista_cpu(pid);
     cpu_a_liberar->pid_en_cpu = -1;
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
     log_debug(logger_kernel, "Se libero un CPU CARAJO");
 

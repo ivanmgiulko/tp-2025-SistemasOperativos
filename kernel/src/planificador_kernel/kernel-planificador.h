@@ -2,6 +2,7 @@
 #define KERNEL_PLANIFICADOR_H_
 
     #include "kernel-gestor.h"
+    #include <utils/kernel-utils/kernel-structs-enums.h>
 
     /**
 	 * @file
@@ -13,7 +14,7 @@
 	 * @brief similar al concepto de Monitor. Asocia una cola a un mutex
 	 */
     
-    extern t_list* lista_cpus;
+    extern t_lista_cpus* lista_cpus;
 
     /**
 	 * @enum p_algoritmos
@@ -44,8 +45,6 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
-
-    extern sem_t mutex_lista_cpus;
 
     extern sem_t bin_proceso_bloqueado;
     extern sem_t bin_proceso_eliminar;

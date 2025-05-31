@@ -10,13 +10,10 @@ t_estado* estado_exit;
 
 t_contador* pid_contador;
 
-
 sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
-
-sem_t mutex_lista_cpus;
 
 sem_t bin_proceso_bloqueado;
 sem_t bin_proceso_eliminar;
@@ -45,7 +42,7 @@ int asignar_pid(){
     return valor_pid;
 }
 
-t_list* lista_cpus = NULL;
+t_lista_cpus* lista_cpus = NULL;
 
 void inicializar_estructuras()
 {
@@ -53,15 +50,15 @@ void inicializar_estructuras()
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
 
-    lista_cpus = list_create();
+    lista_cpus = malloc(sizeof(t_lista_cpus));
+    lista_cpus->lista_cpus = list_create();
+    pthread_mutex_init(&lista_cpus->mutex_lista, NULL);
 
     // INICIAMOS SEMAFOROS
     sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_susp_ready, 0, 0);
-
-    sem_init(&mutex_lista_cpus);
 
     sem_init(&bin_proceso_bloqueado, 0, 1);
     sem_init(&bin_proceso_eliminar, 0, 1);
@@ -92,11 +89,11 @@ void iniciar_planificacion_largo_plazo(){
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
 
-    // t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    // pasar_pcb_a_susp_ready(proceso_ejemplo1);
+    t_pcb* proceso_ejemplo1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    pasar_pcb_a_susp_ready(proceso_ejemplo1);
 
-    // t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
-    // pasar_pcb_a_susp_ready(proceso_ejemplo2);        
+    t_pcb* proceso_ejemplo2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 4000, asignar_pid());
+    pasar_pcb_a_susp_ready(proceso_ejemplo2);        
 
     t_pcb* proceso_ejemplo3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid());
     pasar_pcb_a_new(proceso_ejemplo3);
@@ -140,15 +137,20 @@ void iniciar_planificador_mediano_plazo() {
 
         t_pcb* _proceso_bloquedo = peek_cola_mutex(estado_blocked);
 
-        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io, _proceso_bloquedo->pid);
+        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloquedo->pid);
 
         if(_io_que_usa_pcb_bloqueado->enabled == true) {
+
+            pthread_mutex_lock(&lista_de_io->mutex_lista);
             _io_que_usa_pcb_bloqueado->enabled = false;
+            pthread_mutex_unlock(&lista_de_io->mutex_lista);
+
             enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo_ultimo_bloqueo, _io_que_usa_pcb_bloqueado->socket);
         } else { 
+
             // El proceso sigue bloqueado
             // Logica de mediano plazo
-            
+    
         }
     }
 }
@@ -174,7 +176,9 @@ void iniciar_planificador_corto_plazo(){
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
 
+            pthread_mutex_lock(&lista_cpus->mutex_lista);
             cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+            pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
             enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
         }
@@ -351,6 +355,6 @@ t_cpu_conectada* _buscar_cpu_libre() {
         return cpu->pid_en_cpu == -1;
     }
 
-    return list_find(lista_cpus, _cpu_esta_libre);
+    return list_find(lista_cpus->lista_cpus, _cpu_esta_libre);
 
 }

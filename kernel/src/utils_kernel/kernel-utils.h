@@ -2,6 +2,7 @@
 #define KERNEL_UTILS_H_
 
     #include "kernel-gestor.h"
+    #include <utils/kernel-utils/kernel-structs-enums.h>
 
     void _chequear_segundo_argumento_es_numero(char* numero_en_string);
 

@@ -145,7 +145,7 @@ t_pcbMemoria* deserializarProceso(t_buffer* buffer) {
 
     memcpy(&(procesoMemo->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
     memcpy(&(procesoMemo->tamanioMemoria), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    memcpy(&(procesoMemo->path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    memcpy(&(procesoMemo->path_length), stream, sizeof(uint32_t));  stream += sizeof(uint32_t);
     procesoMemo->pathArchivoPseudocodigo = malloc(procesoMemo->path_length);
     memcpy(procesoMemo->pathArchivoPseudocodigo, stream, procesoMemo->path_length);
 

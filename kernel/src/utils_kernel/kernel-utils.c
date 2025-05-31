@@ -127,7 +127,7 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
     int tamanio_lista = list_size(lista_base), cont = 0;
     
     do { 
-        t_io* _elemento_pivote = list_get(lista_de_io, cont);
+        t_io* _elemento_pivote = list_get(lista_de_io->lista_ios, cont);
 
         t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
 

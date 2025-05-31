@@ -58,35 +58,11 @@ typedef struct
 
 } t_pcbMemoria; // Esto es lo que Memoria debe saber del PCB que es enviado desde Kernel
 
-typedef struct {
-    uint8_t pid;
-	int64_t tiempo;
-} t_info_proceso_en_io;
-
 typedef struct  {
     int valor;
     pthread_mutex_t mutex;
 } t_contador;
 
-typedef struct { 
-	int socket_interrupt;
-	int socket_dispatch;
-	uint8_t id_cpu;
-	int8_t pid_en_cpu;
-} t_cpu_conectada;
-
-/**
-	 * @struct t_io
-	 * @brief asocia un modulo IO a su lista de procesos pendientes de ejecucion
-	 */
-typedef struct {
-    char* nombre;
-	pthread_mutex_t mutex;
-    t_list* procesos;
-    int socket;
-	uint64_t tiempo_ultimo_bloqueo;
-	bool enabled;
-} t_io;
 
 
 metricas_estado iniciarMetricasEstado();
