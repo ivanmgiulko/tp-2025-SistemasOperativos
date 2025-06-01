@@ -62,6 +62,7 @@ void _iniciar_server_para_io()
     pthread_detach(hilo_servidor_io);
 }
 
+
 void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
 { 
     if(_cola_new_estaba_vacia) {
@@ -123,7 +124,7 @@ void _iniciar_cuando_apreta_enter() {
 }
 
 t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
-    bool flag = true;
+    bool flag = false;
     int tamanio_lista = list_size(lista_base), cont = 0;
     
     do { 
@@ -139,7 +140,7 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
             return _elemento_pivote;
         }
 
-    } while(!flag && cont < tamanio_lista);
+    } while(!flag && cont <= tamanio_lista);
     return NULL;
 }
 

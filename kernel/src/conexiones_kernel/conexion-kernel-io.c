@@ -1,23 +1,37 @@
 #include "conexion-kernel-io.h"
 
-int manejar_conexion_kernel_io(){
-    socket_io = esperar_cliente(fd_server_io, logger_kernel);
-	
+void manejar_conexion_kernel_io() {
+    while (1) {
+        socket_io = esperar_cliente(fd_server_io, logger_kernel);
+        if (fd_server_io == -1) {
+            log_error(logger_kernel, "Error al aceptar cliente de IO");
+            continue;
+        }
+
+        // Crear un hilo para manejar la conexión del cliente
+        pthread_t hilo_cliente_io;
+        pthread_create(&hilo_cliente_io, NULL, (void*)manejar_cliente_io, (void*)&socket_io);
+        pthread_detach(hilo_cliente_io);
+    }
+}
+
+int manejar_cliente_io(void* socket_cliente_ptr){
+    int socket_cliente_io = *(int*)socket_cliente_ptr;
 	size_t tamanio_interfaz;
 	int32_t resultado_handshake_exitoso = 1;
-	if(recv(socket_io, &tamanio_interfaz, sizeof(size_t), 0) != sizeof(size_t)){
+	if(recv(socket_cliente_io, &tamanio_interfaz, sizeof(size_t), 0) != sizeof(size_t)){
 		log_error(logger_kernel, "Error al recibir el tamanio de la interfaz");
 		return EXIT_FAILURE;
 	}
 
 	void* stream = malloc(tamanio_interfaz);
-	if(recv(socket_io, stream, tamanio_interfaz, 0) != tamanio_interfaz){
+	if(recv(socket_cliente_io, stream, tamanio_interfaz, 0) != tamanio_interfaz){
 		log_error(logger_kernel, "Error al recibir el nombre de la interfaz");
 		return EXIT_FAILURE;
 	}
 
 	// Enviar respuesta al cliente
-	send(socket_io, &resultado_handshake_exitoso, sizeof(int32_t), 0);
+	send(socket_cliente_io, &resultado_handshake_exitoso, sizeof(int32_t), 0);
 
 	char* nombre_io = malloc(tamanio_interfaz + 1);
 	memcpy(nombre_io, stream, tamanio_interfaz);
@@ -28,20 +42,20 @@ int manejar_conexion_kernel_io(){
 		inicializar_lista_io();
 	}
 
-	inicializar_io(nombre_io, socket_io);
+	inicializar_io(nombre_io, socket_cliente_io);
 
 	free(stream);
 
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_io);
+		paquete->codigo_operacion = recibir_operacion(socket_cliente_io);
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
-			recibir_mensaje(socket_io, logger_kernel);
+			recibir_mensaje(socket_cliente_io, logger_kernel);
 			break;
 		case PROCESO_DESBLOQUEADO:
-			recibir_paquete(socket_io, paquete);
+			recibir_paquete(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
@@ -69,7 +83,7 @@ int manejar_conexion_kernel_io(){
 		}
 	}
 
-	close(socket_io);
+	close(socket_cliente_io);
 	return EXIT_SUCCESS;
 }
 

@@ -50,7 +50,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 		case PROCESO_FINALIZADO:
 			recibir_paquete(socket_cliente, paquete);
 			int offset = 0;
-			uint8_t  pid = _deserializar_pid(offset, paquete);
+			uint8_t  pid = _deserializar_pid(&offset, paquete);
 			
 			log_info(logger_kernel, "## %d - Finaliza el proceso", pid);
 			sem_post(&sem_hay_espacio_en_memoria);

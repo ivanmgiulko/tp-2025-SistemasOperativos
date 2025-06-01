@@ -41,11 +41,13 @@
 	*/
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
-	t_syscall_io _deserializar_syscall_io(int , t_paquete* );
+	t_syscall_io _deserializar_syscall_io(int* , t_paquete* );
 
-	int _deserializar_pid(int offset, t_paquete* paquete);
+	int deserializar_tamanio_proceso(int* offset, t_paquete* paquete);
 
-	int _deserializar_pc(int offset, t_paquete* paquete);
+	int _deserializar_pid(int* offset, t_paquete* paquete);
+
+	int _deserializar_pc(int* offset, t_paquete* paquete);
 
 	bool _tiene_el_pid(void* ptr, void* data);
 
@@ -64,6 +66,8 @@
 	t_cpu_conectada* _buscar_cpu_en_lista(uint8_t);
 
 	void liberar_cpu_de_proceso(uint8_t pid);
+
+	char* deserializar_archivo_instrucciones(int* offset, t_paquete* paquete);
 
 	t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid);
 

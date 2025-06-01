@@ -15,7 +15,9 @@
 	* @brief Maneja las peticiones que le llegan al Kernel desde la IO
 	* @returns 0 (finalizando la conexion previamente) en caso de que se termine de manejar la conexion dada entre Kernel y IO
 	*/
-    int manejar_conexion_kernel_io();
+    void manejar_conexion_kernel_io();
+
+	int manejar_cliente_io();
 
 	/**
 	* @brief envia un proceso al modulo de IO para que se bloquee

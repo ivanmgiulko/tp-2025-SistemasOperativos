@@ -40,15 +40,15 @@ void manejar_conexion_kernel_dispatch() {
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
-    int offset, pid, pc, tamanio_pid;
+    int* offset = malloc(sizeof(int)); 
+    int pid, pc;
     while (1) {
         
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_interrupt);
 
-        offset = 0;
-        tamanio_pid = 0;
+        *offset = 0;
         
         switch (paquete->codigo_operacion){
             case MENSAJE:
@@ -59,9 +59,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
             
                 recibir_paquete(socket_interrupt, paquete);
 
-                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;                        
+                pid = _deserializar_pid(offset, paquete);                        
 
-                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
+                pc = _deserializar_pc(offset, paquete); 
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
@@ -101,52 +101,29 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 // de la syscall INIT_PORC recibo PID, Archivo, tamanioProceso
                 recibir_paquete(socket_interrupt, paquete);
 
-                offset = 0;
+                pid = _deserializar_pid(offset, paquete);    
 
-                // Leer tamaño PID
-                memcpy(&tamanio_pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
-                // Leer PID
-                memcpy(&pid, paquete->buffer->stream + offset, tamanio_pid); offset += tamanio_pid;
-
-                // Leer tamaño archivo
-                int len_archivo=0;
-                memcpy(&len_archivo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
-                // Leer archivo
-                char* archivo = malloc(len_archivo);
-                memcpy(archivo, paquete->buffer->stream + offset, len_archivo); offset += len_archivo;
-
-                // Leer tamaño_tamanio
-                int tamanio_tamanio;
-                memcpy(&tamanio_tamanio, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-
-                // Leer tamanio
-                int tamanio;
-                memcpy(&tamanio, paquete->buffer->stream + offset, tamanio_tamanio); offset += tamanio_tamanio;
-
-                // Recibo prooceso desde CPU deserializado
-                // t_pcb* proceso_prueba_syscall = proceso_syscall_prueba(paquete->buffer);
-                // // Observacion: este proceso no tiene iniciada las metricas, habria que ver como usar la funcion "iniciarPCB"
-                
-                // // Pasamos procesos que llegan desde CPU (SYSCALL INIT_PROC) a NEW
-                // pasar_pcb_a_new(proceso_prueba_syscall);
-                //log_trace(logger_kernel, "SYSCALL_INIT_PROC recibida: PID=%d, archivo=%s, tamanio=%d", pid, archivo, tamanio);
                 log_info(logger_kernel, "## %d - Solicitó syscall: INIT_PROC", pid);
-            
+
+                char* archivo = deserializar_archivo_instrucciones(offset, paquete);
+
+                int tamanio_proceso = deserializar_tamanio_proceso(offset, paquete);
+
+                t_pcb* nuevo_proceso = iniciarPCB(archivo, tamanio_proceso, asignar_pid());
+
+                pasar_pcb_a_new(nuevo_proceso);
+
                 eliminar_paquete(paquete);
-                free(archivo);
-            
                 break;
             case SYSCALL_DUMP_MEMORY:
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+                pid = _deserializar_pid(offset, paquete); 
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
 
-                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
+                pc = _deserializar_pc(offset, paquete); 
 
                 // Sacamos el proceso del estado exec y lo ponemos en blocked
                 // Habria que mandarlo a Memoria y ahi que lo devuelva conexion-kernel-memorica.c
@@ -159,9 +136,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                pid = _deserializar_pid(offset, paquete); offset += sizeof(int) * 2;
+                pid = _deserializar_pid(offset, paquete); 
                 
-                pc = _deserializar_pc(offset, paquete); offset += sizeof(int) * 2;
+                pc = _deserializar_pc(offset, paquete); 
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: EXIT", pid);
 
@@ -254,44 +231,44 @@ t_pcb* proceso_syscall_prueba(t_buffer* buffer) {
     return proceso_syscall_prueba;
 }
 
-t_syscall_io _deserializar_syscall_io(int offset, t_paquete* paquete) 
+t_syscall_io _deserializar_syscall_io(int* offset, t_paquete* paquete) 
 { 
     t_syscall_io _syscall_io_recibida;
 
     int len_dispositivo = 0;
-    memcpy(&len_dispositivo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&len_dispositivo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
     char* dispositivo = malloc(len_dispositivo);
-    memcpy(dispositivo, paquete->buffer->stream + offset, len_dispositivo); offset += len_dispositivo;
+    memcpy(dispositivo, paquete->buffer->stream + *offset, len_dispositivo); *offset += len_dispositivo;
     _syscall_io_recibida.dispositivo = dispositivo;
 
     // Leer tiempo
     int tamanio_tiempo;
-    memcpy(&tamanio_tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&tamanio_tiempo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
     int tiempo;
-    memcpy(&tiempo, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&tiempo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
     _syscall_io_recibida.tiempo = tiempo;
 
     return _syscall_io_recibida;
 }
 
-int _deserializar_pid(int offset, t_paquete* paquete) 
+int _deserializar_pid(int* offset, t_paquete* paquete) 
 { 
     int pid = 0, tamanio_pid = 0;
     // El PID es recibido como INT, pero deberia ser uint8_t    
-    memcpy(&tamanio_pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-    memcpy(&pid, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&tamanio_pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    memcpy(&pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
     return pid;
 }
 
-int _deserializar_pc(int offset, t_paquete* paquete) 
+int _deserializar_pc(int* offset, t_paquete* paquete) 
 { 
     int pc = 0, tamanio_pc = 0;
     // El PID es recibido como INT, pero deberia ser uint8_t    
-    memcpy(&tamanio_pc, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
-    memcpy(&pc, paquete->buffer->stream + offset, sizeof(int)); offset += sizeof(int);
+    memcpy(&tamanio_pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    memcpy(&pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
     return pc;
 }
@@ -424,4 +401,24 @@ void liberar_cpu_de_proceso(uint8_t pid)
     log_debug(logger_kernel, "Se libero un CPU CARAJO");
 
     sem_post(&bin_cpu_disponible);
+}
+
+char* deserializar_archivo_instrucciones(int* offset, t_paquete* paquete) {
+    int len_archivo=0;
+    
+    memcpy(&len_archivo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+
+    char* archivo = malloc(len_archivo);
+    memcpy(archivo, paquete->buffer->stream + *offset, len_archivo); *offset += len_archivo;
+
+    return archivo;
+}
+
+int deserializar_tamanio_proceso(int* offset, t_paquete* paquete) {
+
+    int tamanio_tamanio, tamanio;
+    memcpy(&tamanio_tamanio, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    memcpy(&tamanio, paquete->buffer->stream + *offset, tamanio_tamanio); *offset += tamanio_tamanio;
+
+    return tamanio;
 }
