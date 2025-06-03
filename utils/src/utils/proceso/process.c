@@ -41,6 +41,17 @@ metricas_tiempo iniciarMetricasTiempo()
     return tiempos;
 }
 
+metricas_proceso iniciarMetricasProceso(){
+    metricas_proceso metricas;
+    metricas.cantVecesTP = 0;
+    metricas.cantVecesInstrucciones = 0;
+    metricas.cantVecesSWAP = 0;
+    metricas.cantVecesMP = 0;
+    metricas.cantVecesRead = 0;
+    metricas.cantVecesWrite = 0;
+    return metricas;
+}
+
 t_contador* inicializar_contador(){
     t_contador* contador = malloc(sizeof(t_contador));
 

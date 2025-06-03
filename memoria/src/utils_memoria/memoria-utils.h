@@ -2,6 +2,7 @@
 #define MEMORIA_UTILS_H_
 #define MAX_LINEA 256
 #include "memoria-gestor.h"
+#include "config_memoria/memoria-config.h"
 
     /**
 	 * @file
@@ -9,19 +10,28 @@
 	 */
 
 typedef struct {
-    char* direccion;
-    char* datos;
-} t_write;
-
-typedef struct {
     int pid;
     char** instrucciones;           // array dinámico de instrucciones
     int cant_instrucciones;
+    metricas_proceso metricas_proceso;
 } t_proceso_en_memoria;
+
+// CAMBIAR STRUCTS DE TABLAS DE PAGINAS
+
+typedef struct {
+    uint32_t* entradas;
+    int cantidad_entradas;
+} t_tabla_paginas_nivel;
+
+typedef struct {
+    t_tabla_paginas_nivel* niveles;
+    int cantidad_niveles;
+} t_tabla_paginas;
 
 typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
+    t_tabla_paginas tabla_paginas;
     pthread_mutex_t mutex; 
 } t_memoria_del_sistema;
 
@@ -32,6 +42,6 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 void agregar_proceso(t_pcbMemoria* pcb);
 int finalizar_proceso(int pid);
 char* obtener_instruccion(int pid, int pc);
-t_memoria_del_sistema crear_memoria_del_sistema();
+t_memoria_del_sistema crear_memoria_del_sistema(t_memoria_config* config);
 
 #endif // MEMORIA_UTILS_H_

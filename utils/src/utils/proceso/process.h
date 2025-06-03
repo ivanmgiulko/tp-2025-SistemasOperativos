@@ -35,6 +35,16 @@ typedef struct metricas_tiempo // Los tiempos son devueltos en milisegundos. Rev
     int64_t tiempoEnExit;
 } metricas_tiempo;
 
+typedef struct metricas_proceso
+{
+    uint8_t cantVecesTP; // Accesos a Tablas de Paginas
+    uint8_t cantVecesInstrucciones; // Instrucciones solicitadas
+    uint8_t cantVecesSWAP; // Bajadas a SWAP
+    uint8_t cantVecesMP; // Subidad a Memoria Principal o espacio contiguo de memoria
+    uint8_t cantVecesRead;
+    uint8_t cantVecesWrite;
+} metricas_proceso;
+
 typedef struct 
 {
     uint8_t pid;
@@ -52,6 +62,8 @@ typedef struct
 typedef struct 
 {
     uint8_t pid;
+    metricas_proceso metricas_proceso;
+
     char* pathArchivoPseudocodigo;
     uint32_t path_length;
     uint32_t tamanioMemoria;
@@ -67,6 +79,7 @@ typedef struct  {
 
 metricas_estado iniciarMetricasEstado();
 metricas_tiempo iniciarMetricasTiempo();
+metricas_proceso iniciarMetricasProceso();
 t_pcb* iniciarPCB(char* , int , int );
 void enviarProceso_A_Memoria(t_pcb , int );
 void enviar_proceso_a_finalizar_Memoria(t_pcb , int );

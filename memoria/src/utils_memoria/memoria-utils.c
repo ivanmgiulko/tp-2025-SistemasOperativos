@@ -1,10 +1,21 @@
 #include "memoria-utils.h"
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
-t_memoria_del_sistema crear_memoria_del_sistema() {
+t_memoria_del_sistema crear_memoria_del_sistema(t_memoria_config* config) {
     t_memoria_del_sistema memoria;
     pthread_mutex_init(&memoria.mutex, NULL); 
     memoria.procesos = malloc(sizeof(t_proceso_en_memoria)); 
     memoria.cant_procesos = 0;
+
+    int cantidad_niveles = atoi(config->CANTIDAD_NIVELES);
+    int entradas_por_tabla = atoi(config->ENTRADAS_POR_TABLA);
+
+    memoria.tabla_paginas.cantidad_niveles = cantidad_niveles;
+    memoria.tabla_paginas.niveles = malloc(cantidad_niveles * (sizeof(t_tabla_paginas_nivel)));
+
+    for (int i = 0; i < cantidad_niveles; i++) {
+        memoria.tabla_paginas.niveles[i].cantidad_entradas = entradas_por_tabla;
+        memoria.tabla_paginas.niveles[i].entradas = malloc(entradas_por_tabla * sizeof(uint32_t));
+    }
     return memoria;
 }
 
@@ -167,7 +178,7 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     int cant_inst = 0;
     log_debug(logger_memoria, "Path recibido en PCB: %s", pcb->pathArchivoPseudocodigo);
 
-
+    pcb->metricas_proceso = iniciarMetricasProceso();
     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
     
     if (!instrucciones){
@@ -180,6 +191,7 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     nuevoProceso.pid = pcb->pid;
     nuevoProceso.instrucciones = instrucciones;
     nuevoProceso.cant_instrucciones = cant_inst;
+    nuevoProceso.metricas_proceso = pcb->metricas_proceso;
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
