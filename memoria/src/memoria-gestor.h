@@ -7,6 +7,7 @@
     #include <utils/serializacion/serializacion.h>
     #include <utils/contrato/contrato.h>
     #include <utils/utils.h>
+    #include "config_memoria/memoria-config.h"
 
     /**
 	 * @file
@@ -22,7 +23,7 @@
     extern t_log* logger_memoria;
 
     // CONFIG
-    extern t_config* config_memoria;
+    extern t_memoria_config* config_memoria;
 
     // VARIABLES
     extern int cantMemoria;

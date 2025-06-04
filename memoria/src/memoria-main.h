@@ -14,7 +14,7 @@
     t_log* logger_memoria;
     
     // CONFIG
-    t_config* config_memoria;
+    t_memoria_config* config_memoria;
 
     //STRUCTS
     

@@ -1,7 +1,8 @@
 #ifndef CONFIG_KERNEL_H
 #define CONFIG_KERNEL_H
 
-    #include "memoria-gestor.h"
+    // #include "memoria-gestor.h"
+    #include <./utils/utils.h>
 
     /**
 	 * @file
@@ -25,7 +26,7 @@
         char *LOG_LEVEL;
         char *DUMP_PATH;
         char *PATH_INSTRUCCIONES;
-    }t_memoria_config;
+    } t_memoria_config;
 
     /**
 	* @brief Crea el config que tiene la memoria asociado para poder utilizar los datos de este

@@ -1,21 +1,11 @@
 #include "memoria-utils.h"
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
-t_memoria_del_sistema crear_memoria_del_sistema(t_memoria_config* config) {
+t_memoria_del_sistema crear_memoria_del_sistema() {
     t_memoria_del_sistema memoria;
     pthread_mutex_init(&memoria.mutex, NULL); 
     memoria.procesos = malloc(sizeof(t_proceso_en_memoria)); 
     memoria.cant_procesos = 0;
 
-    int cantidad_niveles = atoi(config->CANTIDAD_NIVELES);
-    int entradas_por_tabla = atoi(config->ENTRADAS_POR_TABLA);
-
-    memoria.tabla_paginas.cantidad_niveles = cantidad_niveles;
-    memoria.tabla_paginas.niveles = malloc(cantidad_niveles * (sizeof(t_tabla_paginas_nivel)));
-
-    for (int i = 0; i < cantidad_niveles; i++) {
-        memoria.tabla_paginas.niveles[i].cantidad_entradas = entradas_por_tabla;
-        memoria.tabla_paginas.niveles[i].entradas = malloc(entradas_por_tabla * sizeof(uint32_t));
-    }
     return memoria;
 }
 
@@ -187,16 +177,19 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     } 
     memoria_del_sistema->procesos = realloc(memoria_del_sistema->procesos, (memoria_del_sistema->cant_procesos + 1) * sizeof(t_proceso_en_memoria));
 
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+
     t_proceso_en_memoria nuevoProceso;
     nuevoProceso.pid = pcb->pid;
     nuevoProceso.instrucciones = instrucciones;
     nuevoProceso.cant_instrucciones = cant_inst;
     nuevoProceso.metricas_proceso = pcb->metricas_proceso;
+    nuevoProceso.tabla_primera = crear_tabla_paginacion(0, cantidad_niveles, entradas_por_tabla);
+    log_debug(logger_memoria, "Creo una tabla de páginas de %d niveles y %d entradas para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, nuevoProceso.pid);
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
-
-
 }
 
 int finalizar_proceso(int pid) {
@@ -223,6 +216,8 @@ int finalizar_proceso(int pid) {
     }
     log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
+    liberar_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera);
+    log_trace(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
 
     // Desplazar los procesos siguientes para llenar el hueco
     for (int i = encontrado; i < memoria_del_sistema->cant_procesos - 1; i++) {
@@ -288,4 +283,34 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
     *desplazamiento += tamanio;
 
     return string;
+}
+
+t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla){
+    t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));
+    tabla->cantidad_entradas = entradas_por_tabla;
+
+    if (nivel_actual == cantidad_niveles - 1) {
+        tabla->tipo = NIVEL_FINAL;
+        tabla->entradas = calloc(entradas_por_tabla, sizeof(t_entrada_pagina));
+    } else {
+        tabla->tipo = NIVEL_INTERMEDIO;
+        tabla->subtablas = calloc(entradas_por_tabla, sizeof(t_tabla_pagina*));
+        for (int i = 0; i < entradas_por_tabla; i++) {
+            tabla->subtablas[i] = crear_tabla_paginacion(nivel_actual + 1, cantidad_niveles, entradas_por_tabla);
+        }
+    }
+    
+    return tabla;
+}
+
+void liberar_tabla(t_tabla_pagina* tabla) {
+    if (tabla->tipo == NIVEL_INTERMEDIO) { // Si es de NIVEL_INTERMEDIO recorre todas las subtablas y las libera
+        for (int i = 0; i < tabla->cantidad_entradas; i++) {
+            liberar_tabla(tabla->subtablas[i]);
+        }
+        free(tabla->subtablas);
+    } else {
+        free(tabla->entradas); // Cuando es NIVEL_FINAL libera las entradas
+    }
+    free(tabla);
 }

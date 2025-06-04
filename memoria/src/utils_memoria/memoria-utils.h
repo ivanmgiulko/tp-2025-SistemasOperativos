@@ -9,29 +9,38 @@
      * @brief #include "utils_memoria/memoria-utils.h"
 	 */
 
+typedef enum {
+    NIVEL_INTERMEDIO,
+    NIVEL_FINAL
+} tipo_tabla;
+
+typedef struct {
+    bool presente;
+    uint32_t marco;
+    bool uso;
+    bool modificado;
+} t_entrada_pagina;
+
+typedef struct t_tabla_pagina {
+    tipo_tabla tipo;
+    union {
+        struct t_tabla_pagina** subtablas;       // si es NIVEL_INTERMEDIO entonces tengo más tablas
+        t_entrada_pagina* entradas;              // si es NIVEL_FINAL entonces tengo las entradas de la tabla
+    };
+    int cantidad_entradas;
+} t_tabla_pagina;
+
 typedef struct {
     int pid;
     char** instrucciones;           // array dinámico de instrucciones
     int cant_instrucciones;
     metricas_proceso metricas_proceso;
+    t_tabla_pagina* tabla_primera; // una tabla de paginas raíz por cada proceso
 } t_proceso_en_memoria;
-
-// CAMBIAR STRUCTS DE TABLAS DE PAGINAS
-
-typedef struct {
-    uint32_t* entradas;
-    int cantidad_entradas;
-} t_tabla_paginas_nivel;
-
-typedef struct {
-    t_tabla_paginas_nivel* niveles;
-    int cantidad_niveles;
-} t_tabla_paginas;
 
 typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
-    t_tabla_paginas tabla_paginas;
     pthread_mutex_t mutex; 
 } t_memoria_del_sistema;
 
@@ -42,6 +51,8 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 void agregar_proceso(t_pcbMemoria* pcb);
 int finalizar_proceso(int pid);
 char* obtener_instruccion(int pid, int pc);
-t_memoria_del_sistema crear_memoria_del_sistema(t_memoria_config* config);
+t_memoria_del_sistema crear_memoria_del_sistema();
+t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
+void liberar_tabla(t_tabla_pagina* tabla);
 
 #endif // MEMORIA_UTILS_H_

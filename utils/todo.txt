@@ -64,6 +64,11 @@ KERNEL: arreglados los comentarios y creados los hilos para manejar las conexion
 # 57
 - Listo la ejecución completa de READ (basada en lo hecho en el WRITE)
 
+#68.1
+- Config de memoria correctamente instanciado como variable global
+- Creado el struct inicial de tabla de paginas jerárquica para cada proceso creado
+- Funciones crear_tabla_paginacion y liberar_tabla, instanciadas dentro de agregar_proceso y finalizar_proceso
+
 ========================================================================= [LISTA DE TODO!] =======================================================================
 * Chequear si es necesario un hilo de escucha de peticiones de memoria.
 
