@@ -59,6 +59,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 			pthread_mutex_lock(&estado_exit->mutex);
 			t_pcb* proceso_finalizado = buscar_proceso_en_cola_exit(estado_exit->cola, pid);
+			temporal_stop(proceso_finalizado->metricas_tiempo->tiempoEnExit);
 			pthread_mutex_unlock(&estado_exit->mutex);
 
 			log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
@@ -71,6 +72,10 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
 			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
 
+			free(proceso_finalizado->metricas_estado);
+			free(proceso_finalizado->metricas_tiempo);
+			free(proceso_finalizado);
+			
 			sem_post(&sem_hay_espacio_en_memoria);
 			sem_post(&bin_proceso_eliminar);
 			
