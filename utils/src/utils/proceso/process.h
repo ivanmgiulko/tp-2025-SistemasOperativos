@@ -26,13 +26,13 @@ typedef struct metricas_estado
 
 typedef struct metricas_tiempo // Los tiempos son devueltos en milisegundos. Revisar commons para esto
 {
-    int64_t tiempoEnNew;
-    int64_t tiempoEnReady;
-    int64_t tiempoEnExec;
-    int64_t tiempoEnBlocked;
-    int64_t tiempoEnSuspReady;
-    int64_t tiempoEnSuspBlocked;
-    int64_t tiempoEnExit;
+    t_temporal* tiempoEnNew;
+    t_temporal* tiempoEnReady;
+    t_temporal* tiempoEnExec;
+    t_temporal* tiempoEnBlocked;
+    t_temporal* tiempoEnSuspReady;
+    t_temporal* tiempoEnSuspBlocked;
+    t_temporal* tiempoEnExit;
 } metricas_tiempo;
 
 typedef struct metricas_proceso
@@ -49,8 +49,8 @@ typedef struct
 {
     uint8_t pid;
     uint16_t pc;
-    metricas_estado metricas_estado;
-    metricas_tiempo metricas_tiempo;
+    metricas_estado* metricas_estado;
+    metricas_tiempo* metricas_tiempo;
     p_estados estadoProceso;
 
     char* pathArchivoPseudocodigo;
@@ -77,9 +77,10 @@ typedef struct  {
 
 
 
-metricas_estado iniciarMetricasEstado();
-metricas_tiempo iniciarMetricasTiempo();
+metricas_estado* iniciarMetricasEstado();
+metricas_tiempo* iniciarMetricasTiempo();
 metricas_proceso iniciarMetricasProceso();
+
 t_pcb* iniciarPCB(char* , int , int );
 void enviarProceso_A_Memoria(t_pcb , int );
 void enviar_proceso_a_finalizar_Memoria(t_pcb , int );

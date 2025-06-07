@@ -84,7 +84,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                     encolar_pcb_en_interfaz(interfaz_disponible, _info_proceso_bloqueado);
     
-                    encolar_pcb_en_estado(estado_blocked, _proceso_a_bloquear); 
+                    pasar_de_exec_a_blocked(_proceso_a_bloquear); 
 
                     sem_post(&sem_cantidad_pcbs_en_blocked);
                     // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
@@ -300,6 +300,8 @@ void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc)
     t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
 
     _proceso_a_terminar->pc = pc;
+
+    pasar_de_exec_a_exit(_proceso_a_terminar);
 
     enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
 

@@ -15,40 +15,64 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid)
     return nuevoPCB;
 }
 
-metricas_estado iniciarMetricasEstado()
+metricas_estado* iniciarMetricasEstado()
 {
-    metricas_estado estados;
-    estados.cantVecesBlocked = 0;
-    estados.cantVecesExec = 0;
-    estados.cantVecesExit = 0;
-    estados.cantVecesNew = 0;
-    estados.cantVecesReady = 0;
-    estados.cantVecesSuspBlocked = 0;
-    estados.cantVecesSuspReady = 0;
+    metricas_estado* estados = malloc(sizeof(metricas_estado));
+    
+    estados->cantVecesBlocked       = 0;
+    estados->cantVecesExec          = 0;
+    estados->cantVecesExit          = 0;
+    estados->cantVecesNew           = 0;
+    estados->cantVecesReady         = 0;
+    estados->cantVecesSuspBlocked   = 0;
+    estados->cantVecesSuspReady     = 0;
+
     return estados;
 }
 
-metricas_tiempo iniciarMetricasTiempo()
+metricas_tiempo* iniciarMetricasTiempo()
 {
-    metricas_tiempo tiempos;
-    tiempos.tiempoEnBlocked = 0;
-    tiempos.tiempoEnExec = 0;
-    tiempos.tiempoEnExit = 0;
-    tiempos.tiempoEnNew = 0;
-    tiempos.tiempoEnReady = 0;
-    tiempos.tiempoEnSuspBlocked = 0;
-    tiempos.tiempoEnSuspReady = 0;
+    metricas_tiempo* tiempos = malloc(sizeof(metricas_tiempo));
+
+    tiempos->tiempoEnBlocked = temporal_create();
+    temporal_stop(tiempos->tiempoEnBlocked);
+    tiempos->tiempoEnBlocked->elapsed_ms = 0;
+
+    tiempos->tiempoEnExec = temporal_create();
+    temporal_stop(tiempos->tiempoEnExec);
+    tiempos->tiempoEnExec->elapsed_ms = 0;
+
+    tiempos->tiempoEnExit = temporal_create();
+    temporal_stop(tiempos->tiempoEnExit);
+    tiempos->tiempoEnExit->elapsed_ms = 0;
+
+    tiempos->tiempoEnNew = temporal_create();
+    temporal_stop(tiempos->tiempoEnNew);
+    tiempos->tiempoEnNew->elapsed_ms = 0;
+
+    tiempos->tiempoEnReady = temporal_create();
+    temporal_stop(tiempos->tiempoEnReady);
+    tiempos->tiempoEnReady->elapsed_ms = 0;
+
+    tiempos->tiempoEnSuspBlocked = temporal_create();
+    temporal_stop(tiempos->tiempoEnSuspBlocked);
+    tiempos->tiempoEnSuspBlocked->elapsed_ms = 0;
+
+    tiempos->tiempoEnSuspReady = temporal_create();
+    temporal_stop(tiempos->tiempoEnSuspReady);
+    tiempos->tiempoEnSuspReady->elapsed_ms = 0;
+
     return tiempos;
 }
 
 metricas_proceso iniciarMetricasProceso(){
     metricas_proceso metricas;
-    metricas.cantVecesTP = 0;
+    metricas.cantVecesTP            = 0;
     metricas.cantVecesInstrucciones = 0;
-    metricas.cantVecesSWAP = 0;
-    metricas.cantVecesMP = 0;
-    metricas.cantVecesRead = 0;
-    metricas.cantVecesWrite = 0;
+    metricas.cantVecesSWAP          = 0;
+    metricas.cantVecesMP            = 0;
+    metricas.cantVecesRead          = 0;
+    metricas.cantVecesWrite         = 0;
     return metricas;
 }
 

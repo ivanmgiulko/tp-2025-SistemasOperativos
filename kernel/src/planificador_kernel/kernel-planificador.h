@@ -156,7 +156,9 @@
 
     void pasar_pcb_blocked_a_ready(t_pcb* pcb);
 
-    void pasar_pcb_a_susp_ready(t_pcb* pcb);
+    void pasar_de_exec_a_blocked(t_pcb* pcb);
+    
+    void pasar_de_exec_a_exit(t_pcb* pcb);
 
     /**
 	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta

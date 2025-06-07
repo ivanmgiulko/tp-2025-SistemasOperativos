@@ -49,17 +49,34 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 		case PROCESO_FINALIZADO:
 			recibir_paquete(socket_cliente, paquete);
-			int offset = 0;
-			uint8_t  pid = _deserializar_pid(&offset, paquete);
 			
-			log_info(logger_kernel, "## %d - Finaliza el proceso", pid);
+			int* offset = malloc(sizeof(int));
+			*offset = 0;
+
+			uint8_t pid = _deserializar_pid(offset, paquete);
+			
+			log_info(logger_kernel, "%d - Finaliza el proceso", pid);
+
+			pthread_mutex_lock(&estado_exit->mutex);
+			t_pcb* proceso_finalizado = buscar_proceso_en_cola_exit(estado_exit->cola, pid);
+			pthread_mutex_unlock(&estado_exit->mutex);
+
+			log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
+			proceso_finalizado->pid, 
+			proceso_finalizado->metricas_estado->cantVecesNew, 		   proceso_finalizado->metricas_tiempo->tiempoEnNew->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesReady,       proceso_finalizado->metricas_tiempo->tiempoEnReady->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesBlocked,     proceso_finalizado->metricas_tiempo->tiempoEnBlocked->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesExec, 	   proceso_finalizado->metricas_tiempo->tiempoEnExec->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesExit,        proceso_finalizado->metricas_tiempo->tiempoEnExit->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
+			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
+
 			sem_post(&sem_hay_espacio_en_memoria);
 			sem_post(&bin_proceso_eliminar);
 			
 			eliminar_paquete(paquete);
 			
-			
-
+		
 			return EXIT_SUCCESS;
 			break;
 		
@@ -75,4 +92,13 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 	close(fd_conexion_memoria);
 	log_trace(logger_kernel, "Se cierra la conexion con Memoria");
 	return EXIT_SUCCESS;
+}
+
+t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid) 
+{
+	bool _tiene_el_pid(void* ptr) {
+		t_pcb* proceso = (t_pcb*) ptr;
+		return proceso->pid == pid;
+	}
+	return list_find(cola_exit, _tiene_el_pid);
 }
