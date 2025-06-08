@@ -137,6 +137,8 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				// realizar el DUMP de "proceso_a_dumpear"
 
+				log_info(logger_memoria, "## PID: %d - Memory Dump solicitado", proceso_a_dumpear->pid);
+
 				bool simulacion_dump = true;
 
 				if(simulacion_dump == false) { // Sale mal
@@ -205,7 +207,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Entra acá si encontro el proceso y la instrucción
 	else{
-		log_info(logger, "Instrucción encontrada: %s", respuesta->instruccion);
+		log_info(logger, "## PID: %d - Obtener instrucción: %d - Instrucción: %s",peticion->pid, peticion->pc, respuesta->instruccion);
 		//Serializo la respuesta
 		int size_respuesta;
 		void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);

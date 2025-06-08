@@ -192,6 +192,31 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     memoria_del_sistema->cant_procesos++;
 }
 
+void informar_metricas_memoria(int pid){
+    
+    // Buscar el proceso por PID
+    int encontrado = -1;
+    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
+        if (memoria_del_sistema->procesos[i].pid == pid) {
+            encontrado = i;
+            break;
+        }
+    }
+    metricas_proceso m = memoria_del_sistema->procesos[encontrado].metricas_proceso;
+
+    log_info(logger_memoria,
+    "## PID: %d - Proceso Destruido \n"
+    "- Métricas - \n"
+    "Acc.T.Pag: %d;\n"
+    "Inst.Sol.: %d;\n"
+    "SWAP: %d;\n"
+    "Mem.Prin.: %d;\n"
+    "Lec.Mem.: %d;\n"
+    "Esc.Mem.: %d",
+    pid, m.cantVecesTP, m.cantVecesInstrucciones, m.cantVecesSWAP,
+    m.cantVecesMP, m.cantVecesRead, m.cantVecesWrite);
+}
+
 int finalizar_proceso(int pid) {
     int encontrado = -1;
 
@@ -218,6 +243,9 @@ int finalizar_proceso(int pid) {
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
     liberar_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera);
     log_trace(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
+
+    //Informar métricas:
+    informar_metricas_memoria(pid);
 
     // Desplazar los procesos siguientes para llenar el hueco
     for (int i = encontrado; i < memoria_del_sistema->cant_procesos - 1; i++) {
@@ -256,6 +284,8 @@ char* obtener_instruccion(int pid, int pc) {
         if (memoria_del_sistema->procesos[i].pid == pid) {
             log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
             if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
+                memoria_del_sistema->procesos[i].metricas_proceso.cantVecesInstrucciones++;
+                //log_debug(logger_memoria, "Se incrementa la métrica CantInstrucciones del proceso pid: %d", pid);
                 pthread_mutex_unlock(&memoria_del_sistema->mutex);
                 return memoria_del_sistema->procesos[i].instrucciones[pc];
             } else {  
