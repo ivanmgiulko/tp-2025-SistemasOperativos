@@ -30,6 +30,8 @@ typedef enum
 	FIN_PID,
 	RESPUESTA_MEMORIA, 
 	PROCESO_MEMORIA,
+	PROCESO_DUMPEAR,
+	RESPUESTA_DUMPEO,
 	PROCESO_FINALIZAR,
 	PROCESO_FINALIZADO,
 	INFO_PROC_EXEC,
@@ -37,7 +39,7 @@ typedef enum
 	INTERFAZ,
 	WRITE_MEMORIA,
 	READ_MEMORIA,
-	// Syscalls que recibe Kernel desde CPU (no se si disp o inter)
+	// Syscalls que recibe Kernel desde CPU INTERRUPT
 	SYSCALL_IO,
 	SYSCALL_EXIT,
 	SYSCALL_INIT_PROC,

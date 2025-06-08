@@ -53,7 +53,7 @@
 
 	t_pcb* _sacar_pcb_de_exec(int pid);
 
-	void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc);
+	void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar);
 
 	uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu);
 
@@ -70,6 +70,8 @@
 	char* deserializar_archivo_instrucciones(int* offset, t_paquete* paquete);
 
 	t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid);
+
+	void enviar_proceso_a_dumpear_en_memoria(int socket_cliente, t_pcb proceso);
 
 	/**
 	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC

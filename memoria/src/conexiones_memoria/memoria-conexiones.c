@@ -99,13 +99,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
 
 				// Libera el paquete
-				free(paquete_tmp->buffer->stream);
-				free(paquete_tmp->buffer);
-				free(paquete_tmp);
+				eliminar_paquete(paquete_tmp);
 
-				free(paquete->buffer->stream);
-				free(paquete->buffer);
-				free(paquete);
+				eliminar_paquete(paquete);
 				break;
 
 			case WRITE_MEMORIA:
@@ -134,12 +130,28 @@ int manejar_conexion_cliente(int socket_cliente){
 				eliminar_paquete(paquete);
 				break;
 
+			case PROCESO_DUMPEAR:
+				recibir_paquete(socket_cliente, paquete);
+
+				t_pcb* proceso_a_dumpear = recibir_proceso_a_dumpear_desde_kernel(paquete->buffer);
+
+				// realizar el DUMP de "proceso_a_dumpear"
+
+				bool simulacion_dump = true;
+
+				if(simulacion_dump == false) { // Sale mal
+					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, false, socket_cliente);
+				} else { // Sale bien
+					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, true, socket_cliente);
+				}
+				eliminar_paquete(paquete);
+				break;
+
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
 				log_error(logger_memoria, "el cliente se desconecto.");
 				return EXIT_FAILURE;
 				break;
-	
 			default:
 				log_warning(logger_memoria, "Operacion desconocida. No quieras meter la pata");
 				break;
@@ -312,6 +324,52 @@ void enviar_proceso_terminado(uint8_t pid, t_paquete* paquete, int socket_client
     send(socket_cliente, paquete_exit, bytes, 0);
 
     free(paquete_exit);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
+}
+
+t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer) 
+{
+	t_pcb* proceso_a_dumpear = malloc(sizeof(t_pcb));
+
+	void* stream = buffer->stream;
+
+    memcpy(&(proceso_a_dumpear->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+	memcpy(&(proceso_a_dumpear->pc), stream, sizeof(uint16_t)); stream += sizeof(uint16_t);
+	memcpy(&(proceso_a_dumpear->metricas_estado), stream, sizeof(metricas_estado)); stream += sizeof(metricas_estado);
+	memcpy(&(proceso_a_dumpear->estadoProceso), stream, sizeof(p_estados)); stream += sizeof(p_estados);
+ 	memcpy(&(proceso_a_dumpear->tamanioMemoria), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+	memcpy(&(proceso_a_dumpear->path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+
+	proceso_a_dumpear->pathArchivoPseudocodigo = malloc(proceso_a_dumpear->path_length);
+    memcpy(proceso_a_dumpear->pathArchivoPseudocodigo, stream, proceso_a_dumpear->path_length);
+
+    return proceso_a_dumpear;
+}
+
+void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente) {
+
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size =  sizeof(uint8_t) + sizeof(bool);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &respuesta, sizeof(bool)); offset += sizeof(bool);
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = RESPUESTA_DUMPEO;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));   offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));  offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);

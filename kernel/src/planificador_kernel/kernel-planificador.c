@@ -116,6 +116,7 @@ void iniciar_planificador_mediano_plazo() {
         t_pcb* _proceso_bloquedo = peek_cola_mutex(estado_blocked);
 
         t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloquedo->pid);
+        // SI esto es NULL, significa que el proceso no esta en ninguna lista de io, sino que quiere hacer el bloqueo de DUMP_MEMORY
         
         if(_io_que_usa_pcb_bloqueado->enabled == true) {
 
@@ -143,7 +144,7 @@ void iniciar_planificador_corto_plazo(){
             
             t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
             
-            sem_wait(&bin_cpu_disponible); // Deberia estar iniciado con la cantidad de CPU disponibles
+            sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
             cpu_libre = _buscar_cpu_libre();
 
             t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
@@ -240,6 +241,20 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 
+void pasar_pcb_blocked_a_exit(t_pcb* pcb) 
+{ 
+    encolar_pcb_en_estado(estado_exit, pcb);
+
+    pcb->metricas_estado->cantVecesExit++;
+    temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
+    temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
+
+    pcb->estadoProceso = EXIT;
+    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado EXIT", pcb->pid);
+    _enviar_a_finalizar_proceso(pcb);
+    
+}
+
 void pasar_pcb_ready_a_exec(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exec, pcb);
@@ -274,6 +289,7 @@ void pasar_de_exec_a_exit(t_pcb* pcb)
 
     pcb->estadoProceso = EXIT;
     log_info(logger_kernel, "## %d Pasa del estado EXEC al estado EXIT", pcb->pid);
+    _enviar_a_finalizar_proceso(pcb);
 }
 
 

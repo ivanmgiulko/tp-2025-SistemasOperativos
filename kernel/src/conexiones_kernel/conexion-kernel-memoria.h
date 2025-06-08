@@ -3,6 +3,11 @@
     
     #include "kernel-gestor.h"
 
+	typedef struct {
+		uint8_t pid;
+		bool respuesta;
+	} t_respuesta_dump;
+
     /**
 	 * @file
 	 * @brief #include "conexiones_kernel/conexion-k-memoria.h"
@@ -23,5 +28,9 @@
 	void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente);
 
 	t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid);
+
+	t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer);
+	
+	t_pcb* _sacar_pcb_de_blocked(int pid);
 
 #endif // CONEXIONES_K_MEMORIA_H_

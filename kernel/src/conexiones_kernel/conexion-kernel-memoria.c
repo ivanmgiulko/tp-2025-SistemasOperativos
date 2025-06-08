@@ -47,6 +47,26 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			}
 			break;
 
+		case RESPUESTA_DUMPEO:
+			recibir_paquete(socket_cliente, paquete);
+			t_respuesta_dump* resp_dump = recibir_respuesta_dump(paquete->buffer);
+
+			t_pcb* proceso_desbloqueado = _sacar_pcb_de_blocked(resp_dump->pid);
+
+			if(resp_dump->respuesta == false){
+				
+				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
+				log_debug(logger_kernel, "NO se pudo hacer el DUMP. Finaliza el proceso...");
+
+			} else {
+				
+				pasar_pcb_blocked_a_ready(proceso_desbloqueado);
+				log_debug(logger_kernel, "SI se pudo hacer el DUMP. El proceso se desbloquea y pasa a Ready");
+			}
+			return EXIT_SUCCESS;
+
+			break;
+
 		case PROCESO_FINALIZADO:
 			recibir_paquete(socket_cliente, paquete);
 			
@@ -106,4 +126,32 @@ t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid)
 		return proceso->pid == pid;
 	}
 	return list_find(cola_exit, _tiene_el_pid);
+}
+
+t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer)
+{
+	t_respuesta_dump* respuesta_dump = malloc(sizeof(t_respuesta_dump));
+
+	void* stream = buffer->stream;
+
+    memcpy(&(respuesta_dump->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+	memcpy(&(respuesta_dump->respuesta), stream, sizeof(bool)); stream += sizeof(bool);
+	
+    return respuesta_dump;
+}
+
+t_pcb* _sacar_pcb_de_blocked(int pid) 
+{ 
+    pthread_mutex_lock(&(estado_blocked->mutex));
+    t_pcb* _proceso_a_desbloquear = NULL;
+    for (int i = 0; i < list_size(estado_blocked->cola); i++) {
+        t_pcb* pcb = list_get(estado_blocked->cola, i);
+        if (pcb->pid == pid) {
+            _proceso_a_desbloquear = list_remove(estado_blocked->cola, i); // Eliminar el elemento
+            break; // Salir del bucle una vez encontrado
+        }
+    }
+
+    pthread_mutex_unlock(&(estado_blocked->mutex));
+    return _proceso_a_desbloquear;
 }

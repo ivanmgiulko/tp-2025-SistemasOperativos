@@ -70,7 +70,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			t_pcb* _proceso_desbloqueado = pop_cola_mutex(estado_blocked);
 			sem_post(&bin_proceso_bloqueado);
 
-
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
 			break;

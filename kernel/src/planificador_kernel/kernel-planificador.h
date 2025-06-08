@@ -160,6 +160,8 @@
     
     void pasar_de_exec_a_exit(t_pcb* pcb);
 
+    void pasar_pcb_blocked_a_exit(t_pcb* pcb);
+
     /**
 	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta
     * @return devuelve TRUE si estaba vacia, o FALSE si no lo estaba.

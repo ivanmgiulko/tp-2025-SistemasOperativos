@@ -71,13 +71,13 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
+                t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
+                _proceso_a_bloquear->pc = pc;
+
                 if(interfaz_disponible != NULL) { 
                     
                     log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
-                    t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
-                    _proceso_a_bloquear->pc = pc;
-
                     t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));
                     _info_proceso_bloqueado->pid    = _proceso_a_bloquear->pid;
                     _info_proceso_bloqueado->tiempo = _syscall_io_recibida.tiempo;
@@ -91,11 +91,11 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 } else {
 
-                    _enviar_a_finalizar_proceso(pid, pc);
+                    pasar_de_exec_a_exit(_proceso_a_bloquear);
+
                 }
 
                 eliminar_paquete(paquete);
-                 
                 break;
             case SYSCALL_INIT_PROC:
                 // de la syscall INIT_PORC recibo PID, Archivo, tamanioProceso
@@ -125,10 +125,21 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pc = _deserializar_pc(offset, paquete); 
 
-                // Sacamos el proceso del estado exec y lo ponemos en blocked
-                // Habria que mandarlo a Memoria y ahi que lo devuelva conexion-kernel-memorica.c
-                // Hacemos ahi lo que diga la syscall, y de ahi se pasa a EXIT o vuelve a Ready
+                liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
+                t_pcb* _proceso_a_dumpear = _sacar_pcb_de_exec(pid);
+                _proceso_a_dumpear->pc = pc;
+
+                pasar_de_exec_a_blocked(_proceso_a_dumpear);
+
+                char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+                enviar_proceso_a_dumpear_en_memoria(fd_conexion_memoria, *_proceso_a_dumpear);
+
+                manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                
                 eliminar_paquete(paquete);
                 break;
 
@@ -144,7 +155,10 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                _enviar_a_finalizar_proceso(pid, pc);
+                t_pcb* _proceso_a_finalizar = _sacar_pcb_de_exec(pid);
+                _proceso_a_finalizar->pc = pc;
+
+                pasar_de_exec_a_exit(_proceso_a_finalizar);
                 
                 eliminar_paquete(paquete);
                 break;
@@ -289,7 +303,7 @@ t_pcb* _sacar_pcb_de_exec(int pid)
     return _proceso_a_bloquear;
 }
 
-void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc)
+void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
 { 
     sem_wait(&bin_proceso_eliminar);
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
@@ -297,16 +311,9 @@ void _enviar_a_finalizar_proceso(uint8_t pid, uint16_t pc)
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
     // Falta realizar prueba
-    t_pcb* _proceso_a_terminar = _sacar_pcb_de_exec(pid);
-
-    _proceso_a_terminar->pc = pc;
-
-    pasar_de_exec_a_exit(_proceso_a_terminar);
-
-    enviar_proceso_a_finalizar_Memoria(*_proceso_a_terminar, fd_conexion_memoria);
+    enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
 
     manejar_conexion_kernel_memoria(fd_conexion_memoria);
-
 }
 
 uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu) {
@@ -423,4 +430,37 @@ int deserializar_tamanio_proceso(int* offset, t_paquete* paquete) {
     memcpy(&tamanio, paquete->buffer->stream + *offset, tamanio_tamanio); *offset += tamanio_tamanio;
 
     return tamanio;
+}
+
+void enviar_proceso_a_dumpear_en_memoria(int socket_cliente, t_pcb proceso)  {
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size =  sizeof(uint8_t) + sizeof(uint16_t) + sizeof(metricas_estado) + 
+                    sizeof(p_estados) + sizeof(uint32_t) * 2 + (proceso.path_length + 1);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &proceso.pid, sizeof(uint8_t));                       offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &proceso.pc, sizeof(uint16_t));                       offset += sizeof(uint16_t);
+    memcpy(buffer->stream + offset, &proceso.metricas_estado,   sizeof(metricas_estado)); offset += sizeof(metricas_estado);
+    memcpy(buffer->stream + offset, &proceso.estadoProceso,     sizeof(p_estados));       offset += sizeof(p_estados);
+    memcpy(buffer->stream + offset, &proceso.tamanioMemoria,    sizeof(uint32_t));        offset += sizeof(uint32_t);
+
+    memcpy(buffer->stream + offset, &proceso.path_length,       sizeof(uint32_t));        offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, proceso.pathArchivoPseudocodigo, proceso.path_length);
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_DUMPEAR;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));   offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));  offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    free(paquete->buffer->stream);
+    free(paquete->buffer);
+    free(paquete);
 }
