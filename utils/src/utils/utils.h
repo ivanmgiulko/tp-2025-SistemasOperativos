@@ -19,7 +19,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <commons/temporal.h>
-
+#include <time.h>
+#include <sys/stat.h>
 
 typedef enum
 {

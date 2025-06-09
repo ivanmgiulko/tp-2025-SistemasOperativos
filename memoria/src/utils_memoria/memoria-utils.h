@@ -54,5 +54,6 @@ char* obtener_instruccion(int pid, int pc);
 t_memoria_del_sistema crear_memoria_del_sistema();
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
 void liberar_tabla(t_tabla_pagina* tabla);
+t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
 
 #endif // MEMORIA_UTILS_H_

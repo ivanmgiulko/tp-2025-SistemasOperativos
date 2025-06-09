@@ -131,19 +131,27 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case PROCESO_DUMPEAR:
+				log_info(logger_memoria, "Recibí paquete de ejecución de DUMP_MEMORY");
 				recibir_paquete(socket_cliente, paquete);
+				if (paquete == NULL) {
+					log_error(logger_memoria, "Fallo al recibir paquete de DUMP_MEMORY");
+					break;
+				}
 
 				t_pcb* proceso_a_dumpear = recibir_proceso_a_dumpear_desde_kernel(paquete->buffer);
-
-				// realizar el DUMP de "proceso_a_dumpear"
-
 				log_info(logger_memoria, "## PID: %d - Memory Dump solicitado", proceso_a_dumpear->pid);
 
-				bool simulacion_dump = true;
+				// realizar el DUMP de "proceso_a_dumpear"
+				bool resultado = realizar_dump_memory(proceso_a_dumpear->pid);
+				if (!resultado){
+					log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
+				}
 
-				if(simulacion_dump == false) { // Sale mal
+				if (!resultado) { // Sale mal
+					log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
 					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, false, socket_cliente);
 				} else { // Sale bien
+					log_info(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
 					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, true, socket_cliente);
 				}
 				eliminar_paquete(paquete);
@@ -375,4 +383,59 @@ void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_client
     free(paquete->buffer->stream);
     free(paquete->buffer);
     free(paquete);
+}
+
+bool realizar_dump_memory(int pid) {
+	// Buscamos proceso a dumpear
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "DUMP_MEMORY: proceso %d no registrado en memoria", pid);
+        return false;
+    }
+
+    // Creo directorio
+    char* dump_path = config_memoria->DUMP_PATH;
+    int resultado = mkdir(dump_path, 0755);
+	if (resultado == 0) {
+        log_trace(logger_memoria, "DUMP_MEMORY: directorio creado con éxito");
+    } else {
+        log_trace(logger_memoria, "DUMP_MEMORY: el directorio ha sido creado anteriormente");
+    }
+
+    // Creo el timestamp para el nombre del archivo a dumpear
+    time_t now = time(NULL);
+    struct tm tm = *localtime(&now);
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%Y%m%d%H%M%S", &tm);
+
+    // Armamos nombre completo del timestamp anashei
+    char filename[512];
+    snprintf(filename, sizeof(filename), "%s/%d-%s.dmp", dump_path, pid, timestamp);
+
+    // Abrimos puerta al nether
+    FILE* file = fopen(filename, "w+b");
+    if (!file) {
+        log_error(logger_memoria, "DUMP_MEMORY: no pudo abrirse el archivo del dump %s", filename);
+        return false;
+    }
+
+    // Escribimos las instrucciones del proceso - CAMBIAR AL TERMINAR DE HACER LA MEMORIA
+    for (int i = 0; i < proceso->cant_instrucciones; i++) {
+        fprintf(file, "%s\n", proceso->instrucciones[i]);
+    }
+	log_trace(logger_memoria, "DUMP_MEMORY: se escribieron todas las instrucciones");
+
+	// ELIMINAR - Leemos lo escrito para chequear que esté bien
+    fseek(file, 0, SEEK_SET);
+
+    char linea[256];
+    log_trace(logger_memoria, "DUMP_MEMORY: leyendo contenido escrito:");
+    while (fgets(linea, sizeof(linea), file)) {
+        log_debug(logger_memoria, "DUMP DEBUG: %s", linea);
+    }
+	// ELIMINAR - Leemos lo escrito para chequear que esté bien
+
+    fclose(file);
+    log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
+    return true;
 }

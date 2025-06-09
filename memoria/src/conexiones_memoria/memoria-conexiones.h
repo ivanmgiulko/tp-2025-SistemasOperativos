@@ -38,5 +38,7 @@
 	t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer);
 
 	void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente);
+
+	bool realizar_dump_memory(int pid);
 	
 #endif // MEMORIA_CONEXIONES_H_

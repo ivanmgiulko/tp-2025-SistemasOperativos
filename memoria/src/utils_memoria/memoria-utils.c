@@ -344,3 +344,11 @@ void liberar_tabla(t_tabla_pagina* tabla) {
     }
     free(tabla);
 }
+
+t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
+    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
+        if (memoria_del_sistema->procesos[i].pid == pid)
+            return &memoria_del_sistema->procesos[i];
+    }
+    return NULL;
+}
