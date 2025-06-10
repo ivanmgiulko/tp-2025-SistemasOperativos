@@ -5,6 +5,25 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     pthread_mutex_init(&memoria.mutex, NULL); 
     memoria.procesos = malloc(sizeof(t_proceso_en_memoria)); 
     memoria.cant_procesos = 0;
+    memoria.tam_memoria = atoi(config_memoria->TAM_MEMORIA);
+    memoria.tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    memoria.cant_marcos = memoria.tam_memoria / memoria.tam_pagina;
+
+    // Reservamos la memoria principal según el tamaño del config
+    memoria.memoria_principal = malloc(memoria.tam_memoria);
+    if (memoria.memoria_principal == NULL) {
+        log_error(logger_memoria, "Error al reservar la memoria principal");
+        exit(EXIT_FAILURE);
+    }
+
+    // Instanciamos el bitmap
+    memoria.bitmap_marcos_ocupados = calloc(memoria.cant_marcos, sizeof(bool));
+    if (memoria.bitmap_marcos_ocupados == NULL) {
+        log_error(logger_memoria, "Error al instanciar el bitmap de frames");
+        exit(EXIT_FAILURE);
+    }
+
+    log_info(logger_memoria, "Memoria instanciada - Tamaño: %d bytes, Marcos: %d marcos de %d bytes", memoria.tam_memoria, memoria.cant_marcos, memoria.tam_pagina);
 
     return memoria;
 }
@@ -186,6 +205,9 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     nuevoProceso.cant_instrucciones = cant_inst;
     nuevoProceso.metricas_proceso = pcb->metricas_proceso;
     nuevoProceso.tabla_primera = crear_tabla_paginacion(0, cantidad_niveles, entradas_por_tabla);
+
+    // Me agarró sueño, descomentar cuando implemente bien las funciones (ver relación marco-entrada y crear función de liberar marcos al finalizar proceso)
+    // asignar_marcos_tabla(nuevoProceso.tabla_primera, memoria_del_sistema);
     log_debug(logger_memoria, "Creo una tabla de páginas de %d niveles y %d entradas para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, nuevoProceso.pid);
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
@@ -317,7 +339,7 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
 
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla){
     t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));
-    tabla->cantidad_entradas = entradas_por_tabla;
+    tabla->cant_entradas = entradas_por_tabla;
 
     if (nivel_actual == cantidad_niveles - 1) {
         tabla->tipo = NIVEL_FINAL;
@@ -335,7 +357,7 @@ t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, i
 
 void liberar_tabla(t_tabla_pagina* tabla) {
     if (tabla->tipo == NIVEL_INTERMEDIO) { // Si es de NIVEL_INTERMEDIO recorre todas las subtablas y las libera
-        for (int i = 0; i < tabla->cantidad_entradas; i++) {
+        for (int i = 0; i < tabla->cant_entradas; i++) {
             liberar_tabla(tabla->subtablas[i]);
         }
         free(tabla->subtablas);
@@ -351,4 +373,38 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
             return &memoria_del_sistema->procesos[i];
     }
     return NULL;
+}
+
+void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria) {
+    // Si es nivel intermedio, recorro hasta encontrar el nivel final
+    if (tabla->tipo == NIVEL_INTERMEDIO) {
+        for (int i = 0; i < tabla->cant_entradas; i++) {
+            asignar_marcos_tabla(tabla->subtablas[i], memoria);
+        }
+    } else {
+        for (int i = 0; i < tabla->cant_entradas; i++) {
+            int marco = buscar_marco_libre(memoria);
+            if (marco == -1) {
+                log_error(logger_memoria, "No hay marcos libres suficientes");
+                exit(EXIT_FAILURE);
+            }
+
+            tabla->entradas[i].marco = marco;
+            tabla->entradas[i].presente = true;
+            tabla->entradas[i].uso = false;
+            tabla->entradas[i].modificado = false;
+            tabla->entradas[i].num_pagina = i;
+
+            memoria->bitmap_marcos_ocupados[marco] = true;
+        }
+    }
+}
+
+int buscar_marco_libre(t_memoria_del_sistema* memoria) {
+    for (int i = 0; i < memoria->cant_marcos; i++) {
+        if (!memoria->bitmap_marcos_ocupados[i]) {
+            return i;
+        }
+    }
+    return -1;
 }

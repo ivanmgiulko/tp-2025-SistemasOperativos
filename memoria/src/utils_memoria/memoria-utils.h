@@ -17,6 +17,7 @@ typedef enum {
 typedef struct {
     bool presente;
     uint32_t marco;
+    uint32_t num_pagina;
     bool uso;
     bool modificado;
 } t_entrada_pagina;
@@ -27,7 +28,7 @@ typedef struct t_tabla_pagina {
         struct t_tabla_pagina** subtablas;       // si es NIVEL_INTERMEDIO entonces tengo más tablas
         t_entrada_pagina* entradas;              // si es NIVEL_FINAL entonces tengo las entradas de la tabla
     };
-    int cantidad_entradas;
+    int cant_entradas;
 } t_tabla_pagina;
 
 typedef struct {
@@ -41,6 +42,11 @@ typedef struct {
 typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
+    void* memoria_principal;
+    int tam_memoria;
+    int tam_pagina;
+    int cant_marcos;
+    bool* bitmap_marcos_ocupados;
     pthread_mutex_t mutex; 
 } t_memoria_del_sistema;
 
@@ -55,5 +61,7 @@ t_memoria_del_sistema crear_memoria_del_sistema();
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
 void liberar_tabla(t_tabla_pagina* tabla);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
+void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
+int buscar_marco_libre(t_memoria_del_sistema* memoria);
 
 #endif // MEMORIA_UTILS_H_
