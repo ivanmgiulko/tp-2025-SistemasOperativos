@@ -40,7 +40,6 @@
         int socket;
         bool enabled;
         t_list* procesos;
-	    uint64_t tiempo_ultimo_bloqueo;
     } t_io;
    
     typedef struct { // Elemento en 't_list* procesos'

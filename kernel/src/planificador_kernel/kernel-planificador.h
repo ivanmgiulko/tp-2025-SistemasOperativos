@@ -37,9 +37,10 @@
     extern t_estado* estado_susp_ready;
     extern t_estado* estado_exec;
     extern t_estado* estado_blocked;
+    extern t_estado* estado_blocked_aux;
     extern t_estado* estado_susp_blocked;
     extern t_estado* estado_exit;
-
+ 
     extern pthread_mutex_t mutex_pid;
     extern sem_t sem_cantidad_pcbs_en_new;
     extern sem_t sem_cantidad_pcbs_en_ready;
@@ -158,9 +159,13 @@
 
     void pasar_de_exec_a_blocked(t_pcb* pcb);
     
+    void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb);
+
     void pasar_de_exec_a_exit(t_pcb* pcb);
 
     void pasar_pcb_blocked_a_exit(t_pcb* pcb);
+
+    void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb);
 
     /**
 	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta
@@ -189,7 +194,11 @@
 
     bool _verificar_cola_susp_ready_esta_vacia();
 
+    bool _chequear_interfaz_disponible(t_io* interfaz);
+
     t_cpu_conectada* _buscar_cpu_libre();
+
+    t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid);
 
 #endif
 

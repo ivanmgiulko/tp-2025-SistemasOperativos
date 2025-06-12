@@ -61,6 +61,10 @@
 	 */
     t_io* funcion_syscall_IO(char* nombreInterfaz);
 
+	void enviar_proceso_suspendido_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente);
+
 	void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb);
+
+	t_pcb* _sacar_pcb_de_blocked_auxiliar(uint8_t pid);
 
 #endif  /*CONEXION_KERNEL_IO_*/  

@@ -57,6 +57,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 		case PROCESO_DESBLOQUEADO:
 			recibir_paquete(socket_cliente_io, paquete);
 
+			log_warning(logger_kernel, "Recibo el proceso bloqueado para finalizar");
+
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
 			
@@ -67,12 +69,33 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			list_remove(_io_que_usa_pcb_bloqueado->procesos, 0);
 			
-			t_pcb* _proceso_desbloqueado = pop_cola_mutex(estado_blocked);
-			sem_post(&bin_proceso_bloqueado);
-
+			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_blocked_auxiliar(pid_desbloqueado);
+			
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
 			break;
+
+		case PROCESO_SUSPENDIDO_DESBLOQUEADO:
+			recibir_paquete(socket_cliente_io, paquete);
+
+			log_warning(logger_kernel, "Recibo el proceso bloqueado y suspendido para finalizar");
+
+			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
+			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado_susp);
+			
+			pthread_mutex_lock(&lista_de_io->mutex_lista);
+			t_io* _io_que_usa_pcb_bloqueado_susp    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado_susp);
+			_io_que_usa_pcb_bloqueado_susp->enabled = true;
+			pthread_mutex_unlock(&lista_de_io->mutex_lista);
+
+			list_remove(_io_que_usa_pcb_bloqueado_susp->procesos, 0);
+			
+			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_blocked_auxiliar(pid_desbloqueado_susp);
+			
+			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
+
+			break;
+	
 		case -1:
 			log_error(logger_kernel, "el cliente [IO] se desconecto.");
 			return EXIT_FAILURE;
@@ -110,6 +133,30 @@ void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cl
     eliminar_paquete(paquete);
 }
 
+void enviar_proceso_suspendido_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente) { 
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t) + sizeof(int64_t);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &tiempo, sizeof(int64_t)); offset += sizeof(int64_t);
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_SUSPENDIDO_BLOQUEADO;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}
+
 uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) { 
 	uint8_t pid;
     
@@ -134,7 +181,6 @@ void inicializar_io(char* nombre_io, int socket_io) {
     io->procesos = list_create();
     io->socket = socket_io;
 	io->enabled = true;
-	io->tiempo_ultimo_bloqueo = 0;
     list_add(lista_de_io->lista_ios, io);
 
     log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
@@ -158,4 +204,20 @@ void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb) {
     pthread_mutex_lock(&(lista_de_io->mutex_lista));
     list_add(interfaz->procesos, pcb);
     pthread_mutex_unlock(&(lista_de_io->mutex_lista));
+}
+
+t_pcb* _sacar_pcb_de_blocked_auxiliar(uint8_t pid) 
+{ 
+    pthread_mutex_lock(&(estado_blocked_aux->mutex));
+    t_pcb* _proceso_a_desbloquear = NULL;
+    for (int i = 0; i < list_size(estado_blocked_aux->cola); i++) {
+        t_pcb* pcb = list_get(estado_blocked_aux->cola, i);
+        if (pcb->pid == pid) {
+            _proceso_a_desbloquear = list_remove(estado_blocked_aux->cola, i); 
+            break; 
+        }
+    }
+
+    pthread_mutex_unlock(&(estado_blocked_aux->mutex));
+    return _proceso_a_desbloquear;
 }

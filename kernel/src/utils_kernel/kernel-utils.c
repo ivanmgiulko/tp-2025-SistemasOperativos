@@ -136,7 +136,6 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
             cont++;
         } else { 
             flag = true;
-            _elemento_pivote->tiempo_ultimo_bloqueo = _proceso_encontrado->tiempo;  
             return _elemento_pivote;
         }
 

@@ -5,6 +5,7 @@ t_estado* estado_ready;
 t_estado* estado_susp_ready;
 t_estado* estado_exec;
 t_estado* estado_blocked;
+t_estado* estado_blocked_aux; // Ver en planificador mediano plazo
 t_estado* estado_susp_blocked;
 t_estado* estado_exit;
 
@@ -15,11 +16,12 @@ sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
-sem_t bin_proceso_bloqueado;
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
 
 sem_t sem_hay_espacio_en_memoria;
+
+t_temporal* tiempo_esperando;
 
 void crear_proceso_cero(char* path, int tamanio){
     
@@ -58,12 +60,13 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
-    sem_init(&sem_cantidad_pcbs_en_susp_ready, 0, 0);
-
-    sem_init(&bin_proceso_bloqueado, 0, 1);
+    
     sem_init(&bin_proceso_eliminar, 0, 1);
     sem_init(&bin_cpu_disponible, 0, 0);
 
+    tiempo_esperando = temporal_create();
+    tiempo_esperando->elapsed_ms = 0;
+    temporal_stop(tiempo_esperando);
 
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
     estado_new          = inicializar_estado();
@@ -71,6 +74,7 @@ void inicializar_estructuras()
     estado_susp_ready   = inicializar_estado();
     estado_exec         = inicializar_estado();
     estado_blocked      = inicializar_estado();
+    estado_blocked_aux  = inicializar_estado();
     estado_susp_blocked = inicializar_estado();
     estado_exit         = inicializar_estado();
 }
@@ -89,6 +93,8 @@ void iniciar_planificacion_largo_plazo(){
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){
+        
+        sem_wait(&sem_cantidad_pcbs_en_new);
 
         bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
         
@@ -111,30 +117,69 @@ void iniciar_planificador_mediano_plazo() {
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_blocked);
-        sem_wait(&bin_proceso_bloqueado);
 
-        t_pcb* _proceso_bloquedo = peek_cola_mutex(estado_blocked);
+        t_pcb* _proceso_bloqueado = pop_cola_mutex(estado_blocked);
+        encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
 
-        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloquedo->pid);
-        // SI esto es NULL, significa que el proceso no esta en ninguna lista de io, sino que quiere hacer el bloqueo de DUMP_MEMORY
-        
+        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
+
+        t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+
         if(_io_que_usa_pcb_bloqueado->enabled == true) {
 
             pthread_mutex_lock(&lista_de_io->mutex_lista);
             _io_que_usa_pcb_bloqueado->enabled = false;
             pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
-            enviar_proceso_a_io_para_bloqueo(_proceso_bloquedo->pid, _io_que_usa_pcb_bloqueado->tiempo_ultimo_bloqueo, _io_que_usa_pcb_bloqueado->socket);
+            enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
         } else { 
 
-            // El proceso sigue bloqueado
-            // Logica de mediano plazo
-    
+            int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
+            bool flag = false, proceso_suspendido = false;
+
+            do { 
+                temporal_resume(tiempo_esperando);
+                
+                if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado) == true) {
+
+                    pthread_mutex_lock(&lista_de_io->mutex_lista);
+                    _io_que_usa_pcb_bloqueado->enabled = false;
+                    pthread_mutex_unlock(&lista_de_io->mutex_lista);
+
+                    if(proceso_suspendido == true) {
+                        t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
+                        encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
+                        enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+                    } else {
+                        enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+                    }
+                    flag = true;
+                }
+
+                if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && _chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado) == false && proceso_suspendido == false){
+                    pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
+                    // avisar a memo para que aumente el tamanio
+                    proceso_suspendido = true;
+                }
+                
+
+            } while(flag == false);
+
         }
+        tiempo_esperando->elapsed_ms = 0;
+        temporal_stop(tiempo_esperando);
     }
 }
 
-// CONSUMIDOr
+bool _chequear_interfaz_disponible(t_io* interfaz) {
+    bool interfaz_disponible = false;
+    pthread_mutex_lock(&lista_de_io->mutex_lista);
+    interfaz_disponible = interfaz->enabled;
+    pthread_mutex_unlock(&lista_de_io->mutex_lista);
+    return interfaz_disponible;
+}
+
+// CONSUMIDOR
 void iniciar_planificador_corto_plazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
@@ -241,6 +286,31 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
 
+void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb) 
+{
+    encolar_pcb_en_estado(estado_susp_blocked, pcb);
+
+    pcb->metricas_estado->cantVecesSuspBlocked++;
+    temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
+    temporal_resume(pcb->metricas_tiempo->tiempoEnSuspBlocked);
+
+    pcb->estadoProceso = SUSP_BLOCEKD;
+    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado SUSP-BLOCKED", pcb->pid);
+}
+
+void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb) 
+{
+    encolar_pcb_en_estado(estado_susp_ready, pcb);
+
+    pcb->metricas_estado->cantVecesSuspReady++;
+    temporal_stop(pcb->metricas_tiempo->tiempoEnSuspBlocked);
+    temporal_resume(pcb->metricas_tiempo->tiempoEnSuspReady);
+
+    pcb->estadoProceso = SUSP_READY;
+    log_info(logger_kernel, "## %d Pasa del estado SUSP-BLOCKED al estado SUSP-READY", pcb->pid);
+    sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
+}
+
 void pasar_pcb_blocked_a_exit(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exit, pcb);
@@ -327,14 +397,12 @@ t_pcb* peek_cola_mutex(t_estado* cola_mutex)
 
 t_pcb* peek_pcb_en_new() 
 {
-    sem_wait(&sem_cantidad_pcbs_en_new);
     t_pcb* pcb = peek_cola_mutex(estado_new);
     return pcb;
 }
 
 t_pcb* peek_pcb_en_susp_ready() 
 {
-    sem_wait(&sem_cantidad_pcbs_en_susp_ready);
     t_pcb* pcb = peek_cola_mutex(estado_susp_ready);
     return pcb;
 }
@@ -358,7 +426,6 @@ void _enviar_proceso_new_a_cola_ready() {
         log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
         // El proceso sigue en la cola de New
         sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
-        sem_post(&sem_cantidad_pcbs_en_new);   // comienzo de nuevo el while para que ponga al proceso en Ready
     }
 }
 
@@ -375,7 +442,6 @@ void _enviar_proceso_susp_ready_a_cola_ready()
         log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
         // El proceso sigue en la cola de New
         sem_wait(&sem_hay_espacio_en_memoria);        // Espera el semaforo desde kernel-memoria
-        sem_post(&sem_cantidad_pcbs_en_susp_ready);   // comienzo de nuevo el while para que ponga al proceso en Ready
     }
 }
 
@@ -388,4 +454,14 @@ t_cpu_conectada* _buscar_cpu_libre() {
 
     return list_find(lista_cpus->lista_cpus, _cpu_esta_libre);
 
+}
+
+t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid) 
+{
+    bool _esta_el_proceso(void* ptr) {
+        t_info_proceso_en_io* info_proceso = (t_info_proceso_en_io*) ptr;
+        return info_proceso->pid == pid;
+    }
+
+    return list_find(lista_procesos, _esta_el_proceso);
 }
