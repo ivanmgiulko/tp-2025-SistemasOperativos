@@ -75,8 +75,6 @@ typedef struct  {
     pthread_mutex_t mutex;
 } t_contador;
 
-
-
 metricas_estado* iniciarMetricasEstado();
 metricas_tiempo* iniciarMetricasTiempo();
 metricas_proceso iniciarMetricasProceso();
@@ -90,5 +88,9 @@ void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
 t_pcbMemoria* deserializarProceso(t_buffer* );
 
 t_contador* inicializar_contador();
+
+int _deserializar_pid(int* offset, t_paquete* paquete);
+
+int _deserializar_pc(int* offset, t_paquete* paquete);
 
 #endif // PROCESS_H_

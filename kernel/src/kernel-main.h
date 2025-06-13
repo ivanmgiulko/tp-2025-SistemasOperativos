@@ -6,8 +6,6 @@
     #include "utils_kernel/kernel-utils.h"
     #include "config_kernel/kernel-config.h"
     #include "planificador_kernel/kernel-planificador.h"
-    #include "conexiones_kernel/conexion-kernel-cpu.h"
-    #include "conexiones_kernel/conexion-kernel-io.h"
     #include "conexiones_kernel/conexion-kernel-memoria.h"
 
     /**

@@ -187,3 +187,22 @@ t_pcbMemoria* deserializarProceso(t_buffer* buffer) {
     return procesoMemo;
 }
 
+int _deserializar_pid(int* offset, t_paquete* paquete) 
+{ 
+    int pid = 0, tamanio_pid = 0;
+    // El PID es recibido como INT, pero deberia ser uint8_t    
+    memcpy(&tamanio_pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    memcpy(&pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+
+    return pid;
+}
+
+int _deserializar_pc(int* offset, t_paquete* paquete) 
+{ 
+    int pc = 0, tamanio_pc = 0;
+    // El PID es recibido como INT, pero deberia ser uint8_t    
+    memcpy(&tamanio_pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    memcpy(&pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+
+    return pc;
+}

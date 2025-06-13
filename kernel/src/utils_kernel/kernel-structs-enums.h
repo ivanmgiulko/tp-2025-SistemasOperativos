@@ -2,6 +2,8 @@
 #define KERNEL_STRUCTS_ENUMS_H_
 
     #include <utils/utils.h>
+    #include <utils/proceso/process.h>
+    #include <utils/contrato/contrato.h>
 
     typedef enum{
 		SOCKET_INTERRUPT,
@@ -46,5 +48,11 @@
         uint8_t pid;
 	    int64_t tiempo;
     } t_info_proceso_en_io;
+
+    // usado en CPU
+    typedef struct {
+		uint8_t pid;
+		bool respuesta;
+	} t_respuesta_dump;
 
 #endif // KERNEL_STRUCTS_ENUMS_H_

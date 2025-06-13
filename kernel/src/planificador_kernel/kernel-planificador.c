@@ -1,4 +1,6 @@
 #include "kernel-planificador.h"
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-io/modulo-io.h>
 
 t_estado* estado_new;
 t_estado* estado_ready;
@@ -235,134 +237,6 @@ bool _verificar_cola_susp_ready_esta_vacia() {
     return cola_vacia;
 }
 
-void pasar_pcb_a_new(t_pcb* pcb) 
-{
-    encolar_pcb_en_estado(estado_new, pcb);
-
-    pcb->metricas_estado->cantVecesNew++;
-    temporal_resume(pcb->metricas_tiempo->tiempoEnNew);
-
-    pcb->estadoProceso = NEW;
-    log_info(logger_kernel, "## %d Pasa al estado NEW", pcb->pid);
-    sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
-}
-
-
-void pasar_pcb_new_a_ready(t_pcb* pcb)
-{ 
-    encolar_pcb_en_estado(estado_ready, pcb);
-
-    pcb->metricas_estado->cantVecesReady++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnNew);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnReady);
-
-    pcb->estadoProceso = READY;
-    log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb->pid);
-    sem_post(&sem_cantidad_pcbs_en_ready); 
-}
-
-void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
-    encolar_pcb_en_estado(estado_ready, pcb);
-
-    pcb->metricas_estado->cantVecesReady++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnSuspReady);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnReady);
-
-    pcb->estadoProceso = READY;
-    log_info(logger_kernel, "## %d Pasa del estado SUSP-READY al estado READY", pcb->pid);
-    sem_post(&sem_cantidad_pcbs_en_ready); 
-}
-
-void pasar_pcb_blocked_a_ready(t_pcb* pcb) 
-{ 
-    encolar_pcb_en_estado(estado_ready, pcb);
-
-    pcb->metricas_estado->cantVecesReady++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnReady);
-
-    pcb->estadoProceso = READY;
-    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado READY", pcb->pid);
-    sem_post(&sem_cantidad_pcbs_en_ready); 
-}
-
-void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb) 
-{
-    encolar_pcb_en_estado(estado_susp_blocked, pcb);
-
-    pcb->metricas_estado->cantVecesSuspBlocked++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnSuspBlocked);
-
-    pcb->estadoProceso = SUSP_BLOCEKD;
-    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado SUSP-BLOCKED", pcb->pid);
-}
-
-void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb) 
-{
-    encolar_pcb_en_estado(estado_susp_ready, pcb);
-
-    pcb->metricas_estado->cantVecesSuspReady++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnSuspBlocked);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnSuspReady);
-
-    pcb->estadoProceso = SUSP_READY;
-    log_info(logger_kernel, "## %d Pasa del estado SUSP-BLOCKED al estado SUSP-READY", pcb->pid);
-    sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
-}
-
-void pasar_pcb_blocked_a_exit(t_pcb* pcb) 
-{ 
-    encolar_pcb_en_estado(estado_exit, pcb);
-
-    pcb->metricas_estado->cantVecesExit++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
-
-    pcb->estadoProceso = EXIT;
-    log_info(logger_kernel, "## %d Pasa del estado BLOCKED al estado EXIT", pcb->pid);
-    _enviar_a_finalizar_proceso(pcb);
-    
-}
-
-void pasar_pcb_ready_a_exec(t_pcb* pcb) 
-{ 
-    encolar_pcb_en_estado(estado_exec, pcb);
-
-    pcb->metricas_estado->cantVecesExec++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnReady);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnExec);
-
-    pcb->estadoProceso = EXEC;
-    log_info(logger_kernel, "## %d Pasa del estado READY al estado EXEC", pcb->pid);
-}
-
-void pasar_de_exec_a_blocked(t_pcb* pcb)
-{
-    encolar_pcb_en_estado(estado_blocked, pcb);
-
-    pcb->metricas_estado->cantVecesBlocked++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnBlocked);
-
-    pcb->estadoProceso = BLOCKED;
-    log_info(logger_kernel, "## %d Pasa del estado EXEC al estado BLOCKED", pcb->pid);
-}
-
-void pasar_de_exec_a_exit(t_pcb* pcb)
-{
-    encolar_pcb_en_estado(estado_exit, pcb);
-
-    pcb->metricas_estado->cantVecesExit++;
-    temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
-    temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
-
-    pcb->estadoProceso = EXIT;
-    log_info(logger_kernel, "## %d Pasa del estado EXEC al estado EXIT", pcb->pid);
-    _enviar_a_finalizar_proceso(pcb);
-}
-
-
 t_estado* inicializar_estado() 
 {
     // REVISAR FREE PARA MALLOC
@@ -445,23 +319,3 @@ void _enviar_proceso_susp_ready_a_cola_ready()
     }
 }
 
-t_cpu_conectada* _buscar_cpu_libre() { 
-
-    bool _cpu_esta_libre(void* ptr) {
-        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
-        return cpu->pid_en_cpu == -1;
-    }
-
-    return list_find(lista_cpus->lista_cpus, _cpu_esta_libre);
-
-}
-
-t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid) 
-{
-    bool _esta_el_proceso(void* ptr) {
-        t_info_proceso_en_io* info_proceso = (t_info_proceso_en_io*) ptr;
-        return info_proceso->pid == pid;
-    }
-
-    return list_find(lista_procesos, _esta_el_proceso);
-}

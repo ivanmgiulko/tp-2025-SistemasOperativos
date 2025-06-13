@@ -12,10 +12,8 @@
     #include "planificador_kernel/kernel-planificador.h"
     #include "utils_kernel/kernel-utils.h"
     #include "conexiones_kernel/conexion-kernel-memoria.h"
-    #include "conexiones_kernel/conexion-kernel-cpu.h"
-    #include "conexiones_kernel/conexion-kernel-io.h"
 
-    #include <utils/kernel-utils/kernel-structs-enums.h>
+    #include "utils_kernel/kernel-structs-enums.h"
 
     /**
 	 * @file

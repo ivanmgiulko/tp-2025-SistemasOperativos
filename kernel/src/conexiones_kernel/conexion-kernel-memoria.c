@@ -1,24 +1,7 @@
 #include "conexion-kernel-memoria.h"
-
-void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente)
-{
-	t_paquete* paquete = malloc(sizeof(t_paquete));
-
-	paquete->codigo_operacion = TAMANIO_PROCESO;
-	paquete->buffer = malloc(sizeof(t_buffer));
-	paquete->buffer->size = strlen(tam_proceso) + 1;
-	paquete->buffer->stream = malloc(paquete->buffer->size);
-	memcpy(paquete->buffer->stream, tam_proceso, paquete->buffer->size);
-
-	int bytes = paquete->buffer->size + 2*sizeof(int);
-
-	void* a_enviar = serializar_paquete(paquete, bytes);
-
-	send(socket_cliente, a_enviar, bytes, 0);
-
-	free(a_enviar);
-	eliminar_paquete(paquete);
-}
+#include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
+#include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-memoria/modulo-memoria.h>
 
 char* recibir_respuestaMemoria(int socket_cliente) { 
     int size;
@@ -119,40 +102,8 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 	return EXIT_SUCCESS;
 }
 
-t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid) 
-{
-	bool _tiene_el_pid(void* ptr) {
-		t_pcb* proceso = (t_pcb*) ptr;
-		return proceso->pid == pid;
-	}
-	return list_find(cola_exit, _tiene_el_pid);
-}
 
-t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer)
-{
-	t_respuesta_dump* respuesta_dump = malloc(sizeof(t_respuesta_dump));
 
-	void* stream = buffer->stream;
 
-    memcpy(&(respuesta_dump->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
-	memcpy(&(respuesta_dump->respuesta), stream, sizeof(bool)); stream += sizeof(bool);
-	
-    return respuesta_dump;
-}
 
-t_pcb* _sacar_pcb_de_blocked(int pid) 
-{ 
-    pthread_mutex_lock(&(estado_blocked->mutex));
-    t_pcb* _proceso_a_desbloquear = NULL;
-    for (int i = 0; i < list_size(estado_blocked->cola); i++) {
-        t_pcb* pcb = list_get(estado_blocked->cola, i);
-        if (pcb->pid == pid) {
-            _proceso_a_desbloquear = list_remove(estado_blocked->cola, i); // Eliminar el elemento
-            break; // Salir del bucle una vez encontrado
-        }
-    }
-
-    pthread_mutex_unlock(&(estado_blocked->mutex));
-    return _proceso_a_desbloquear;
-}
 

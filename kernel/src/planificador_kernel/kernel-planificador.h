@@ -2,7 +2,9 @@
 #define KERNEL_PLANIFICADOR_H_
 
     #include "kernel-gestor.h"
-    #include <utils/kernel-utils/kernel-structs-enums.h>
+    
+    #include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
+	#include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 
     /**
 	 * @file
@@ -143,30 +145,7 @@
 	*/
     void pasar_pcb_a_new(t_pcb*);
 
-    /**
-	* @brief pasa el proceso que le pasemos por parametro del estado NEW a READY
-    * @param t_pcb* proceso que va a ser pasado a READY
-	*/
-    void pasar_pcb_new_a_ready(t_pcb* pcb);
-
-    /**
-	* @brief pasa el proceso que le pasemos por parametro del estado READY a EXEC
-    * @param t_pcb* proceso que va a ser pasado a EXEC
-	*/
-    void pasar_pcb_ready_a_exec(t_pcb* pcb);
-
-    void pasar_pcb_blocked_a_ready(t_pcb* pcb);
-
-    void pasar_de_exec_a_blocked(t_pcb* pcb);
     
-    void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb);
-
-    void pasar_de_exec_a_exit(t_pcb* pcb);
-
-    void pasar_pcb_blocked_a_exit(t_pcb* pcb);
-
-    void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb);
-
     /**
 	* @brief verifica si la cola NEW estaba vacia antes de que llegase un proceso a esta
     * @return devuelve TRUE si estaba vacia, o FALSE si no lo estaba.
@@ -196,9 +175,6 @@
 
     bool _chequear_interfaz_disponible(t_io* interfaz);
 
-    t_cpu_conectada* _buscar_cpu_libre();
-
-    t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid);
-
+    
 #endif
 
