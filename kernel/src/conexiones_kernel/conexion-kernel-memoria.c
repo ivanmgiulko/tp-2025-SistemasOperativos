@@ -1,7 +1,10 @@
-#include "conexion-kernel-memoria.h"
+#include "kernel-gestor.h"
+
 #include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
 #include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-memoria/modulo-memoria.h>
+#include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
+// #include <utils_kernel/utils-complementarios/conexion-con-memoria
 
 char* recibir_respuestaMemoria(int socket_cliente) { 
     int size;
@@ -84,7 +87,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			
 			eliminar_paquete(paquete);
 			
-		
 			return EXIT_SUCCESS;
 			break;
 		
@@ -101,9 +103,3 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 	log_trace(logger_kernel, "Se cierra la conexion con Memoria");
 	return EXIT_SUCCESS;
 }
-
-
-
-
-
-

@@ -1,4 +1,5 @@
 #include "modulo-cpu.h"
+#include <utils_kernel/utils-complementarios/archivo-planificador/utils-planificador.h>
 
 void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) { 
     t_buffer* buffer = malloc(sizeof(t_buffer));

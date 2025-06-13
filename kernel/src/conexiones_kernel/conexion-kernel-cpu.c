@@ -4,6 +4,7 @@
 #include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
 #include <utils_kernel/manejar-conexiones/modulo-cpu/manejar-conexion-cpu.h>
+#include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
 #include <utils_kernel/utils-complementarios/conexion-con-cpu/utils-kernel-cpu.h>
 #include <utils_kernel/utils-complementarios/conexion-con-io/utils-kernel-io.h>
 

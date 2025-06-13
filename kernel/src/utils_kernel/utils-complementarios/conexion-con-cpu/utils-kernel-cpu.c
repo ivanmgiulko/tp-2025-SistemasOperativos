@@ -1,4 +1,6 @@
 #include "utils-kernel-cpu.h"
+#include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
+#include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
 
 void _agregar_socket_en_cpu(uint8_t id_cpu, t_sockets_cpu tipo_socket, int valor_socket) {
 

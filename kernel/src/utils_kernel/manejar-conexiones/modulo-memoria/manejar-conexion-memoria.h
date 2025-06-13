@@ -1,12 +1,7 @@
-#ifndef CONEXIONES_K_MEMORIA_H_
-#define CONEXIONES_K_MEMORIA_H_
+#ifndef MANEJAR_CONEXION_MEMORIA_H_
+#define MANEJAR_CONEXION_MEMORIA_H_
     
     #include "kernel-gestor.h"
-
-    /**
-	 * @file
-	 * @brief #include "conexiones_kernel/conexion-k-memoria.h"
-	 */
 
     /**
 	* @brief Maneja las peticiones que le llegan al Kernel desde la memoria
@@ -15,7 +10,4 @@
 	*/
     int manejar_conexion_kernel_memoria(int socket_cliente);
 
-	
-
-	
-#endif // CONEXIONES_K_MEMORIA_H_
+#endif // MANEJAR_CONEXION_MEMORIA_H_

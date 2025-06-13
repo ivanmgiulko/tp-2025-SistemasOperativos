@@ -1,5 +1,8 @@
 #include "kernel-main.h"
+
+#include <utils_kernel/utils-complementarios/archivo-main/utils-main.h>
 #include <utils_kernel/manejar-conexiones/modulo-cpu/manejar-conexion-cpu.h>
+#include <utils_kernel/manejar-conexiones/modulo-io/manejar-conexion-io.h>
 
 int main(int argc, char* argv[]) {
 	// if(argc <= CANT_MINIMA_ARGUMENTOS){

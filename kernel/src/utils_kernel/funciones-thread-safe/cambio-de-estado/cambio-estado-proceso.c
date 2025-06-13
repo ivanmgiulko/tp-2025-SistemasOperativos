@@ -1,4 +1,5 @@
 #include "cambio-estado-proceso.h"
+#include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
 
 void pasar_pcb_a_new(t_pcb* pcb) 
 {

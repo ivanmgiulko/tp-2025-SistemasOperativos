@@ -49,10 +49,21 @@
 	    int64_t tiempo;
     } t_info_proceso_en_io;
 
-    // usado en CPU
     typedef struct {
 		uint8_t pid;
 		bool respuesta;
 	} t_respuesta_dump;
+
+    typedef enum {
+        FIFO,
+        SJF,
+        PMCP,
+        SJF_SIN_DESALOJO
+    } p_algoritmos;
+
+    typedef struct {
+        t_list* cola;
+        pthread_mutex_t mutex;
+    } t_estado;
 
 #endif // KERNEL_STRUCTS_ENUMS_H_

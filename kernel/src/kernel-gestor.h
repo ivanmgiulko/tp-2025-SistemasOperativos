@@ -9,9 +9,7 @@
     #include <utils/contrato/contrato.h>
     
     #include "config_kernel/kernel-config.h"
-    #include "planificador_kernel/kernel-planificador.h"
-    #include "utils_kernel/kernel-utils.h"
-    #include "conexiones_kernel/conexion-kernel-memoria.h"
+    #include "utils_kernel/utils-complementarios/archivo-planificador/utils-planificador.h"
 
     #include "utils_kernel/kernel-structs-enums.h"
 

@@ -3,10 +3,7 @@
 
     #include "kernel-gestor.h"
     
-    #include "utils_kernel/kernel-utils.h"
     #include "config_kernel/kernel-config.h"
-    #include "planificador_kernel/kernel-planificador.h"
-    #include "conexiones_kernel/conexion-kernel-memoria.h"
 
     /**
 	 * @file

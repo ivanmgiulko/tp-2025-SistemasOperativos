@@ -29,4 +29,8 @@
 
     t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid);
 
+    t_io* buscar_io_en_lista(t_list*, uint8_t);
+
+    t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* , uint8_t );
+
 #endif // BUSQUEDA_DE_STRUCTS_H_

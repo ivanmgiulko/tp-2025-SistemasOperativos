@@ -62,3 +62,33 @@ t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid)
 	}
 	return list_find(cola_exit, _tiene_el_pid);
 }
+
+t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
+    bool flag = false;
+    int tamanio_lista = list_size(lista_base), cont = 0;
+    
+    do { 
+        t_io* _elemento_pivote = list_get(lista_de_io->lista_ios, cont);
+
+        t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
+
+        if(_proceso_encontrado == NULL) { 
+            cont++;
+        } else { 
+            flag = true;
+            return _elemento_pivote;
+        }
+
+    } while(!flag && cont <= tamanio_lista);
+    return NULL;
+}
+
+t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, uint8_t pid) {
+
+    bool _es_el_proceso(void* elemento) {
+        t_info_proceso_en_io* info_proc = (t_info_proceso_en_io*) elemento;
+        return info_proc->pid == pid;
+    }
+
+    return list_find(lista_procesos_de_io, _es_el_proceso);
+}
