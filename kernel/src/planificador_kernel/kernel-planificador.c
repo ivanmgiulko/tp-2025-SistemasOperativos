@@ -44,6 +44,15 @@ void iniciar_planificacion_largo_plazo(){
  	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
 	pthread_detach(hilo_planificador_mediano_plazo);
 
+    t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 5000);
+    pasar_pcb_a_new(proceso_1);
+
+    t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 2500);
+    pasar_pcb_a_new(proceso_2);
+
+    t_pcb* proceso_3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 500);
+    pasar_pcb_a_new(proceso_3);
+
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){
         
@@ -124,13 +133,33 @@ void iniciar_planificador_corto_plazo(){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
         
-        if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0){
-            
-            t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+        t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+
+        if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0) {
             
             sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
             cpu_libre = _buscar_cpu_libre();
 
+            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+            pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
+            infoProceso->pc = pcb_a_operar->pc;
+            infoProceso->pid = pcb_a_operar->pid;
+
+            pthread_mutex_lock(&lista_cpus->mutex_lista);
+            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+            pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+
+        } else if(strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SJF") == 0) {
+
+            sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
+            cpu_libre = _buscar_cpu_libre();
+
+            list_sort(estado_ready->cola, _menor_estimacion);
             t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
             pasar_pcb_ready_a_exec(pcb_a_operar);
