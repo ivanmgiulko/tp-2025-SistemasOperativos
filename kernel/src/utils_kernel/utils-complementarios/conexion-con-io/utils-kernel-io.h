@@ -19,5 +19,7 @@
 
 	void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb);
 
+	void alternar_estado_io(t_io* io);
+	
 #endif // UTILS_KERNEL_IO_H_
 

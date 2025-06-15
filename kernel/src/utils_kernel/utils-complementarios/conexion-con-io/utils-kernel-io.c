@@ -25,3 +25,9 @@ void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb)
     list_add(interfaz->procesos, pcb);
     pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 }
+
+void alternar_estado_io(t_io* io){
+    pthread_mutex_lock(&lista_de_io->mutex_lista);
+        io->enabled = !(io->enabled);
+    pthread_mutex_unlock(&lista_de_io->mutex_lista);
+}

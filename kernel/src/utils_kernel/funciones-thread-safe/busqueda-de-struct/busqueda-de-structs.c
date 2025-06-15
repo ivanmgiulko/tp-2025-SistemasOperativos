@@ -63,6 +63,7 @@ t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid)
 	return list_find(cola_exit, _tiene_el_pid);
 }
 
+// funcion que busca la io donde se encuentra el pid
 t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
     bool flag = false;
     int tamanio_lista = list_size(lista_base), cont = 0;
@@ -75,7 +76,7 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
         if(_proceso_encontrado == NULL) { 
             cont++;
         } else { 
-            flag = true;
+            flag = true; // Creo que esto es al pedo si haces un return. En todo caso sacás el return y que el return fuera del while te de _proceso_encontrado
             return _elemento_pivote;
         }
 

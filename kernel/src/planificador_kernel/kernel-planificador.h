@@ -16,8 +16,8 @@
 	 * @brief similar al concepto de Monitor. Asocia una cola a un mutex
 	 */
     
-    
-    
+      
+  
 
 
     

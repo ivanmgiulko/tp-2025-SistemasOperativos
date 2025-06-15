@@ -71,14 +71,11 @@ void iniciar_planificador_mediano_plazo() {
         encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
 
         t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
-
         t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
-
-        if(_io_que_usa_pcb_bloqueado->enabled == true) {
-
-            pthread_mutex_lock(&lista_de_io->mutex_lista);
-            _io_que_usa_pcb_bloqueado->enabled = false;
-            pthread_mutex_unlock(&lista_de_io->mutex_lista);
+        // Si devuelve null?
+        if(_io_que_usa_pcb_bloqueado->enabled) {
+            
+            alternar_estado_io(_io_que_usa_pcb_bloqueado);
 
             enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
         } else { 
@@ -86,33 +83,30 @@ void iniciar_planificador_mediano_plazo() {
             int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
             bool flag = false, proceso_suspendido = false;
 
+            temporal_resume(tiempo_esperando);
+
             do { 
-                temporal_resume(tiempo_esperando);
                 
-                if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado) == true) {
+                if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado)) {
 
-                    pthread_mutex_lock(&lista_de_io->mutex_lista);
-                    _io_que_usa_pcb_bloqueado->enabled = false;
-                    pthread_mutex_unlock(&lista_de_io->mutex_lista);
+                    alternar_estado_io(_io_que_usa_pcb_bloqueado);
 
-                    if(proceso_suspendido == true) {
+                    if(proceso_suspendido) {
                         t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
                         encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
                         enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
                     } else {
                         enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
                     }
-                    flag = true;
-                }
+                    flag = !flag;
 
-                if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && _chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado) == false && proceso_suspendido == false){
+                }else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
                     pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
                     // avisar a memo para que aumente el tamanio
-                    proceso_suspendido = true;
+                    proceso_suspendido = !proceso_suspendido;
                 }
                 
-
-            } while(flag == false);
+            } while(!flag);
 
         }
         tiempo_esperando->elapsed_ms = 0;
