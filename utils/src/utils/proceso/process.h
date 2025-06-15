@@ -53,6 +53,11 @@ typedef struct
     metricas_tiempo* metricas_tiempo;
     p_estados estadoProceso;
 
+    uint64_t estimacion_actual;
+    uint64_t estimacion_rafaga_anterior;
+    uint8_t rafagas_hechas_reales;
+    uint16_t pcAux;
+
     char* pathArchivoPseudocodigo;
     uint32_t path_length;
     uint32_t tamanioMemoria;
@@ -79,11 +84,11 @@ metricas_estado* iniciarMetricasEstado();
 metricas_tiempo* iniciarMetricasTiempo();
 metricas_proceso iniciarMetricasProceso();
 
-t_pcb* iniciarPCB(char* , int , int );
-void enviarProceso_A_Memoria(t_pcb , int );
-void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
+t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial);
 
-// void enviar_proceso_a_finalizar_kernel(t_paquete, int, int);
+void enviarProceso_A_Memoria(t_pcb , int );
+
+void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
 
 t_pcbMemoria* deserializarProceso(t_buffer* );
 

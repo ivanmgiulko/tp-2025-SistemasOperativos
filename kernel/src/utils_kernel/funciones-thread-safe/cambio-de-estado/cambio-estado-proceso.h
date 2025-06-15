@@ -39,4 +39,6 @@
 
     void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar);
 
+    uint64_t calcular_estimacion_actual(uint8_t rafagas_hechas, uint64_t estimacion_anterior);
+
 #endif // CAMBIO_ESTADO_PROCESO_H_

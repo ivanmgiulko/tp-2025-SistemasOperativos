@@ -25,22 +25,7 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     eliminar_paquete(paquete);
 }
 
-t_pcb* proceso_syscall_prueba(t_buffer* buffer) { 
-    char* pathArchivoPseudocodigo;
-    uint32_t path_length;
-    int tamanioProceso;
 
-    void* stream = buffer->stream;
-
-    memcpy(&(tamanioProceso), stream, sizeof(int)); stream += sizeof(int);
-    memcpy(&(path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    pathArchivoPseudocodigo = malloc(path_length);
-    memcpy(pathArchivoPseudocodigo, stream, path_length);
-
-    t_pcb* proceso_syscall_prueba = iniciarPCB(pathArchivoPseudocodigo, tamanioProceso, asignar_pid());
-
-    return proceso_syscall_prueba;
-}
 
 t_syscall_io _deserializar_syscall_io(int* offset, t_paquete* paquete) 
 { 

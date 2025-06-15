@@ -1,7 +1,6 @@
 #include "process.h"
 
-
-t_pcb* iniciarPCB(char* path, int tamanio, int pid) 
+t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial) 
 {
     t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
     nuevoPCB->pathArchivoPseudocodigo = path;
@@ -10,6 +9,12 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid)
     nuevoPCB->pid = pid;
     nuevoPCB->pc = 0;
     nuevoPCB->estadoProceso = NEW;
+
+    nuevoPCB->pcAux = 0;
+    nuevoPCB->estimacion_rafaga_anterior = 0; // Estn(n)
+    nuevoPCB->estimacion_actual = estimacion_inicial; // Est(n + 1)
+    nuevoPCB->rafagas_hechas_reales = 0; // R(n)
+
     nuevoPCB->metricas_estado = iniciarMetricasEstado();
     nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();
     return nuevoPCB;

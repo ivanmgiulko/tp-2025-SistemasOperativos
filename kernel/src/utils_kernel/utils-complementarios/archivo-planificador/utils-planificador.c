@@ -67,10 +67,13 @@ void _iniciar_cuando_apreta_enter()
 void crear_proceso_cero(char* path, int tamanio)
 {
     inicializar_pid();
-  	t_pcb* proceso_ejemplo = iniciarPCB(path ,tamanio, asignar_pid());
 
-    pasar_pcb_a_new(proceso_ejemplo);
-	log_info(logger_kernel,"## %d Se crea el proceso - Estado: NEW", proceso_ejemplo->pid);
+    uint64_t estimacion_inical = atoi(configuracion_kernel->ESTIMACION_INICIAL);
+
+  	t_pcb* proceso_cero = iniciarPCB(path ,tamanio, asignar_pid(), estimacion_inical);
+
+    pasar_pcb_a_new(proceso_cero);
+	log_info(logger_kernel,"## %d Se crea el proceso - Estado: NEW", proceso_cero->pid);
 }
 
 void inicializar_pid(){
@@ -231,4 +234,10 @@ void _enviar_proceso_susp_ready_a_cola_ready()
         // El proceso sigue en la cola de New
         sem_wait(&sem_hay_espacio_en_memoria);        // Espera el semaforo desde kernel-memoria
     }
+}
+
+bool _menor_estimacion(void* a, void* b) {
+    t_pcb* proceso_a = (t_pcb*) a;
+    t_pcb* proceso_b = (t_pcb*) b;
+    return proceso_a->estimacion_actual <= proceso_b->estimacion_actual;
 }

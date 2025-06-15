@@ -10,13 +10,6 @@
 	*/
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
-    /**
-	* @brief recibe un proceso nuevo originado por la SYSCALL INIT_PROC
-	* @param t_buffer*: Contenido del proceso a poner en NEW
-	* @return devuelve un proceso creado a raiz de la syscall
-	*/
-	t_pcb* proceso_syscall_prueba(t_buffer* buffer);
-
     t_syscall_io _deserializar_syscall_io(int* , t_paquete* );
 
     char* deserializar_archivo_instrucciones(int* offset, t_paquete* paquete);

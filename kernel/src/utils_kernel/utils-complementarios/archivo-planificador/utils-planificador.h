@@ -155,4 +155,6 @@
 	*/
     void _enviar_proceso_new_a_cola_ready();
 
+    bool _menor_estimacion(void* a, void* b);
+
 #endif // UTILS_PLANIFICADOR_H_

@@ -31,7 +31,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pid = _deserializar_pid(offset, paquete);                        
 
-                pc = _deserializar_pc(offset, paquete); 
+                pc = _deserializar_pc(offset, paquete); // 6
+
+                // Cantidad de rafagas = 5 | pc - 1
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
@@ -42,7 +44,12 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
                 t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
+
                 _proceso_a_bloquear->pc = pc;
+
+                _proceso_a_bloquear->rafagas_hechas_reales = pc - _proceso_a_bloquear->pcAux - 1;
+
+                _proceso_a_bloquear->pcAux = pc;
 
                 if(interfaz_disponible != NULL) { 
                     
@@ -79,7 +86,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 int tamanio_proceso = deserializar_tamanio_proceso(offset, paquete);
 
-                t_pcb* nuevo_proceso = iniciarPCB(archivo, tamanio_proceso, asignar_pid());
+                t_pcb* nuevo_proceso = iniciarPCB(archivo, tamanio_proceso, asignar_pid(), atoi(configuracion_kernel->ESTIMACION_INICIAL));
 
                 pasar_pcb_a_new(nuevo_proceso);
 
@@ -93,7 +100,11 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
 
-                pc = _deserializar_pc(offset, paquete); 
+                pc = _deserializar_pc(offset, paquete); // 7
+
+               _proceso_a_bloquear->rafagas_hechas_reales = pc - _proceso_a_bloquear->pcAux - 1;
+
+                _proceso_a_bloquear->pcAux = pc;
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
