@@ -37,7 +37,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			recibir_paquete(socket_cliente, paquete);
 			t_respuesta_dump* resp_dump = recibir_respuesta_dump(paquete->buffer);
 
-			t_pcb* proceso_desbloqueado = _sacar_pcb_de_blocked(resp_dump->pid);
+			t_pcb* proceso_desbloqueado = _sacar_pcb_de_cola(resp_dump->pid, estado_blocked);
 
 			if(resp_dump->respuesta == false){
 				
@@ -63,7 +63,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			
 			log_info(logger_kernel, "%d - Finaliza el proceso", pid);
 
-			t_pcb* proceso_finalizado = _sacar_pcb_de_exit(pid);
+			t_pcb* proceso_finalizado = _sacar_pcb_de_cola(pid, estado_exit);
 			temporal_stop(proceso_finalizado->metricas_tiempo->tiempoEnExit);
 
 			log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 

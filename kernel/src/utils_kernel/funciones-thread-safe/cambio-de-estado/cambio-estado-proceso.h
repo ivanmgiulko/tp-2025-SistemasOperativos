@@ -29,13 +29,7 @@
     
     void pasar_de_exec_a_exit(t_pcb* pcb);
 
-    t_pcb* _sacar_pcb_de_exec(int pid);
-
-    t_pcb* _sacar_pcb_de_blocked_auxiliar(uint8_t pid);
-
-    t_pcb* _sacar_pcb_de_blocked(int pid);
-
-    t_pcb* _sacar_pcb_de_exit(uint8_t pid);
+    t_pcb* _sacar_pcb_de_cola(int pid, t_estado* estado);
 
     void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar);
 

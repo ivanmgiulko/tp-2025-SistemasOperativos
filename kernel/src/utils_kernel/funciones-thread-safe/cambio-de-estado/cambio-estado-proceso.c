@@ -141,68 +141,20 @@ void pasar_de_exec_a_exit(t_pcb* pcb)
     _enviar_a_finalizar_proceso(pcb);
 }
 
-t_pcb* _sacar_pcb_de_exec(int pid) 
+t_pcb* _sacar_pcb_de_cola(int pid, t_estado* estado) 
 { 
-    pthread_mutex_lock(&(estado_exec->mutex));
-    t_pcb* _proceso_a_bloquear = NULL;
-    for (int i = 0; i < list_size(estado_exec->cola); i++) {
-        t_pcb* pcb = list_get(estado_exec->cola, i);
+    pthread_mutex_lock(&(estado->mutex));
+    t_pcb* proceso_a_devolver = NULL;
+    for (int i = 0; i < list_size(estado->cola); i++) {
+        t_pcb* pcb = list_get(estado->cola, i);
         if (pcb->pid == pid) {
-            _proceso_a_bloquear = list_remove(estado_exec->cola, i); // Eliminar el elemento
+            proceso_a_devolver = list_remove(estado->cola, i); // Eliminar el elemento
             break; // Salir del bucle una vez encontrado
         }
     }
 
-    pthread_mutex_unlock(&(estado_exec->mutex));
-    return _proceso_a_bloquear;
-}
-
-t_pcb* _sacar_pcb_de_blocked_auxiliar(uint8_t pid) 
-{ 
-    pthread_mutex_lock(&(estado_blocked_aux->mutex));
-    t_pcb* _proceso_a_desbloquear = NULL;
-    for (int i = 0; i < list_size(estado_blocked_aux->cola); i++) {
-        t_pcb* pcb = list_get(estado_blocked_aux->cola, i);
-        if (pcb->pid == pid) {
-            _proceso_a_desbloquear = list_remove(estado_blocked_aux->cola, i); 
-            break; 
-        }
-    }
-
-    pthread_mutex_unlock(&(estado_blocked_aux->mutex));
-    return _proceso_a_desbloquear;
-}
-
-t_pcb* _sacar_pcb_de_blocked(int pid) 
-{ 
-    pthread_mutex_lock(&(estado_blocked->mutex));
-    t_pcb* _proceso_a_desbloquear = NULL;
-    for (int i = 0; i < list_size(estado_blocked->cola); i++) {
-        t_pcb* pcb = list_get(estado_blocked->cola, i);
-        if (pcb->pid == pid) {
-            _proceso_a_desbloquear = list_remove(estado_blocked->cola, i); // Eliminar el elemento
-            break; // Salir del bucle una vez encontrado
-        }
-    }
-
-    pthread_mutex_unlock(&(estado_blocked->mutex));
-    return _proceso_a_desbloquear;
-}
-
-t_pcb* _sacar_pcb_de_exit(uint8_t pid) 
-{ 
-    pthread_mutex_lock(&(estado_exit->mutex));
-    t_pcb* _proceso_a_exit = NULL;
-    for (int i = 0; i < list_size(estado_exit->cola); i++) {
-        t_pcb* pcb = list_get(estado_exit->cola, i);
-        if (pcb->pid == pid) {
-            _proceso_a_exit = list_remove(estado_exit->cola, i); // Eliminar el elemento
-            break; // Salir del bucle una vez encontrado
-        }
-    }
-
-    pthread_mutex_unlock(&(estado_exit->mutex));
-    return _proceso_a_exit;
+    pthread_mutex_unlock(&(estado->mutex));
+    return proceso_a_devolver;
 }
 
 void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)

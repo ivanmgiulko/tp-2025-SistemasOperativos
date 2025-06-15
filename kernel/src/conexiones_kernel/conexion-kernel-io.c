@@ -62,7 +62,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			list_remove(_io_que_usa_pcb_bloqueado->procesos, 0);
 			
-			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_blocked_auxiliar(pid_desbloqueado);
+			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked_aux);
 			
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
@@ -83,7 +83,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			list_remove(_io_que_usa_pcb_bloqueado_susp->procesos, 0);
 			
-			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_blocked_auxiliar(pid_desbloqueado_susp);
+			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_cola(pid_desbloqueado_susp, estado_blocked_aux);
 			
 			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
 

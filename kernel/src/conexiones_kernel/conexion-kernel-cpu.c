@@ -43,7 +43,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
-                t_pcb* _proceso_a_bloquear = _sacar_pcb_de_exec(pid);
+                t_pcb* _proceso_a_bloquear = _sacar_pcb_de_cola(pid, estado_exec);
 
                 _proceso_a_bloquear->pc = pc;
 
@@ -108,7 +108,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                t_pcb* _proceso_a_dumpear = _sacar_pcb_de_exec(pid);
+                t_pcb* _proceso_a_dumpear = _sacar_pcb_de_cola(pid, estado_exec);
                 _proceso_a_dumpear->pc = pc;
 
                 pasar_de_exec_a_blocked(_proceso_a_dumpear);
@@ -136,7 +136,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                t_pcb* _proceso_a_finalizar = _sacar_pcb_de_exec(pid);
+                t_pcb* _proceso_a_finalizar = _sacar_pcb_de_cola(pid, estado_exec);
                 _proceso_a_finalizar->pc = pc;
 
                 pasar_de_exec_a_exit(_proceso_a_finalizar);

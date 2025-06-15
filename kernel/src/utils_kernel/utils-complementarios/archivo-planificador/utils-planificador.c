@@ -103,6 +103,7 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
     
     sem_init(&bin_proceso_eliminar, 0, 1);
+    sem_init(&bin_replanificar_srt, 0, 0);
     sem_init(&bin_cpu_disponible, 0, 0);
 
     tiempo_esperando = temporal_create();
@@ -213,6 +214,7 @@ void _enviar_proceso_new_a_cola_ready() {
     if(hay_espacio_en_memoria) { 
         pcb_en_new = pop_cola_mutex(estado_new);
         pasar_pcb_new_a_ready(pcb_en_new);
+        sem_post(&bin_replanificar_srt);
     } else { 
         log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
         // El proceso sigue en la cola de New
@@ -229,6 +231,7 @@ void _enviar_proceso_susp_ready_a_cola_ready()
     if(hay_espacio_en_memoria) { 
         pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
         pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
+        sem_post(&bin_replanificar_srt);
     } else { 
         log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
         // El proceso sigue en la cola de New
@@ -240,4 +243,11 @@ bool _menor_estimacion(void* a, void* b) {
     t_pcb* proceso_a = (t_pcb*) a;
     t_pcb* proceso_b = (t_pcb*) b;
     return proceso_a->estimacion_actual <= proceso_b->estimacion_actual;
+}
+
+void* _mayor_estimacion(void* a, void* b) 
+{
+    t_pcb* proceso_a = (t_pcb*) a;
+    t_pcb* proceso_b = (t_pcb*) b;
+    return proceso_a->estimacion_actual > proceso_b->estimacion_actual ? proceso_a : proceso_b;
 }

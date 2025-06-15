@@ -25,6 +25,7 @@ sem_t sem_cantidad_pcbs_en_susp_ready;
 
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
+sem_t bin_replanificar_srt;
 
 sem_t sem_hay_espacio_en_memoria;
 
@@ -144,7 +145,7 @@ void iniciar_planificador_corto_plazo(){
 
             pasar_pcb_ready_a_exec(pcb_a_operar);
             
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
 
@@ -164,7 +165,7 @@ void iniciar_planificador_corto_plazo(){
 
             pasar_pcb_ready_a_exec(pcb_a_operar);
             
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); // Hacerle el free
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
             infoProceso->pc = pcb_a_operar->pc;
             infoProceso->pid = pcb_a_operar->pid;
 
@@ -173,6 +174,49 @@ void iniciar_planificador_corto_plazo(){
             pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
             enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+            
+        } else if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SRT") == 0) {
+
+            sem_wait(&bin_replanificar_srt); // Cuando llega un proceso a Ready, este semaforo se postea
+
+            cpu_libre = _buscar_cpu_libre();
+
+            list_sort(estado_ready->cola, _menor_estimacion);
+            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+            if(cpu_libre == NULL) {
+                // buscamos proceso con mayor estimacion en la cola de exec
+                t_pcb* _proceso_con_mayor_estimacion = list_get_maximum(estado_exec->cola, _mayor_estimacion);
+
+                if(pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
+                    
+                    
+                    /*  
+                        0. mandar msj por interrupt al CPU para que desaloje el proceso
+                        // sem_wait(&bin_cpu_disponible); -> saco el semaforo para que pueda chequear que haya cpus ocupados
+                        1. Frenamos aca con un semaforo para que haga los siguiente:
+                        2. CPU lo desalojara y nos devolvera el PID y el PC con motivo de interrupcion
+                        3. habilitar el CPU que usaba ese proceso cuando lo recibamos (habilitamos semaforo)
+                        4. mandamos el proceso nuevo a ese CPU
+                    */
+                } 
+
+            } else {
+
+            pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+            infoProceso->pc = pcb_a_operar->pc;
+            infoProceso->pid = pcb_a_operar->pid;
+
+            pthread_mutex_lock(&lista_cpus->mutex_lista);
+            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+            pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+
+            }
         }
     }
 }
+

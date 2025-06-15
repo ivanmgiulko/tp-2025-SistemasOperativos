@@ -22,9 +22,9 @@
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
 
-    extern sem_t bin_proceso_bloqueado;
     extern sem_t bin_proceso_eliminar;
     extern sem_t bin_cpu_disponible;
+    extern sem_t bin_replanificar_srt;
     
     extern t_contador* pid_contador;
     extern t_temporal* tiempo_esperando;
@@ -156,5 +156,7 @@
     void _enviar_proceso_new_a_cola_ready();
 
     bool _menor_estimacion(void* a, void* b);
+
+    void* _mayor_estimacion(void* a, void* b);
 
 #endif // UTILS_PLANIFICADOR_H_
