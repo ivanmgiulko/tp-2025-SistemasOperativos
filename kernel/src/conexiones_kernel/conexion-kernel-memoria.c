@@ -63,10 +63,8 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			
 			log_info(logger_kernel, "%d - Finaliza el proceso", pid);
 
-			pthread_mutex_lock(&estado_exit->mutex);
-			t_pcb* proceso_finalizado = buscar_proceso_en_cola_exit(estado_exit->cola, pid);
+			t_pcb* proceso_finalizado = _sacar_pcb_de_exit(pid);
 			temporal_stop(proceso_finalizado->metricas_tiempo->tiempoEnExit);
-			pthread_mutex_unlock(&estado_exit->mutex);
 
 			log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
 			proceso_finalizado->pid, 

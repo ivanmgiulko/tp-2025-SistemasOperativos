@@ -175,6 +175,22 @@ t_pcb* _sacar_pcb_de_blocked(int pid)
     return _proceso_a_desbloquear;
 }
 
+t_pcb* _sacar_pcb_de_exit(uint8_t pid) 
+{ 
+    pthread_mutex_lock(&(estado_exit->mutex));
+    t_pcb* _proceso_a_exit = NULL;
+    for (int i = 0; i < list_size(estado_exit->cola); i++) {
+        t_pcb* pcb = list_get(estado_exit->cola, i);
+        if (pcb->pid == pid) {
+            _proceso_a_exit = list_remove(estado_exit->cola, i); // Eliminar el elemento
+            break; // Salir del bucle una vez encontrado
+        }
+    }
+
+    pthread_mutex_unlock(&(estado_exit->mutex));
+    return _proceso_a_exit;
+}
+
 void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
 { 
     sem_wait(&bin_proceso_eliminar);

@@ -2,7 +2,6 @@
 #define CAMBIO_ESTADO_PROCESO_H_
 
     #include <./utils_kernel/kernel-structs-enums.h>
-    #include <planificador_kernel/kernel-planificador.h>
 
    /**
 	* @brief pasa el proceso que le pasemos por parametro del estado NEW a READY
@@ -35,6 +34,8 @@
     t_pcb* _sacar_pcb_de_blocked_auxiliar(uint8_t pid);
 
     t_pcb* _sacar_pcb_de_blocked(int pid);
+
+    t_pcb* _sacar_pcb_de_exit(uint8_t pid);
 
     void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar);
 

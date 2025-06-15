@@ -1,7 +1,11 @@
-#include "kernel-planificador.h"
+#include "kernel-gestor.h"
+
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-io/modulo-io.h>
 #include <utils_kernel/utils-complementarios/archivo-planificador/utils-planificador.h>
+#include <utils_kernel/utils-complementarios/conexion-con-io/utils-kernel-io.h>
+#include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
+#include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 
 t_estado* estado_new;
 t_estado* estado_ready;
