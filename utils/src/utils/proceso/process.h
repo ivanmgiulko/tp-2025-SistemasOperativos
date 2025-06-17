@@ -53,10 +53,10 @@ typedef struct
     metricas_tiempo* metricas_tiempo;
     p_estados estadoProceso;
 
-    uint64_t estimacion_actual;
-    uint64_t estimacion_rafaga_anterior;
-    uint8_t rafagas_hechas_reales;
-    uint16_t pcAux;
+    int64_t estimacion_actual;
+    int64_t estimacion_rafaga_anterior;
+    int64_t tiempo_rafaga;
+    int64_t estimacion_aux;
 
     char* pathArchivoPseudocodigo;
     uint32_t path_length;

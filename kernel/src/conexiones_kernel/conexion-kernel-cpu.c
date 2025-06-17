@@ -48,9 +48,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 _proceso_a_bloquear->pc = pc;
 
-                _proceso_a_bloquear->rafagas_hechas_reales = pc - _proceso_a_bloquear->pcAux - 1;
+                _proceso_a_bloquear->tiempo_rafaga = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec) - _proceso_a_bloquear->estimacion_aux;
 
-                _proceso_a_bloquear->pcAux = pc;
+                _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
 
                 if(interfaz_disponible != NULL) { 
                     
@@ -104,14 +104,14 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pc = _deserializar_pc(offset, paquete); 
 
-               _proceso_a_bloquear->rafagas_hechas_reales = pc - _proceso_a_bloquear->pcAux - 1;
-
-                _proceso_a_bloquear->pcAux = pc;
-
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
                 t_pcb* _proceso_a_dumpear = _sacar_pcb_de_cola(pid, estado_exec);
                 _proceso_a_dumpear->pc = pc;
+
+                _proceso_a_dumpear->tiempo_rafaga = temporal_gettime(_proceso_a_dumpear->metricas_tiempo->tiempoEnExec) - _proceso_a_dumpear->estimacion_aux;
+
+                _proceso_a_dumpear->estimacion_aux = temporal_gettime(_proceso_a_dumpear->metricas_tiempo->tiempoEnExec);
 
                 pasar_de_exec_a_blocked(_proceso_a_dumpear);
 

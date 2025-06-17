@@ -83,8 +83,6 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
         
         t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
 
-        log_error(logger_kernel, "El PID que usa [%s] es: [%d]", _elemento_pivote->nombre, _proceso_encontrado->pid);
-
         if(_proceso_encontrado == NULL) { 
             cont++;
         } else { 
