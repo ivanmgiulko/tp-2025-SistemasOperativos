@@ -198,17 +198,22 @@ void agregar_proceso(t_pcbMemoria* pcb) {
 
     int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
     int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int tam_pagina = atoi(config_memoria->TAM_PAGINA);
 
     t_proceso_en_memoria nuevoProceso;
     nuevoProceso.pid = pcb->pid;
     nuevoProceso.instrucciones = instrucciones;
     nuevoProceso.cant_instrucciones = cant_inst;
     nuevoProceso.metricas_proceso = pcb->metricas_proceso;
-    nuevoProceso.tabla_primera = crear_tabla_paginacion(0, cantidad_niveles, entradas_por_tabla);
+    nuevoProceso.tamanioMemoria = pcb->tamanioMemoria;
 
-    // Me agarró sueño, descomentar cuando implemente bien las funciones (ver relación marco-entrada y crear función de liberar marcos al finalizar proceso)
-    // asignar_marcos_tabla(nuevoProceso.tabla_primera, memoria_del_sistema);
-    log_debug(logger_memoria, "Creo una tabla de páginas de %d niveles y %d entradas para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, nuevoProceso.pid);
+    int paginas_necesarias = (pcb->tamanioMemoria + tam_pagina -1) / tam_pagina;
+    int pagina_actual = 0;
+    nuevoProceso.tabla_primera = crear_tabla_paginacion(0, cantidad_niveles, entradas_por_tabla, &pagina_actual, paginas_necesarias);
+
+    int paginas_asignadas = 0;
+    asignar_marcos_tabla(nuevoProceso.tabla_primera, memoria_del_sistema, paginas_necesarias, &paginas_asignadas);
+    log_debug(logger_memoria, "Creo una tabla de páginas (%d niveles, %d entradas) con %d paginas útiles y %d marcos ocupados para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, paginas_necesarias, paginas_asignadas, nuevoProceso.pid);
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
@@ -263,6 +268,7 @@ int finalizar_proceso(int pid) {
     }
     log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
+    liberar_marcos_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera, memoria_del_sistema);
     liberar_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera);
     log_trace(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
 
@@ -337,18 +343,31 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
     return string;
 }
 
-t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla){
+t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales){
     t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));
     tabla->cant_entradas = entradas_por_tabla;
 
     if (nivel_actual == cantidad_niveles - 1) {
         tabla->tipo = NIVEL_FINAL;
         tabla->entradas = calloc(entradas_por_tabla, sizeof(t_entrada_pagina));
+
+        for (int i = 0; i < entradas_por_tabla; i++) {
+            if (*pagina_actual >= paginas_totales) break;
+
+            tabla->entradas[i].presente = false;
+            tabla->entradas[i].marco = 0;
+            tabla->entradas[i].num_pagina = *pagina_actual;
+            tabla->entradas[i].uso = false;
+            tabla->entradas[i].modificado = false;
+
+            (*pagina_actual)++;
+        }
     } else {
         tabla->tipo = NIVEL_INTERMEDIO;
         tabla->subtablas = calloc(entradas_por_tabla, sizeof(t_tabla_pagina*));
+
         for (int i = 0; i < entradas_por_tabla; i++) {
-            tabla->subtablas[i] = crear_tabla_paginacion(nivel_actual + 1, cantidad_niveles, entradas_por_tabla);
+            tabla->subtablas[i] = crear_tabla_paginacion(nivel_actual + 1, cantidad_niveles, entradas_por_tabla, pagina_actual, paginas_totales);
         }
     }
     
@@ -375,14 +394,19 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
     return NULL;
 }
 
-void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria) {
+void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria, int paginas_necesarias, int* paginas_asignadas) {
+    if (*paginas_asignadas >= paginas_necesarias) return;
     // Si es nivel intermedio, recorro hasta encontrar el nivel final
     if (tabla->tipo == NIVEL_INTERMEDIO) {
         for (int i = 0; i < tabla->cant_entradas; i++) {
-            asignar_marcos_tabla(tabla->subtablas[i], memoria);
+            asignar_marcos_tabla(tabla->subtablas[i], memoria, paginas_necesarias, paginas_asignadas);
+            if (*paginas_asignadas >= paginas_necesarias) break;
         }
     } else {
         for (int i = 0; i < tabla->cant_entradas; i++) {
+            if (*paginas_asignadas >= paginas_necesarias) break;
+            if (tabla->entradas[i].presente) continue; // Evita doble asignación
+
             int marco = buscar_marco_libre(memoria);
             if (marco == -1) {
                 log_error(logger_memoria, "No hay marcos libres suficientes");
@@ -394,8 +418,27 @@ void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria)
             tabla->entradas[i].uso = false;
             tabla->entradas[i].modificado = false;
             tabla->entradas[i].num_pagina = i;
-
             memoria->bitmap_marcos_ocupados[marco] = true;
+
+            (*paginas_asignadas)++;
+        }
+    }
+}
+
+void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria) {
+    if (tabla->tipo == NIVEL_INTERMEDIO) {
+        for (int i = 0; i < tabla->cant_entradas; i++) {
+            if (tabla->subtablas[i] != NULL) {
+                liberar_marcos_tabla(tabla->subtablas[i], memoria);
+            }
+        }
+    } else {
+        for (int i = 0; i < tabla->cant_entradas; i++) {
+            if (tabla->entradas[i].presente) {
+                int marco = tabla->entradas[i].marco;
+                memoria->bitmap_marcos_ocupados[marco] = false;
+                log_trace(logger_memoria, "Se liberó el marco %d", marco);
+            }
         }
     }
 }

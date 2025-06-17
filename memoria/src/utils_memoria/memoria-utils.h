@@ -37,6 +37,7 @@ typedef struct {
     int cant_instrucciones;
     metricas_proceso metricas_proceso;
     t_tabla_pagina* tabla_primera; // una tabla de paginas raíz por cada proceso
+    uint32_t tamanioMemoria;
 } t_proceso_en_memoria;
 
 typedef struct {
@@ -58,10 +59,11 @@ void agregar_proceso(t_pcbMemoria* pcb);
 int finalizar_proceso(int pid);
 char* obtener_instruccion(int pid, int pc);
 t_memoria_del_sistema crear_memoria_del_sistema();
-t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla);
+t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales);
 void liberar_tabla(t_tabla_pagina* tabla);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
-void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
+void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria, int paginas_necesarias, int* paginas_asignadas);
+void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
 
 #endif // MEMORIA_UTILS_H_
