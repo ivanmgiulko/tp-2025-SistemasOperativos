@@ -374,13 +374,13 @@ void planificar_con_srt()
     }
 }
 
-void administrar_proceso_bloqueado(void* proceso_bloqueado) 
+void administrar_proceso_bloqueado(void* pcb) 
 {
     t_temporal* tiempo_esperando = temporal_create();
     temporal_stop(tiempo_esperando);
     tiempo_esperando->elapsed_ms = 0;
     
-    t_pcb* _proceso_bloqueado = (t_pcb*)proceso_bloqueado;
+    t_pcb* _proceso_bloqueado = (t_pcb*)pcb;
 
     t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
     t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
@@ -395,14 +395,18 @@ void administrar_proceso_bloqueado(void* proceso_bloqueado)
 
             alternar_estado_io(_io_que_usa_pcb_bloqueado);
 
-            sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
             if(proceso_suspendido) {
+
+                sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
 
                 t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
                 encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
                 enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+
             } else {
 
+                sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
+                
                 enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
             }
             flag = !flag;

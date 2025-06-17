@@ -32,3 +32,18 @@ void alternar_estado_io(t_io* io){
     io->enabled = !(io->enabled);
     pthread_mutex_unlock(&lista_de_io->mutex_lista);
 }
+
+void eliminar_proceso_de_io(t_list* procesos_en_io, uint8_t pid) 
+{
+    void liberar_proceso_en_io(void* ptr){
+        t_info_proceso_en_io* pcb = (t_info_proceso_en_io*) ptr;
+        free(pcb);
+    }
+
+    bool _pid_en_io(void* ptr) {
+        t_info_proceso_en_io* pcb = (t_info_proceso_en_io*) ptr;
+        return pcb->pid == pid;
+    }
+
+    list_remove_and_destroy_by_condition(procesos_en_io, _pid_en_io, liberar_proceso_en_io);
+}

@@ -59,8 +59,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			_io_que_usa_pcb_bloqueado->enabled = true;
 			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
-			list_remove(_io_que_usa_pcb_bloqueado->procesos, 0);
-			
+			eliminar_proceso_de_io(_io_que_usa_pcb_bloqueado->procesos, pid_desbloqueado);
+
 			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked_aux);
 
 			sem_post(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
@@ -80,8 +80,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			_io_que_usa_pcb_bloqueado_susp->enabled = true;
 			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
-			list_remove(_io_que_usa_pcb_bloqueado_susp->procesos, 0);
-			
+			eliminar_proceso_de_io(_io_que_usa_pcb_bloqueado->procesos, pid_desbloqueado);
+
 			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_cola(pid_desbloqueado_susp, estado_blocked_aux);
 			
 			sem_post(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
