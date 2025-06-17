@@ -12,6 +12,8 @@
 
     t_cpu_conectada* _buscar_cpu_en_lista(uint8_t);
 
+    t_cpu_conectada* buscar_cpu_que_usa_proceso(t_list* cpus, uint8_t pid);
+
     /**
 	 * @brief busca en la lista de IOs la que le pasemos por parametro
 	 * @param t_list lista de IOs

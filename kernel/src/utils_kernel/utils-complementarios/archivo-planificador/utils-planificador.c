@@ -1,7 +1,11 @@
 #include "utils-planificador.h"
-#include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
-#include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 
+#include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
+#include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
+#include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
+#include <utils_kernel/utils-complementarios/conexion-con-io/utils-kernel-io.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-io/modulo-io.h>
 
 void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
 { 
@@ -106,10 +110,7 @@ void inicializar_estructuras()
     sem_init(&bin_replanificar_srt, 0, 0);
     sem_init(&bin_cpu_disponible, 0, 0);
 
-    tiempo_esperando = temporal_create();
-    tiempo_esperando->elapsed_ms = 0;
-    temporal_stop(tiempo_esperando);
-
+    
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
     estado_new          = inicializar_estado();
     estado_ready        = inicializar_estado();
@@ -122,7 +123,7 @@ void inicializar_estructuras()
 }
 
 bool _chequear_interfaz_disponible(t_io* interfaz) {
-    bool interfaz_disponible = false;
+    bool interfaz_disponible;
     pthread_mutex_lock(&lista_de_io->mutex_lista);
     interfaz_disponible = interfaz->enabled;
     pthread_mutex_unlock(&lista_de_io->mutex_lista);
@@ -231,7 +232,6 @@ void _enviar_proceso_susp_ready_a_cola_ready()
     if(hay_espacio_en_memoria) { 
         pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
         pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
-        sem_post(&bin_replanificar_srt);
     } else { 
         log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
         // El proceso sigue en la cola de New
@@ -250,4 +250,171 @@ void* _mayor_estimacion(void* a, void* b)
     t_pcb* proceso_a = (t_pcb*) a;
     t_pcb* proceso_b = (t_pcb*) b;
     return proceso_a->estimacion_actual > proceso_b->estimacion_actual ? proceso_a : proceso_b;
+}
+
+void planificar_con_fifo() 
+{
+    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+
+    sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
+    cpu_libre = _buscar_cpu_libre();
+
+    t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+    pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+    t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+    infoProceso->pc = pcb_a_operar->pc;
+    infoProceso->pid = pcb_a_operar->pid;
+
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
+    cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+    enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+}
+
+void planificar_con_sjf()
+{
+    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+
+    sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
+    cpu_libre = _buscar_cpu_libre();
+
+    list_sort(estado_ready->cola, _menor_estimacion);
+    t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+    pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+    t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+    infoProceso->pc = pcb_a_operar->pc;
+    infoProceso->pid = pcb_a_operar->pid;
+
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
+    cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+    enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+}
+
+void planificar_con_srt()
+{
+    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+
+    sem_wait(&bin_replanificar_srt); // Cuando llega un proceso a Ready, este semaforo se postea
+
+    cpu_libre = _buscar_cpu_libre();
+
+    list_sort(estado_ready->cola, _menor_estimacion);
+    t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+    if(cpu_libre == NULL) {
+        // buscamos proceso con mayor estimacion en la cola de exec
+        t_pcb* _proceso_con_mayor_estimacion = list_get_maximum(estado_exec->cola, _mayor_estimacion);
+
+        if(pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
+
+        t_cpu_conectada* cpu_de_proceso_a_desalojar = buscar_cpu_que_usa_proceso(lista_cpus->lista_cpus, _proceso_con_mayor_estimacion->pid);
+        
+        enviar_pid_a_desalojar(cpu_de_proceso_a_desalojar->socket_interrupt);
+
+        // Ya se desalojo el CPU con el PCB con mayor estimacion para este entonces
+
+        sem_wait(&bin_cpu_disponible); // Espera se desaloje el CPU que usaba el otro proceso que tenia mas estimacion
+
+        pasar_pcb_ready_a_exec(pcb_a_operar);
+
+        t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+        infoProceso->pc = pcb_a_operar->pc;
+        infoProceso->pid = pcb_a_operar->pid;
+
+        pthread_mutex_lock(&lista_cpus->mutex_lista);
+        cpu_de_proceso_a_desalojar->pid_en_cpu = pcb_a_operar->pid;
+        pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+        enviar_proc_cpu(*infoProceso, cpu_de_proceso_a_desalojar->socket_dispatch);
+
+        } else {
+
+            sem_wait(&bin_cpu_disponible);
+
+            cpu_libre = _buscar_cpu_libre();
+
+            list_sort(estado_ready->cola, _menor_estimacion);
+            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
+
+            pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+            infoProceso->pc = pcb_a_operar->pc;
+            infoProceso->pid = pcb_a_operar->pid;
+
+            pthread_mutex_lock(&lista_cpus->mutex_lista);
+            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+            pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+
+        } 
+
+    } else {
+
+        pasar_pcb_ready_a_exec(pcb_a_operar);
+            
+        t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+        infoProceso->pc = pcb_a_operar->pc;
+        infoProceso->pid = pcb_a_operar->pid;
+
+        pthread_mutex_lock(&lista_cpus->mutex_lista);
+        cpu_libre->pid_en_cpu = pcb_a_operar->pid;
+        pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+        enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+
+    }
+}
+
+void administrar_proceso_bloqueado(void* proceso_bloqueado) 
+{
+    t_temporal* tiempo_esperando = temporal_create();
+    temporal_stop(tiempo_esperando);
+    tiempo_esperando->elapsed_ms = 0;
+    
+    t_pcb* _proceso_bloqueado = (t_pcb*)proceso_bloqueado;
+
+    t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
+    t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+
+    int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
+    bool flag = false, proceso_suspendido = false;
+
+    temporal_resume(tiempo_esperando);
+
+    do { 
+        if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado)) {
+
+            alternar_estado_io(_io_que_usa_pcb_bloqueado);
+
+            sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
+            if(proceso_suspendido) {
+
+                t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
+                encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
+                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+            } else {
+
+                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+            }
+            flag = !flag;
+
+        } else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
+            pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
+            // avisar a memo para que aumente el tamanio
+            proceso_suspendido = !proceso_suspendido;
+        }
+                
+    } while(!flag);
+
+    pthread_exit(NULL);
+
 }

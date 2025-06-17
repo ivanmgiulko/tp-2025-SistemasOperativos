@@ -131,6 +131,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case PROCESO_DUMPEAR:
+
 				log_info(logger_memoria, "Recibí paquete de ejecución de DUMP_MEMORY");
 				recibir_paquete(socket_cliente, paquete);
 				if (paquete == NULL) {
@@ -346,14 +347,6 @@ t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer)
 	void* stream = buffer->stream;
 
     memcpy(&(proceso_a_dumpear->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
-	memcpy(&(proceso_a_dumpear->pc), stream, sizeof(uint16_t)); stream += sizeof(uint16_t);
-	memcpy(&(proceso_a_dumpear->metricas_estado), stream, sizeof(metricas_estado)); stream += sizeof(metricas_estado);
-	memcpy(&(proceso_a_dumpear->estadoProceso), stream, sizeof(p_estados)); stream += sizeof(p_estados);
- 	memcpy(&(proceso_a_dumpear->tamanioMemoria), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-	memcpy(&(proceso_a_dumpear->path_length), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-
-	proceso_a_dumpear->pathArchivoPseudocodigo = malloc(proceso_a_dumpear->path_length);
-    memcpy(proceso_a_dumpear->pathArchivoPseudocodigo, stream, proceso_a_dumpear->path_length);
 
     return proceso_a_dumpear;
 }

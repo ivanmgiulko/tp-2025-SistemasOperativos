@@ -41,6 +41,7 @@
         char* nombre;
         int socket;
         bool enabled;
+        sem_t bin_interfaz_disponible;
         t_list* procesos;
     } t_io;
    

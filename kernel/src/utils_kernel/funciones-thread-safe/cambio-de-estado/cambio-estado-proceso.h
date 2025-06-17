@@ -17,11 +17,13 @@
 
     void pasar_pcb_blocked_a_ready(t_pcb* pcb);
 
+    void pasar_pcb_exec_a_ready(t_pcb* pcb);
+
+    void pasar_pcb_susp_ready_a_ready(t_pcb* pcb);
+
     void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb);
 
     void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb);
-
-    void pasar_pcb_susp_ready_a_ready(t_pcb* pcb);
 
     void pasar_pcb_blocked_a_exit(t_pcb* pcb);
 

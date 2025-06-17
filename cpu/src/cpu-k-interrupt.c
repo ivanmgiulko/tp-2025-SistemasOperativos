@@ -10,7 +10,12 @@ int manejar_conexion_kernel_interrupt(){
 			recibir_mensaje(fd_conexion_kernel_interrupt, logger_cpu);
 			break;
         
-		case INSTRUCCION:
+		case PROCESO_DESALOJAR:
+
+			log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
+
+			enviar_proceso_desalojado(fd_conexion_kernel_interrupt, 0, 4);
+
 			break;
 			
 		case -1:
@@ -25,4 +30,28 @@ int manejar_conexion_kernel_interrupt(){
 	close(fd_conexion_kernel_interrupt);
 	return EXIT_SUCCESS;
 }
-// config
+
+void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
+	t_buffer* buffer = malloc(sizeof(t_buffer));
+	buffer->size = sizeof(int) + sizeof(int);
+	buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &pid, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pc, sizeof(int)); offset += sizeof(int);
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_DESALOJADO;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));   offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));  offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_servidor, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+
+}

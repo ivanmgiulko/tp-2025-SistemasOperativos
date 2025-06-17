@@ -25,6 +25,7 @@ void pasar_pcb_new_a_ready(t_pcb* pcb)
     log_info(logger_kernel, "## %d Pasa del estado NEW al estado READY", pcb->pid);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&bin_replanificar_srt);
 }
 
 void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
@@ -40,6 +41,7 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
     pcb->estimacion_actual = calcular_estimacion_actual(pcb->rafagas_hechas_reales, pcb->estimacion_rafaga_anterior);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&bin_replanificar_srt);
 }
 
 void pasar_pcb_blocked_a_ready(t_pcb* pcb) 
@@ -57,6 +59,25 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
     pcb->estimacion_actual = calcular_estimacion_actual(pcb->rafagas_hechas_reales, pcb->estimacion_rafaga_anterior);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&bin_replanificar_srt);
+}
+
+void pasar_pcb_exec_a_ready(t_pcb* pcb) 
+{ 
+    encolar_pcb_en_estado(estado_ready, pcb);
+
+    pcb->metricas_estado->cantVecesReady++;
+    temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
+    temporal_resume(pcb->metricas_tiempo->tiempoEnReady);
+
+    pcb->estadoProceso = READY;
+    log_info(logger_kernel, "## %d Pasa del estado EXEC al estado READY", pcb->pid);
+
+    pcb->estimacion_rafaga_anterior = pcb->estimacion_actual;
+    pcb->estimacion_actual = calcular_estimacion_actual(pcb->rafagas_hechas_reales, pcb->estimacion_rafaga_anterior);
+
+    sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&bin_replanificar_srt);
 }
 
 uint64_t calcular_estimacion_actual(uint8_t rafagas_hechas, uint64_t estimacion_anterior) {

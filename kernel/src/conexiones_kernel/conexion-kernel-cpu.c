@@ -1,5 +1,6 @@
 
 #include "kernel-gestor.h"
+
 #include <utils_kernel/funciones-thread-safe/busqueda-de-struct/busqueda-de-structs.h>
 #include <utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
@@ -73,6 +74,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 }
 
                 eliminar_paquete(paquete);
+                
                 break;
             case SYSCALL_INIT_PROC:
                 // de la syscall INIT_PORC recibo PID, Archivo, tamanioProceso
@@ -100,7 +102,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
 
-                pc = _deserializar_pc(offset, paquete); // 7
+                pc = _deserializar_pc(offset, paquete); 
 
                _proceso_a_bloquear->rafagas_hechas_reales = pc - _proceso_a_bloquear->pcAux - 1;
 
@@ -142,6 +144,27 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 pasar_de_exec_a_exit(_proceso_a_finalizar);
                 
                 eliminar_paquete(paquete);
+                break;
+
+            case PROCESO_DESALOJADO:
+
+                recibir_paquete(socket_interrupt, paquete);
+                
+                memcpy(&pid, paquete->buffer->stream, sizeof(int)); paquete->buffer->stream += sizeof(int);
+
+                memcpy(&pc, paquete->buffer->stream, sizeof(int)); paquete->buffer->stream += sizeof(int);
+
+                log_info(logger_kernel, "%d - Desalojado por algoritmo SJF/SRT", pid);
+
+                t_pcb* _proceso_desalojado = _sacar_pcb_de_cola(pid, estado_exec);
+                _proceso_desalojado->pc = pc;
+
+                liberar_cpu_de_proceso(pid);
+
+                pasar_pcb_exec_a_ready(_proceso_desalojado);
+
+                // eliminar_paquete(paquete);
+                
                 break;
 
             case -1:

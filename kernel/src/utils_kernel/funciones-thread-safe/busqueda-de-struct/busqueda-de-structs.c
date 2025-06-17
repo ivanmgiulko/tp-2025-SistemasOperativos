@@ -8,7 +8,25 @@ t_cpu_conectada* _buscar_cpu_libre() {
     }
 
     return list_find(lista_cpus->lista_cpus, _cpu_esta_libre);
+}
 
+t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)
+{
+    bool _cpu_tiene_id(void* ptr) {
+        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
+        return cpu->id_cpu == id_cpu;
+    }
+
+    return list_find(lista_cpus->lista_cpus, _cpu_tiene_id);
+}
+
+t_cpu_conectada* buscar_cpu_que_usa_proceso(t_list* cpus, uint8_t pid) 
+{
+    bool _es_el_proceso(void* ptr) {
+        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
+        return cpu->pid_en_cpu == pid;
+    }
+    return list_find(cpus, _es_el_proceso);
 }
 
 t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid) 
@@ -21,15 +39,6 @@ t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid)
     return list_find(lista_procesos, _esta_el_proceso);
 }
 
-t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)
-{
-    bool _cpu_tiene_id(void* ptr) {
-        t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
-        return cpu->id_cpu == id_cpu;
-    }
-
-    return list_find(lista_cpus->lista_cpus, _cpu_tiene_id);
-}
 
 t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid)
 {
@@ -68,9 +77,10 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
     bool flag = false;
     int tamanio_lista = list_size(lista_base), cont = 0;
     
-    do { 
+    do {
+        
         t_io* _elemento_pivote = list_get(lista_de_io->lista_ios, cont);
-
+        
         t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
 
         if(_proceso_encontrado == NULL) { 
@@ -81,6 +91,7 @@ t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
         }
 
     } while(!flag && cont <= tamanio_lista);
+    
     return NULL;
 }
 

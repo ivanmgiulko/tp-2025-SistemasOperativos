@@ -29,8 +29,6 @@ sem_t bin_replanificar_srt;
 
 sem_t sem_hay_espacio_en_memoria;
 
-t_temporal* tiempo_esperando;
-
 t_lista_cpus* lista_cpus = NULL;
 
 void iniciar_planificacion_largo_plazo(){
@@ -45,13 +43,13 @@ void iniciar_planificacion_largo_plazo(){
  	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
 	pthread_detach(hilo_planificador_mediano_plazo);
 
-    t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 500);
+    t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 5000);
     pasar_pcb_a_new(proceso_1);
 
     t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 500);
     pasar_pcb_a_new(proceso_2);
 
-    t_pcb* proceso_3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 500);
+    t_pcb* proceso_3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 400, asignar_pid(), 50);
     pasar_pcb_a_new(proceso_3);
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
@@ -86,45 +84,21 @@ void iniciar_planificador_mediano_plazo() {
 
         t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
         t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
-        // Si devuelve null?
+        
         if(_io_que_usa_pcb_bloqueado->enabled) {
             
             alternar_estado_io(_io_que_usa_pcb_bloqueado);
 
             enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+
         } else { 
 
-            int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
-            bool flag = false, proceso_suspendido = false;
-
-            temporal_resume(tiempo_esperando);
-
-            do { 
-                
-                if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado)) {
-
-                    alternar_estado_io(_io_que_usa_pcb_bloqueado);
-
-                    if(proceso_suspendido) {
-                        t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
-                        encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
-                        enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
-                    } else {
-                        enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
-                    }
-                    flag = !flag;
-
-                }else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
-                    pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
-                    // avisar a memo para que aumente el tamanio
-                    proceso_suspendido = !proceso_suspendido;
-                }
-                
-            } while(!flag);
+            // LA interfaz no esta disponible -> sigue en BLOCKED
+            pthread_t hilo_administrar_proceso_bloqueado;
+ 	        pthread_create(&hilo_administrar_proceso_bloqueado, NULL, (void*)administrar_proceso_bloqueado, (void*)_proceso_bloqueado);
+	        pthread_detach(hilo_administrar_proceso_bloqueado);
 
         }
-        tiempo_esperando->elapsed_ms = 0;
-        temporal_stop(tiempo_esperando);
     }
 }
 
@@ -134,88 +108,22 @@ void iniciar_planificador_corto_plazo(){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_ready);
         
-        t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
-
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0) {
             
-            sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
-            cpu_libre = _buscar_cpu_libre();
-
-            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
-
-            pasar_pcb_ready_a_exec(pcb_a_operar);
+            planificar_con_fifo();
             
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-            infoProceso->pc = pcb_a_operar->pc;
-            infoProceso->pid = pcb_a_operar->pid;
-
-            pthread_mutex_lock(&lista_cpus->mutex_lista);
-            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-            pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
-
         } else if(strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SJF") == 0) {
 
-            sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
-            cpu_libre = _buscar_cpu_libre();
+            planificar_con_sjf();
 
-            list_sort(estado_ready->cola, _menor_estimacion);
-            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
-
-            pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-            infoProceso->pc = pcb_a_operar->pc;
-            infoProceso->pid = pcb_a_operar->pid;
-
-            pthread_mutex_lock(&lista_cpus->mutex_lista);
-            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-            pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
-            
         } else if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SRT") == 0) {
 
-            sem_wait(&bin_replanificar_srt); // Cuando llega un proceso a Ready, este semaforo se postea
+            planificar_con_srt();
 
-            cpu_libre = _buscar_cpu_libre();
+        } else {
 
-            list_sort(estado_ready->cola, _menor_estimacion);
-            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
-
-            if(cpu_libre == NULL) {
-                // buscamos proceso con mayor estimacion en la cola de exec
-                t_pcb* _proceso_con_mayor_estimacion = list_get_maximum(estado_exec->cola, _mayor_estimacion);
-
-                if(pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
-                    
-                    
-                    /*  
-                        0. mandar msj por interrupt al CPU para que desaloje el proceso
-                        // sem_wait(&bin_cpu_disponible); -> saco el semaforo para que pueda chequear que haya cpus ocupados
-                        1. Frenamos aca con un semaforo para que haga los siguiente:
-                        2. CPU lo desalojara y nos devolvera el PID y el PC con motivo de interrupcion
-                        3. habilitar el CPU que usaba ese proceso cuando lo recibamos (habilitamos semaforo)
-                        4. mandamos el proceso nuevo a ese CPU
-                    */
-                } 
-
-            } else {
-
-            pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-            infoProceso->pc = pcb_a_operar->pc;
-            infoProceso->pid = pcb_a_operar->pid;
-
-            pthread_mutex_lock(&lista_cpus->mutex_lista);
-            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-            pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
-
-            }
+            log_error(logger_kernel, "El algoritmo de corto plazo no es soportado por el Sistema Operativo...");
+            exit(1);
         }
     }
 }

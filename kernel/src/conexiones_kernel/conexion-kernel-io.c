@@ -47,10 +47,9 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 		case MENSAJE:
 			recibir_mensaje(socket_cliente_io, logger_kernel);
 			break;
+
 		case PROCESO_DESBLOQUEADO:
 			recibir_paquete(socket_cliente_io, paquete);
-
-			log_warning(logger_kernel, "Recibo el proceso bloqueado para finalizar");
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
@@ -63,15 +62,15 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			list_remove(_io_que_usa_pcb_bloqueado->procesos, 0);
 			
 			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked_aux);
-			
+
+			sem_post(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
+
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
 			break;
 
 		case PROCESO_SUSPENDIDO_DESBLOQUEADO:
 			recibir_paquete(socket_cliente_io, paquete);
-
-			log_warning(logger_kernel, "Recibo el proceso bloqueado y suspendido para finalizar");
 
 			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado_susp);
@@ -85,6 +84,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			
 			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_cola(pid_desbloqueado_susp, estado_blocked_aux);
 			
+			sem_post(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
+
 			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
 
 			break;

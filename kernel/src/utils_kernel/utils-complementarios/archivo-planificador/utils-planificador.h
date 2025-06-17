@@ -29,7 +29,6 @@
     extern t_contador* pid_contador;
     extern t_temporal* tiempo_esperando;
 
-
     void _enviar_desde_new_a_ready(bool , char* );
 
     void _enviar_desde_susp_ready_a_ready(bool , char* );
@@ -41,6 +40,8 @@
     void _enviar_proceso_susp_ready_a_cola_ready();
 
     bool _verificar_cola_susp_ready_esta_vacia();
+
+    void administrar_proceso_bloqueado(void* _proceso_bloqueado);
 
     /**
 	* @brief crea el proceso 0, que es pasado por parametro por el ./bin/kernel
@@ -158,5 +159,11 @@
     bool _menor_estimacion(void* a, void* b);
 
     void* _mayor_estimacion(void* a, void* b);
+
+    void planificar_con_fifo();
+
+    void planificar_con_sjf();
+    
+    void planificar_con_srt();
 
 #endif // UTILS_PLANIFICADOR_H_

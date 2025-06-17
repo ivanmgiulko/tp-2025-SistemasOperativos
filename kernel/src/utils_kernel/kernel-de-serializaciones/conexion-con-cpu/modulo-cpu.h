@@ -18,4 +18,6 @@
 
 	void enviar_proceso_a_dumpear_en_memoria(int socket_cliente, t_pcb proceso);
 
+	void enviar_pid_a_desalojar(int socket_cliente);
+
 #endif // MODULO_CPU_H_
