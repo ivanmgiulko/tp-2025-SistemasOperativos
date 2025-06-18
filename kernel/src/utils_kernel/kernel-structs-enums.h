@@ -39,18 +39,13 @@
 
     typedef struct { // Elemento en 't_list* lista_ios'
         char* nombre;
-        t_list* instancias_io;
-        t_list* procesos_esperando;
-        sem_t instancias_disponibles;
+        int socket;
+        bool enabled;
+        sem_t bin_interfaz_disponible;
+        t_list* procesos;
     } t_io;
    
-    typedef struct { // Elemento en 't_list* instancias_io'
-        int socket;
-        uint8_t pid;
-        pthread_mutex_t mutex_instancia;
-    } t_instancia_io;
-
-    typedef struct { // Elemento en 't_list* procesos_esperando'
+    typedef struct { // Elemento en 't_list* procesos'
         uint8_t pid;
 	    int64_t tiempo;
     } t_info_proceso_en_io;
