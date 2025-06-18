@@ -12,10 +12,13 @@ void inicializar_io(char* nombre_io, int socket_io)
 {
     t_io* io = malloc(sizeof(t_io));
     io->nombre = nombre_io;
-    io->procesos = list_create();
+    io->instancias_io = list_create();
+    io->procesos_esperando = list_create();
+    sem_init(&io->instancias_disponibles, 0, 0);
+
+
     io->socket = socket_io;
 	io->enabled = true;
-    sem_init(&io->bin_interfaz_disponible, 0, 0);
     list_add(lista_de_io->lista_ios, io);
     log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
 }

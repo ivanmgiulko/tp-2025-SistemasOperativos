@@ -397,16 +397,12 @@ void administrar_proceso_bloqueado(void* pcb)
 
             if(proceso_suspendido) {
 
-                sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
-
                 t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
                 encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
                 enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
 
             } else {
 
-                sem_wait(&_io_que_usa_pcb_bloqueado->bin_interfaz_disponible);
-                
                 enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
             }
             flag = !flag;
