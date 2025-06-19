@@ -6,6 +6,7 @@
 #include <utils_kernel/utils-complementarios/conexion-con-io/utils-kernel-io.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-cpu/modulo-cpu.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-io/modulo-io.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-memoria/modulo-memoria.h>
 
 void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
 { 
@@ -19,13 +20,15 @@ void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingr
             
              _enviar_proceso_new_a_cola_ready();
             
-        }
-
-         if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+        } else if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
                 
             list_sort(estado_new->cola, _tiene_menos_tamanio);
 
             _enviar_proceso_new_a_cola_ready();
+        } else {
+
+            log_error(logger_kernel, "El algoritmo de ingreso a ready no es soportado por el Sistema Operativo...");
+            exit(1);
         }
     }
 }
@@ -42,13 +45,15 @@ void _enviar_desde_susp_ready_a_ready(bool _cola_new_estaba_vacia, char* algorti
                 
             _enviar_proceso_susp_ready_a_cola_ready();
             
-        }
-
-        if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
+        }else if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
                 
             list_sort(estado_susp_ready->cola, _tiene_menos_tamanio);
 
             _enviar_proceso_susp_ready_a_cola_ready();
+        } else {
+
+            log_error(logger_kernel, "El algoritmo de ingreso a ready no es soportado por el Sistema Operativo...");
+            exit(1);
         }
     }
 }
@@ -399,8 +404,9 @@ void administrar_proceso_bloqueado(void* pcb)
 
                 t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
                 encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
-                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
 
+                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+                
             } else {
 
                 enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
@@ -409,6 +415,15 @@ void administrar_proceso_bloqueado(void* pcb)
 
         } else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
             pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
+
+            // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+            // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+            // int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+            // enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
+
+            // manejar_conexion_kernel_memoria(fd_conexion_memoria);
+
             // avisar a memo para que aumente el tamanio
             proceso_suspendido = !proceso_suspendido;
         }

@@ -31,3 +31,30 @@ void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente)
 	free(a_enviar);
 	eliminar_paquete(paquete);
 }
+
+void enviar_a_liberar_memoria(int socket_memoria, t_pcb proceso) 
+{
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length);
+    buffer->stream = malloc(buffer->size);
+    uint32_t offset = 0;
+
+    memcpy(buffer->stream + offset, &proceso.pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &proceso.tamanioMemoria, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, &proceso.path_length, sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(buffer->stream + offset, proceso.pathArchivoPseudocodigo, proceso.path_length);
+    
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_SUSPENDIDO_MEMORIA;
+    paquete->buffer = buffer;
+    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+    offset = 0;
+
+    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
+    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
+    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+    send(socket_memoria, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+    free(a_enviar);
+    eliminar_paquete(paquete);
+}

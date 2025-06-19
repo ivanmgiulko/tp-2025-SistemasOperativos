@@ -16,11 +16,8 @@
     // CONFIG
     t_memoria_config* config_memoria;
 
-    //STRUCTS
-    
-    
     // VARIABLES
     int cantMemoria;
-    
     t_memoria_del_sistema* memoria_del_sistema; 
+
 #endif // MEMORIA_H_

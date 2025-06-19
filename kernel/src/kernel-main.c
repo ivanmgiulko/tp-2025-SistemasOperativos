@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	_iniciar_server_para_io();
 
 	argv[1] = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
-	argv[2] = "400";
+	argv[2] = "200";
 	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", argv[1], argv[2]);
 	crear_proceso_cero(argv[1], atoi(argv[2]));
 	
