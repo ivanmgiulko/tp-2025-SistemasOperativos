@@ -12,4 +12,6 @@
 	*/
 	void enviar_tamanio_proceso(char* tam_proceso, int socket_cliente);
 
+	void enviar_a_liberar_memoria(int socket_memoria, t_pcb proceso);
+
 #endif // MODULO_MEMORIA_H_

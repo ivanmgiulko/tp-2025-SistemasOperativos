@@ -42,13 +42,24 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			if(resp_dump->respuesta == false){
 				
 				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
-				log_debug(logger_kernel, "NO se pudo hacer el DUMP. Finaliza el proceso...");
+				log_debug(logger_kernel, "Fallo en el DUMP");
 
 			} else {
 				
 				pasar_pcb_blocked_a_ready(proceso_desbloqueado);
-				log_debug(logger_kernel, "SI se pudo hacer el DUMP. El proceso se desbloquea y pasa a Ready");
+				log_debug(logger_kernel, "Acierto en el DUMP");
 			}
+			return EXIT_SUCCESS;
+
+			break;
+		
+		case SUSPENSION_HECHA:
+
+			log_debug(logger_kernel, "EL PROCESO FUE SUSPENDIDO Y TENGO MAS MEMORIA AHORA");
+
+			sem_post(&sem_cantidad_pcbs_en_new);
+			sem_post(&sem_hay_espacio_en_memoria);
+
 			return EXIT_SUCCESS;
 
 			break;
@@ -81,6 +92,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			free(proceso_finalizado);
 			
 			sem_post(&sem_hay_espacio_en_memoria);
+			sem_post(&sem_cantidad_pcbs_en_new);
 			sem_post(&bin_proceso_eliminar);
 			
 			eliminar_paquete(paquete);

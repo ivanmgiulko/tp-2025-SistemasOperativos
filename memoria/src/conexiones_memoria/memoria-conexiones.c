@@ -25,11 +25,11 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 				
 			case PROCESO_MEMORIA:
-				pthread_mutex_lock(&memoria_del_sistema->mutex);
-				recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
-				paquete->buffer->stream = malloc(paquete->buffer->size);
-				recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
 
+				pthread_mutex_lock(&memoria_del_sistema->mutex);
+				
+				recibir_paquete(socket_cliente, paquete);
+			
 				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
 				log_trace(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
 
@@ -38,8 +38,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				log_warning(logger_memoria, "Cantidad de memoria restante: %d", cantMemoria);
 				
 				if(cantMemoria < 0) {
-					// NO hay memoria para este proceso
-					// enviar a Kernel que no se pudo
+					
 					log_info(logger_memoria, "No se puedo crear el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
 					cantMemoria += proceso_a_inicializar->tamanioMemoria;
 					enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
@@ -54,12 +53,31 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
+
 				pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
 				// Liberar memoria del paquete recibido
 				eliminar_paquete(paquete);
 				
 				break; 
+		
+			case PROCESO_SUSPENDIDO_MEMORIA:
+
+				pthread_mutex_lock(&memoria_del_sistema->mutex);
+
+				recibir_paquete(socket_cliente, paquete);
+			
+				t_pcbMemoria* proceso_suspendido = deserializarProceso(paquete->buffer);
+
+				cantMemoria += proceso_suspendido->tamanioMemoria;
+
+				// Mover proceso de RAM a SWAP
+
+				avisar_kernel_mande_otro_proceso(socket_cliente);
+
+				pthread_mutex_unlock(&memoria_del_sistema->mutex);
+
+				break;
 
 			case PROCESO_FINALIZAR:
 
@@ -76,17 +94,12 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				log_info(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 				//enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
+				
 				t_paquete* paquete_proceso_eliminado = malloc(sizeof(t_paquete));
 				crear_buffer(paquete_proceso_eliminado);
 				
 				enviar_proceso_terminado(pidEliminado, paquete_proceso_eliminado, socket_cliente);
 			
-				// esto me dijo vini que no tiene que pasar nunca
-				// else{
-				// 	log_error(logger_memoria, "No se pudo eliminar el proceso con PID: %d de memoria", pidParaEliminar);
-				// 	//Aca hay que ver que pasa en el lado de kernell en el caso de que no se elimine y como avisarles
-				// 	enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
-				// }
 				break; 
 			case INSTRUCCION:
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
@@ -312,6 +325,7 @@ void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
 	paquete->codigo_operacion = PROCESO_MEMORIA;
 	paquete->buffer = malloc(sizeof(t_buffer));
 	paquete->buffer->size = strlen(mensaje) + 1;
+
 	paquete->buffer->stream = malloc(paquete->buffer->size);
 	memcpy(paquete->buffer->stream, mensaje, paquete->buffer->size);
 
@@ -431,4 +445,20 @@ bool realizar_dump_memory(int pid) {
     fclose(file);
     log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
     return true;
+}
+
+void avisar_kernel_mande_otro_proceso(int socket_cliente) {
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+
+	paquete->codigo_operacion = SUSPENSION_HECHA;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	
+	int bytes = paquete->buffer->size + 2*sizeof(int);
+
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
 }
