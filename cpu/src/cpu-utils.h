@@ -16,4 +16,7 @@
 
     void _handshake_kernel_con_cpu_id(int, char*);
 
+    void check_interrupt();
+    void enviar_proceso_desalojado(int , int , int );
+
 #endif // CPU_UTILS_H

@@ -11,10 +11,15 @@
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
 sem_t sem_cpu;
+sem_t sem_read;
+sem_t sem_write;
+
 sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
+bool flag_interrupt = false;
 int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;
+int valor_sem_cpu;
 
 #endif // CPU_H_

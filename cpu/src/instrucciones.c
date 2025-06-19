@@ -34,7 +34,6 @@ char* obtener_nombre_instruccion(instruccion_t tipo) {
 instruccion_t obtener_tipo(char* nombre_instr) {
     for (int i = 0; mapa_instrucciones[i].nombre != NULL; i++) {
         if (string_equals_ignore_case(mapa_instrucciones[i].nombre, nombre_instr)) {
-            log_debug(logger_cpu, "Instrucción encontrada: %s", mapa_instrucciones[i].nombre);
             return mapa_instrucciones[i].tipo;
         }
     }
@@ -42,7 +41,6 @@ instruccion_t obtener_tipo(char* nombre_instr) {
 }
 t_instruccion* parse_noop(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
-    log_debug(logger_cpu, "Instrucción NOOP");
     instr->tipo = INSTR_NOOP;
     log_info(logger_cpu, "ADENTRO DEL PARSER NOOP A VER EL TIPO: %d", instr->tipo);
     return instr;
@@ -50,7 +48,6 @@ t_instruccion* parse_noop(char* linea) {
 
 
 t_instruccion* parse_read(char* linea) {
-    log_debug(logger_cpu, "Instrucción READ. LINEA: %s", linea);
 
     char** partes = string_split(linea, " ");  
     if (partes[0] == NULL || partes[1] == NULL || partes[2] == NULL) {
@@ -64,9 +61,7 @@ t_instruccion* parse_read(char* linea) {
     instr->parametros.read.direccion = string_duplicate(partes[1]);
     instr->parametros.read.tamanio = atoi(partes[2]);
 
-    log_debug(logger_cpu, "Instrucción READ creada correctamente: archivo=%s, tamaño=%d",
-              instr->parametros.read.direccion, instr->parametros.read.tamanio);
-
+   
     string_array_destroy(partes);
 
     return instr;  
@@ -75,7 +70,6 @@ t_instruccion* parse_read(char* linea) {
 
 
 t_instruccion* parse_write(char* linea) {
-    log_debug(logger_cpu, "Instrucción WRITE. LINEA: %s", linea);
 
     // Dividir la línea en partes
     char** partes = string_split(linea, " ");  
@@ -87,9 +81,7 @@ t_instruccion* parse_write(char* linea) {
     instr->parametros.write.datos = string_duplicate(partes[1]);
     instr->parametros.write.direccion = string_duplicate(partes[2]);
 
-    log_debug(logger_cpu, "Instrucción WRITE creada correctamente: datos=%s, dirección=%s",
-              instr->parametros.write.datos, instr->parametros.write.direccion);
-
+  
     // Liberar memoria de las partes
     string_array_destroy(partes);
 
@@ -103,8 +95,7 @@ t_instruccion* parse_goto(char* linea) {
     instr->tipo = INSTR_GOTO;
     instr->parametros.go_to.valor = atoi(partes[1]);
 
-    log_debug(logger_cpu, "Instrucción GOTO creada correctamente: valor=%d",
-              instr->parametros.go_to.valor);
+   
 
     string_array_destroy(partes);
     return instr;        
@@ -120,14 +111,11 @@ t_instruccion* parse_io(char* linea) {
     instr->parametros.io.dispositivo = string_duplicate(partes[1]);
     instr->parametros.io.tiempo = atoi(partes[2]);
 
-    log_debug(logger_cpu, "Instrucción IO creada correctamente: dispositivo=%s, tiempo=%d",
-              instr->parametros.io.dispositivo, instr->parametros.io.tiempo);
-
+   
     string_array_destroy(partes);
     return instr;       
 }
 t_instruccion* parse_init_proc(char* linea) {
-    log_debug(logger_cpu, "Instrucción INIT_PROC. LINEA: %s", linea);
 
     char** partes = string_split(linea, " ");  
 
@@ -136,9 +124,7 @@ t_instruccion* parse_init_proc(char* linea) {
     instr->parametros.init_proc.archivo = string_duplicate(partes[1]);
     instr->parametros.init_proc.tamanio = atoi(partes[2]);
 
-    log_debug(logger_cpu, "Instrucción INIT_PROC creada correctamente: archivo=%s, tamaño=%d",
-              instr->parametros.init_proc.archivo, instr->parametros.init_proc.tamanio);
-
+  
     string_array_destroy(partes);
 
     return instr; 
@@ -147,13 +133,13 @@ t_instruccion* parse_dump_memory(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_DUMP_MEMORY; 
 
-    log_debug(logger_cpu, "Instrucción DUMP_MEMORY creada correctamente: %d", instr->tipo);
+  
     return instr;   
 }
 t_instruccion* parse_exit(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_EXIT;    
-    log_debug(logger_cpu, "Instrucción EXIT creada correctamente: %d", instr->tipo);
+  
 
     return instr;
 }
@@ -195,12 +181,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo));            
             pcb_actual->pc++;
             
-            pedir_instruccion_a_memoria(pcb_actual);
+            sem_post(&sem_cpu); 
 
             eliminar_paquete(paquete);
 			break;
 		case INSTR_WRITE:
-        pthread_mutex_lock(&mutex_cpu);
             log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
@@ -217,9 +202,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete_write);
             
             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
+
+            sem_post(&sem_write);
+            
 			break;
 		case INSTR_READ:
-        pthread_mutex_lock(&mutex_cpu);
 
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
@@ -238,6 +225,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
             eliminar_paquete(paquete);
            
+            sem_post(&sem_read);
 
 			break;
 		case INSTR_GOTO:
@@ -245,8 +233,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
             pcb_actual->pc = instruccion->parametros.go_to.valor;
             //pcb_actual->pc++;
-            
-            pedir_instruccion_a_memoria(pcb_actual); 
+            sem_post(&sem_cpu); 
+        //    pedir_instruccion_a_memoria(pcb_actual); 
             eliminar_paquete(paquete);
 
 			break;
@@ -321,7 +309,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             pcb_actual->pc++;
            
-            pedir_instruccion_a_memoria(pcb_actual); 
+            sem_post(&sem_cpu); 
 			break;
 		case INSTR_DUMP_MEMORY:
 
@@ -354,7 +342,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
 			log_info(logger_cpu, "syscall detectada... parametros ");
 
-            pcb_actual->pc++;
 
             paquete->codigo_operacion = SYSCALL_EXIT;
 
@@ -372,13 +359,13 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             
-            pedir_instruccion_a_memoria(pcb_actual);
+            sem_post(&sem_cpu_kernel);
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 
 			break;
 	}
-   
+
 }
 
 void free_instruccion(t_instruccion* instruccion) {

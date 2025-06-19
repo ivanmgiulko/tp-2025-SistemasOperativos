@@ -44,13 +44,12 @@ int manejar_conexion_memoria(){
 			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
 
 			pcb_actual->pc++;
+			sem_wait(&sem_write);
 			sem_post(&sem_cpu);
-    		pedir_instruccion_a_memoria(pcb_actual);
 
 			free(mensaje_confirmacion_write);
 			free(paquete->buffer);
 			free(paquete);
-			pthread_mutex_unlock(&mutex_cpu);
 			break;
 		case READ_MEMORIA:
 			uint32_t size_read;
@@ -69,13 +68,13 @@ int manejar_conexion_memoria(){
 			log_info(logger_cpu, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
 
 			pcb_actual->pc++;
+			sem_wait(&sem_read);
 			sem_post(&sem_cpu);
-    		pedir_instruccion_a_memoria(pcb_actual);
+    		
 
 			free(mensaje_confirmacion_read);
 			free(paquete->buffer);
 			free(paquete);
-			pthread_mutex_unlock(&mutex_cpu);
 			break;
 		case FIN_PID:
 			log_info(logger_cpu, "Recibi el fin de PID");

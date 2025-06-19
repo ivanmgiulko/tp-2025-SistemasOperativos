@@ -12,11 +12,15 @@ extern t_log* logger_cpu;
 
 extern sem_t sem_cpu;
 extern sem_t sem_cpu_kernel;
+extern sem_t sem_read;
+extern sem_t sem_write;
 extern pthread_mutex_t mutex_cpu;
 
 
 extern t_peticion_instruccion* pcb_actual;
+extern int valor_sem_cpu;
 
+extern bool flag_interrupt;
 //conexiones
 extern int fd_conexion_kernel_interrupt;
 extern int fd_conexion_kernel_dispatch;
