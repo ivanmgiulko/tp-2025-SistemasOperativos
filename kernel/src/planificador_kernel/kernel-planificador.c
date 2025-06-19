@@ -43,14 +43,14 @@ void iniciar_planificacion_largo_plazo(){
  	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
 	pthread_detach(hilo_planificador_mediano_plazo);
 
-    t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 5000);
+    t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES2.txt", 500, asignar_pid(), 5000);
     pasar_pcb_a_new(proceso_1);
 
-    t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 500);
-    pasar_pcb_a_new(proceso_2);
+    // t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 500);
+    // pasar_pcb_a_new(proceso_2);
 
-    t_pcb* proceso_3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 500);
-    pasar_pcb_a_new(proceso_3);
+    // t_pcb* proceso_3 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 500);
+    // pasar_pcb_a_new(proceso_3);
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){

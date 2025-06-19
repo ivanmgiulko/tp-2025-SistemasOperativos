@@ -5,7 +5,7 @@ int manejar_conexion_kernel_interrupt(){
    while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(fd_conexion_kernel_dispatch);
+		paquete->codigo_operacion = recibir_operacion(fd_conexion_kernel_interrupt);
 
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
