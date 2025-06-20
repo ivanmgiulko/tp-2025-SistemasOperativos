@@ -82,7 +82,7 @@ void crear_proceso_cero(char* path, int tamanio)
   	t_pcb* proceso_cero = iniciarPCB(path ,tamanio, asignar_pid(), estimacion_inical);
 
     pasar_pcb_a_new(proceso_cero);
-	log_info(logger_kernel,"## %d Se crea el proceso - Estado: NEW", proceso_cero->pid);
+	log_info(logger_kernel,"%d Se crea el proceso - Estado: NEW", proceso_cero->pid);
 }
 
 void inicializar_pid(){
@@ -113,9 +113,6 @@ void inicializar_estructuras()
     
     sem_init(&bin_proceso_eliminar, 0, 1);
     sem_init(&bin_cpu_disponible, 0, 0);
-    sem_init(&bin_replanificar_srt, 0, 0);
-
-    
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
     estado_new          = inicializar_estado();
     estado_ready        = inicializar_estado();
@@ -282,47 +279,59 @@ void planificar_con_sjf()
     enviar_a_ejecutar_proceso(cpu_libre, pcb_a_operar);
 }
 
+t_pcb* proceso_a_desalojar() 
+{
+    t_pcb* pcb = NULL;
+    pthread_mutex_lock(&estado_exec->mutex);
+    if(!list_is_empty(estado_exec->cola)) {
+        pcb = list_get_maximum(estado_exec->cola, _mayor_estimacion);
+    }
+    pthread_mutex_unlock(&estado_exec->mutex);
+    return pcb;
+}
+
+
 void planificar_con_srt()
 {
     t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
 
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
     cpu_libre = _buscar_cpu_libre();
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
+    pthread_mutex_lock(&estado_ready->mutex);
     list_sort(estado_ready->cola, _menor_estimacion);
+    pthread_mutex_unlock(&estado_ready->mutex);
+
     t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
-
+  
     if(cpu_libre == NULL) {
-        // buscamos proceso con mayor estimacion en la cola de exec
-        t_pcb* _proceso_con_mayor_estimacion = list_get_maximum(estado_exec->cola, _mayor_estimacion);
-
-        if(pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
-
-            t_cpu_conectada* cpu_de_proceso_a_desalojar = buscar_cpu_que_usa_proceso(lista_cpus->lista_cpus, _proceso_con_mayor_estimacion->pid);
         
+        t_pcb* _proceso_con_mayor_estimacion = proceso_a_desalojar();
+
+        if(_proceso_con_mayor_estimacion != NULL && pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
+
+            pthread_mutex_lock(&lista_cpus->mutex_lista);
+            t_cpu_conectada* cpu_de_proceso_a_desalojar = buscar_cpu_que_usa_proceso(lista_cpus->lista_cpus, _proceso_con_mayor_estimacion->pid);
+            pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
             enviar_pid_a_desalojar(cpu_de_proceso_a_desalojar->socket_interrupt);
 
-            log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR Y TIENE MENOS ESTIMACION", pcb_a_operar->pid);
-
             // Ya se desalojo el CPU con el PCB con mayor estimacion para este entonces
-
+            
             sem_wait(&bin_cpu_disponible); // Espera se desaloje el CPU que usaba el otro proceso que tenia mas estimacion
-
-            log_warning(logger_kernel, "EL PROCESO [%d]", pcb_a_operar->pid);
+            
 
             enviar_a_ejecutar_proceso(cpu_de_proceso_a_desalojar, pcb_a_operar);
 
         } else {
-            // El proceso sigue en Ready, espera a que el otro finalice para ser enviado?
-            // No, es devuelto a la cola de Ready y se replanifica de nuevo...
-            log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR PERO TIENE MAYOR ESTIMACION", pcb_a_operar->pid);
+
             encolar_pcb_en_estado(estado_ready, pcb_a_operar);
             sem_post(&sem_cantidad_pcbs_en_ready);
-
+            
         }
 
     } else {
-
-        log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR Y LA CPU ESTA LIBREEEE", pcb_a_operar->pid);
 
         sem_wait(&bin_cpu_disponible);
 

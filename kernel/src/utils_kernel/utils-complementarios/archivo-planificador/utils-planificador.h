@@ -24,8 +24,7 @@
 
     extern sem_t bin_proceso_eliminar;
     extern sem_t bin_cpu_disponible;
-    extern sem_t bin_replanificar_srt;
-    
+
     extern t_contador* pid_contador;
     extern t_temporal* tiempo_esperando;
 
@@ -42,6 +41,8 @@
     bool _verificar_cola_susp_ready_esta_vacia();
 
     void administrar_proceso_bloqueado(void* _proceso_bloqueado);
+
+    t_pcb* proceso_a_desalojar();
 
     /**
 	* @brief crea el proceso 0, que es pasado por parametro por el ./bin/kernel

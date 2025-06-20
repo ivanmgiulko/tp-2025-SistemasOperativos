@@ -8,6 +8,7 @@ t_cpu_conectada* _buscar_cpu_libre() {
     }
 
     return list_find(lista_cpus->lista_cpus, _cpu_esta_libre);
+    
 }
 
 t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)

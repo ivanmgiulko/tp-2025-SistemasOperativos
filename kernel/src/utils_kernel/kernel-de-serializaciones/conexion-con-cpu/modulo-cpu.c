@@ -112,4 +112,5 @@ void enviar_pid_a_desalojar(int socket_cliente) {
     free(a_enviar);
     eliminar_paquete(paquete);
     
+    
 }

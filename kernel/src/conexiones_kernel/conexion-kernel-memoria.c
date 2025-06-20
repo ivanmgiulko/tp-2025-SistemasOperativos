@@ -94,7 +94,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			sem_post(&sem_hay_espacio_en_memoria);
 			sem_post(&sem_cantidad_pcbs_en_new);
 
-			sem_post(&bin_replanificar_srt);
 			sem_post(&bin_proceso_eliminar);
 			
 			eliminar_paquete(paquete);

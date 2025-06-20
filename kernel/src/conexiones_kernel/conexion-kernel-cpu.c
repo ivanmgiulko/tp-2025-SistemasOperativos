@@ -38,7 +38,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
-                log_info(logger_kernel, "## %d - Solicitó syscall: IO", pid);
+                log_info(logger_kernel, "%d - Solicitó syscall: IO", pid);
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
@@ -54,7 +54,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 if(interfaz_disponible != NULL) { 
                     
-                    log_info(logger_kernel, "## %d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
+                    log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
                     t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));
                     _info_proceso_bloqueado->pid    = _proceso_a_bloquear->pid;
@@ -83,13 +83,15 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pid = _deserializar_pid(offset, paquete);    
 
-                log_info(logger_kernel, "## %d - Solicitó syscall: INIT_PROC", pid);
+                log_info(logger_kernel, "%d - Solicitó syscall: INIT_PROC", pid);
 
                 char* archivo = deserializar_archivo_instrucciones(offset, paquete);
 
                 int tamanio_proceso = deserializar_tamanio_proceso(offset, paquete);
 
                 t_pcb* nuevo_proceso = iniciarPCB(archivo, tamanio_proceso, asignar_pid(), atoi(configuracion_kernel->ESTIMACION_INICIAL));
+
+                log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", nuevo_proceso->pid);
 
                 pasar_pcb_a_new(nuevo_proceso);
 
@@ -102,7 +104,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 pid = _deserializar_pid(offset, paquete); 
 
-                log_info(logger_kernel, "## %d - Solicitó syscall: DUMP_MEMORY", pid);
+                log_info(logger_kernel, "%d - Solicitó syscall: DUMP_MEMORY", pid);
 
                 pc = _deserializar_pc(offset, paquete); 
 
@@ -136,7 +138,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 pc = _deserializar_pc(offset, paquete); 
 
-                log_info(logger_kernel, "## %d - Solicitó syscall: EXIT", pid);
+                log_info(logger_kernel, "%d - Solicitó syscall: EXIT", pid);
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
@@ -152,9 +154,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                pc = _deserializar_pc(offset, paquete); 
+                memcpy(&pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
-                pid = _deserializar_pid(offset, paquete); 
+                memcpy(&pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
 
                 log_info(logger_kernel, "%d - Desalojado por algoritmo SJF/SRT", pid);
 
