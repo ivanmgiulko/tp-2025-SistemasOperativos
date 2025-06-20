@@ -25,7 +25,6 @@ sem_t sem_cantidad_pcbs_en_susp_ready;
 
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
-sem_t bin_buscar_cpu;
 
 sem_t sem_hay_espacio_en_memoria;
 
@@ -44,10 +43,14 @@ void iniciar_planificacion_largo_plazo(){
 	pthread_detach(hilo_planificador_mediano_plazo);
 
     t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 50000);
+    log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", proceso_1->pid);
     pasar_pcb_a_new(proceso_1);
+    
 
     t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES2.txt", 500, asignar_pid(), 50);
+    log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", proceso_2->pid);
     pasar_pcb_a_new(proceso_2);
+    
 
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){

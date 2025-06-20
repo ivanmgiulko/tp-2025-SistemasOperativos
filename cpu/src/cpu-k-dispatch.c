@@ -15,9 +15,7 @@ int manejar_conexion_kernel_dispatch(){
 			case INFO_PROC_EXEC:
 				sem_wait(&sem_cpu_kernel);
 
-				recv(fd_conexion_kernel_dispatch, &(paquete->buffer->size), sizeof(uint32_t), 0);
-				paquete->buffer->stream = malloc(paquete->buffer->size);
-				recv(fd_conexion_kernel_dispatch, paquete->buffer->stream, paquete->buffer->size, 0);
+				recibir_paquete(fd_conexion_kernel_dispatch, paquete);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
 				
@@ -30,6 +28,8 @@ int manejar_conexion_kernel_dispatch(){
 				pedir_instruccion_a_memoria(infoPCB);
 				
 				free(infoPCB);
+				
+				eliminar_paquete(paquete);
 				
 				break;
 

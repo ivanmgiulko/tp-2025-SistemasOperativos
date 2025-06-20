@@ -24,7 +24,7 @@
 
     extern sem_t bin_proceso_eliminar;
     extern sem_t bin_cpu_disponible;
-    
+
     extern t_contador* pid_contador;
     extern t_temporal* tiempo_esperando;
 
