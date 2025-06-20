@@ -13,6 +13,10 @@ int manejar_conexion_memoria(){
 			
 			free(paquete);
 			break;
+		case DATOS_DE_MEMORIA:
+			log_info(logger_cpu, "Recibi los datos de memoria");
+			recibir_datos_de_memoria(mmu);
+			break;
 		case INSTRUCCION:
 				log_info(logger_cpu, "Recibi la instrucción solicitada a MEMORIA");
 				t_paquete* paquete_instruccion = recibir_paquete_instruccion(fd_conexion_memoria);

@@ -9,7 +9,6 @@
 #include <cpu-utils.h>
 
 extern t_log* logger_cpu;
-
 extern sem_t sem_cpu;
 extern sem_t sem_cpu_kernel;
 extern sem_t sem_read;

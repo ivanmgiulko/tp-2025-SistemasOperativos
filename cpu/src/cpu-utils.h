@@ -10,9 +10,13 @@ typedef struct{
     uint32_t cantidad_niveles;
 }mmu_t;
 
+extern mmu_t* mmu;
+
+void recibir_datos_de_memoria(mmu_t*);
+
 void pedir_instruccion_a_memoria(t_peticion_instruccion*);
 
-void inicializar_mmu(mmu_t*);
+mmu_t* inicializar_mmu();
 
 void manejar_respuesta_de_instruccion(t_paquete* paquete);
 

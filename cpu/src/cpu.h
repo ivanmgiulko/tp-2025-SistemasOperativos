@@ -6,14 +6,13 @@
 #include "./cpu-k-dispatch.h"
 #include "./cpu-memoria.h"
 #include "./instrucciones.h"
-// En el header definimos structs, enums, firma de funciones, y creo que nada mas
 
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
 sem_t sem_cpu;
 sem_t sem_read;
 sem_t sem_write;
-
+ mmu_t* mmu;
 sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 bool flag_interrupt = false;
