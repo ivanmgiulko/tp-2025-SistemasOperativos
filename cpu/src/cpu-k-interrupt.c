@@ -18,9 +18,9 @@ int manejar_conexion_kernel_interrupt(){
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
-				free(paquete->buffer->stream);
-				free(paquete->buffer);
-				free(paquete);
+
+				eliminar_paquete(paquete);
+			
 				break;
 				
 			case -1:
@@ -30,7 +30,6 @@ int manejar_conexion_kernel_interrupt(){
 				log_warning(logger_cpu, "Operacion desconocida. No quieras meter la pata");
 				break;
 		}
-		
 	}
 
 	close(fd_conexion_kernel_interrupt);

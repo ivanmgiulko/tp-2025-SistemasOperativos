@@ -112,8 +112,8 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
     
     sem_init(&bin_proceso_eliminar, 0, 1);
-    sem_init(&bin_replanificar_srt, 0, 0);
     sem_init(&bin_cpu_disponible, 0, 0);
+    sem_init(&bin_replanificar_srt, 0, 0);
 
     
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
@@ -220,7 +220,6 @@ void _enviar_proceso_new_a_cola_ready() {
     if(hay_espacio_en_memoria) { 
         pcb_en_new = pop_cola_mutex(estado_new);
         pasar_pcb_new_a_ready(pcb_en_new);
-        sem_post(&bin_replanificar_srt);
     } else { 
         log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
         // El proceso sigue en la cola de New
@@ -266,17 +265,8 @@ void planificar_con_fifo()
 
     t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
-    pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-    t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-    infoProceso->pc = pcb_a_operar->pc;
-    infoProceso->pid = pcb_a_operar->pid;
+    enviar_a_ejecutar_proceso(cpu_libre, pcb_a_operar);
 
-    pthread_mutex_lock(&lista_cpus->mutex_lista);
-    cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-    pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-    enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
 }
 
 void planificar_con_sjf()
@@ -289,24 +279,12 @@ void planificar_con_sjf()
     list_sort(estado_ready->cola, _menor_estimacion);
     t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
 
-    pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-    t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-    infoProceso->pc = pcb_a_operar->pc;
-    infoProceso->pid = pcb_a_operar->pid;
-
-    pthread_mutex_lock(&lista_cpus->mutex_lista);
-    cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-    pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-    enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+    enviar_a_ejecutar_proceso(cpu_libre, pcb_a_operar);
 }
 
 void planificar_con_srt()
 {
     t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
-
-    sem_wait(&bin_replanificar_srt); // Cuando llega un proceso a Ready, este semaforo se postea
 
     cpu_libre = _buscar_cpu_libre();
 
@@ -319,62 +297,36 @@ void planificar_con_srt()
 
         if(pcb_a_operar->estimacion_actual < _proceso_con_mayor_estimacion->estimacion_actual) {
 
-        t_cpu_conectada* cpu_de_proceso_a_desalojar = buscar_cpu_que_usa_proceso(lista_cpus->lista_cpus, _proceso_con_mayor_estimacion->pid);
+            t_cpu_conectada* cpu_de_proceso_a_desalojar = buscar_cpu_que_usa_proceso(lista_cpus->lista_cpus, _proceso_con_mayor_estimacion->pid);
         
-        enviar_pid_a_desalojar(cpu_de_proceso_a_desalojar->socket_interrupt);
+            enviar_pid_a_desalojar(cpu_de_proceso_a_desalojar->socket_interrupt);
 
-        // Ya se desalojo el CPU con el PCB con mayor estimacion para este entonces
+            log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR Y TIENE MENOS ESTIMACION", pcb_a_operar->pid);
 
-        sem_wait(&bin_cpu_disponible); // Espera se desaloje el CPU que usaba el otro proceso que tenia mas estimacion
+            // Ya se desalojo el CPU con el PCB con mayor estimacion para este entonces
 
-        pasar_pcb_ready_a_exec(pcb_a_operar);
+            sem_wait(&bin_cpu_disponible); // Espera se desaloje el CPU que usaba el otro proceso que tenia mas estimacion
 
-        t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-        infoProceso->pc = pcb_a_operar->pc;
-        infoProceso->pid = pcb_a_operar->pid;
+            log_warning(logger_kernel, "EL PROCESO [%d]", pcb_a_operar->pid);
 
-        pthread_mutex_lock(&lista_cpus->mutex_lista);
-        cpu_de_proceso_a_desalojar->pid_en_cpu = pcb_a_operar->pid;
-        pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-        enviar_proc_cpu(*infoProceso, cpu_de_proceso_a_desalojar->socket_dispatch);
+            enviar_a_ejecutar_proceso(cpu_de_proceso_a_desalojar, pcb_a_operar);
 
         } else {
+            // El proceso sigue en Ready, espera a que el otro finalice para ser enviado?
+            // No, es devuelto a la cola de Ready y se replanifica de nuevo...
+            log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR PERO TIENE MAYOR ESTIMACION", pcb_a_operar->pid);
+            encolar_pcb_en_estado(estado_ready, pcb_a_operar);
+            sem_post(&sem_cantidad_pcbs_en_ready);
 
-            sem_wait(&bin_cpu_disponible);
-
-            cpu_libre = _buscar_cpu_libre();
-
-            list_sort(estado_ready->cola, _menor_estimacion);
-            t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
-
-            pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-            t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-            infoProceso->pc = pcb_a_operar->pc;
-            infoProceso->pid = pcb_a_operar->pid;
-
-            pthread_mutex_lock(&lista_cpus->mutex_lista);
-            cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-            pthread_mutex_unlock(&lista_cpus->mutex_lista);
-
-            enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
-
-        } 
+        }
 
     } else {
 
-        pasar_pcb_ready_a_exec(pcb_a_operar);
-            
-        t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
-        infoProceso->pc = pcb_a_operar->pc;
-        infoProceso->pid = pcb_a_operar->pid;
+        log_warning(logger_kernel, "EL PROCESO [%d] QUIERE ENTRAR Y LA CPU ESTA LIBREEEE", pcb_a_operar->pid);
 
-        pthread_mutex_lock(&lista_cpus->mutex_lista);
-        cpu_libre->pid_en_cpu = pcb_a_operar->pid;
-        pthread_mutex_unlock(&lista_cpus->mutex_lista);
+        sem_wait(&bin_cpu_disponible);
 
-        enviar_proc_cpu(*infoProceso, cpu_libre->socket_dispatch);
+        enviar_a_ejecutar_proceso(cpu_libre, pcb_a_operar);
 
     }
 }
@@ -431,5 +383,21 @@ void administrar_proceso_bloqueado(void* pcb)
     } while(!flag);
 
     pthread_exit(NULL);
+
+}
+
+void enviar_a_ejecutar_proceso(t_cpu_conectada* cpu, t_pcb* pcb) {
+    
+    pasar_pcb_ready_a_exec(pcb);
+            
+    t_peticion_instruccion* infoProceso = malloc(sizeof(t_peticion_instruccion)); 
+    infoProceso->pc = pcb->pc;
+    infoProceso->pid = pcb->pid;
+
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
+    cpu->pid_en_cpu = pcb->pid;
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
+    enviar_proc_cpu(*infoProceso, cpu->socket_dispatch);
 
 }

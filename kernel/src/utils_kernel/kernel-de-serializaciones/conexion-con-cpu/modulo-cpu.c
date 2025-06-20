@@ -94,6 +94,7 @@ void enviar_proceso_a_dumpear_en_memoria(int socket_cliente, t_pcb proceso)  {
 
 void enviar_pid_a_desalojar(int socket_cliente) {
     t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t); 
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 

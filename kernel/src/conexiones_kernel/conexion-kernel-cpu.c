@@ -76,6 +76,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 eliminar_paquete(paquete);
                 
                 break;
+
             case SYSCALL_INIT_PROC:
                 // de la syscall INIT_PORC recibo PID, Archivo, tamanioProceso
                 recibir_paquete(socket_interrupt, paquete);
@@ -94,6 +95,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 eliminar_paquete(paquete);
                 break;
+
             case SYSCALL_DUMP_MEMORY:
                 
                 recibir_paquete(socket_interrupt, paquete);
@@ -150,9 +152,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                memcpy(&pid, paquete->buffer->stream, sizeof(int)); paquete->buffer->stream += sizeof(int);
+                pc = _deserializar_pc(offset, paquete); 
 
-                memcpy(&pc, paquete->buffer->stream, sizeof(int)); paquete->buffer->stream += sizeof(int);
+                pid = _deserializar_pid(offset, paquete); 
 
                 log_info(logger_kernel, "%d - Desalojado por algoritmo SJF/SRT", pid);
 
@@ -163,7 +165,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pasar_pcb_exec_a_ready(_proceso_desalojado);
 
-                // eliminar_paquete(paquete);
+                eliminar_paquete(paquete);
                 
                 break;
 

@@ -166,4 +166,6 @@
     
     void planificar_con_srt();
 
+    void enviar_a_ejecutar_proceso(t_cpu_conectada* , t_pcb*);
+
 #endif // UTILS_PLANIFICADOR_H_
