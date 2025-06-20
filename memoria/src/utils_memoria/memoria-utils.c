@@ -28,121 +28,7 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     return memoria;
 }
 
-//hecho por copialot
-// char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-//     if (pathArchivoPseudocodigo == NULL || strlen(pathArchivoPseudocodigo) == 0) {
-//         log_error(logger_memoria, "El path del archivo es inválido");
-//         return NULL;
-//     }
-
-//     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
-//     FILE* archivo = fopen(pathArchivoPseudocodigo, "r");
-//     if (!archivo) {
-//         perror("Error abriendo archivo de pseudocodigo");
-//         return NULL;
-//     }
-
-//     int capacidad = 10;
-//     char** instrucciones = malloc(capacidad * sizeof(char*));
-//     if (!instrucciones) {
-//         fclose(archivo);
-//         return NULL;
-//     }
-
-//     char buffer[MAX_LINEA];
-//     int count = 0;
-
-//     while (fgets(buffer, MAX_LINEA, archivo)) {
-//         buffer[strcspn(buffer, "\n")] = 0;
-
-//         if (count >= capacidad) {
-//             char** temp = realloc(instrucciones, capacidad * 2 * sizeof(char*));
-//             if (!temp) {
-//                 log_error(logger_memoria, "Error al reasignar memoria para instrucciones");
-//                 for (int i = 0; i < count; i++) {
-//                     free(instrucciones[i]);
-//                 }
-//                 free(instrucciones);
-//                 fclose(archivo);
-//                 return NULL;
-//             }
-//             instrucciones = temp;
-//             capacidad *= 2;
-//         }
-
-//         instrucciones[count] = strdup(buffer);
-//         if (!instrucciones[count]) {
-//             log_error(logger_memoria, "Error al duplicar la línea de instrucciones");
-//             for (int i = 0; i < count; i++) {
-//                 free(instrucciones[i]);
-//             }
-//             free(instrucciones);
-//             fclose(archivo);
-//             return NULL;
-//         }
-//         count++;
-//     }
-
-//     fclose(archivo);
-//     *cantidad = count;
-//     return instrucciones;
-// }
-
-// char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-//     if (pathArchivoPseudocodigo == NULL || string_is_empty(pathArchivoPseudocodigo)) {
-//         log_error(logger_memoria, "El path del archivo es inválido o está vacío");
-//         return NULL;
-//     }
-
-//     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
-//     FILE* archivo = fopen(pathArchivoPseudocodigo, "r");
-//     if (!archivo) {
-//         perror("Error abriendo archivo de pseudocodigo");
-//         return NULL;
-//     }
-
-//     char** instrucciones = string_array_new(); // Crear un array de strings vacío
-//     char buffer[MAX_LINEA];
-
-//     while (fgets(buffer, MAX_LINEA, archivo)) {
-//         string_array_push(&instrucciones, string_duplicate(buffer)); // Agregar la instrucción al array
-//     }
-
-//     fclose(archivo);
-//     *cantidad = string_array_size(instrucciones); // Obtener la cantidad de instrucciones
-//     return instrucciones;
-// }
-
-// void agregar_proceso(t_pcbMemoria* pcb) {
-//     int cant_inst = 0;
-//     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
-    
-//     if (!instrucciones) {
-//         log_error(logger_memoria, "No se pudieron leer las instrucciones para el proceso PID %d", pcb->pid);
-//         return;
-//     }
-
-//     t_proceso_en_memoria* temp = realloc(memoria_del_sistema->procesos, (memoria_del_sistema->cant_procesos + 1) * sizeof(t_proceso_en_memoria));
-//     if (!temp) {
-//         log_error(logger_memoria, "Error al reasignar memoria para procesos");
-//         for (int i = 0; i < cant_inst; i++) {
-//             free(instrucciones[i]);
-//         }
-//         free(instrucciones);
-//         return;
-//     }
-//     memoria_del_sistema->procesos = temp;
-
-//     t_proceso_en_memoria nuevoProceso;
-//     nuevoProceso.pid = pcb->pid;
-//     nuevoProceso.instrucciones = instrucciones;
-//     nuevoProceso.cant_instrucciones = cant_inst;
-
-//     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
-//     memoria_del_sistema->cant_procesos++;
-// }
-
-//hehco por nosotros
+//hecho por nosotros
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
    // pathArchivoPseudocodigo = "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
@@ -342,6 +228,15 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
 
     return string;
 }
+
+int leer_int_desde_buffer(t_buffer* buffer, int* desplazamiento){
+    int entero;
+    memcpy(&entero, buffer->stream + *desplazamiento, sizeof(int));
+    *desplazamiento += sizeof(int);
+
+    return entero;
+}
+
 
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales){
     t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));

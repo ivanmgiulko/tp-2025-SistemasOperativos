@@ -161,3 +161,20 @@ void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
     eliminar_paquete(paquete);
 
 }
+
+//Traduce una direccion logica de W/R a su direccion fisica
+t_direccion_fisica calcular_direccion_fisica(int direccion_logica) {
+    t_direccion_fisica resultado;
+
+    resultado.nro_pagina = direccion_logica / TAMANIO_PAGINA;
+    resultado.desplazamiento = direccion_logica % TAMANIO_PAGINA;
+
+    for (int i = 0; i < CANT_NIVELES; i++) {
+        int divisor = (int)pow(CANT_ENTRADAS_TABLA, CANT_NIVELES - i - 1);
+        resultado.entrada_nivel[i] = (resultado.nro_pagina / divisor) % CANT_ENTRADAS_TABLA;
+    }
+	//Devuelve nro de pagina, desplazamiento y entradas de cada nivel
+	log_debug(logger_cpu, "Dirección lógica %d traducida a dirección física: Página %d, Desplazamiento %d", 
+			  direccion_logica, resultado.nro_pagina, resultado.desplazamiento);
+    return resultado;
+}

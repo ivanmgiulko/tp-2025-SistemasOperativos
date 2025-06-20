@@ -189,9 +189,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
-
+                t_direccion_fisica direccion_fisica = traducir_direccion_logica_a_fisica(atoi(instruccion->parametros.write.direccion));
             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
-            agregar_a_paquete(paquete_write, instruccion->parametros.write.direccion, strlen(instruccion->parametros.write.direccion) + 1);
+            agregar_a_paquete(paquete_write, &direccion_fisica.nro_pagina, sizeof(int));
+            agregar_a_paquete(paquete_write, &direccion_fisica.desplazamiento, sizeof(int));
+            agregar_a_paquete(paquete_write, direccion_fisica.entrada_nivel, sizeof(int) * CANT_NIVELES);
             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
             bytes = paquete_write->buffer->size + 2*sizeof(int);
             void* a_enviar_write = serializar_paquete(paquete_write, bytes);

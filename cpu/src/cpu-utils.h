@@ -19,4 +19,12 @@
     void check_interrupt();
     void enviar_proceso_desalojado(int , int , int );
 
+    typedef struct {
+        int nro_pagina;
+        int desplazamiento;
+        int entrada_nivel[CANT_NIVELES];
+    } t_direccion_fisica;
+
+    t_direccion_fisica calcular_direccion_fisica(int );
+
 #endif // CPU_UTILS_H

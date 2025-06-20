@@ -260,13 +260,19 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger) {
     t_buffer* buffer = paquete->buffer;
-
+	
+	//Deserializo el paquete:
     int desplazamiento = 0;
 
-    char* direccion = leer_string_desde_buffer(buffer, &desplazamiento);
-    char* datos = leer_string_desde_buffer(buffer, &desplazamiento);
+    t_direccion_fisica direccion;
+	direccion.nro_pagina = leer_int_desde_buffer(buffer, &desplazamiento);
+	direccion.desplazamiento = leer_int_desde_buffer(buffer, &desplazamiento);
+	for (int i = 0; i < CANT_NIVELES; i++){
+		direccion.entrada_nivel[i] = leer_int_desde_buffer(buffer, &desplazamiento);
+	}
+	char* datos = leer_string_desde_buffer(buffer, &desplazamiento);
 
-    log_info(logger, "[MEMORIA] WRITE recibido - Direccion: %s | Datos: %s", direccion, datos);
+    log_info(logger, "[MEMORIA] WRITE recibido - Direccion: %d | Datos: %s", direccion, datos);
 
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de escritura en memoria)
 	t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
@@ -282,7 +288,9 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* lo
 	send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
 	log_info(logger, "Enviando confirmación de WRITE a CPU");
 	log_info(logger, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
+	//“## PID: <PID> - <Escritura/Lectura> - Dir. Física: <DIRECCIÓN_FÍSICA> - Tamaño: <TAMAÑO>”
 
+	log_info(logger, "## PID: %d - WRITE - Dir. Física: %d | Tamaño: %d", direccion.nro_pagina, direccion.desplazamiento);
 	free(direccion);
     free(datos);
 	free(a_enviar_write);
