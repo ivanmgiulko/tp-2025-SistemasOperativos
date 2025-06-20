@@ -23,10 +23,9 @@ sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
-sem_t bin_replanificar_srt;
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
-
+sem_t bin_buscar_cpu;
 
 sem_t sem_hay_espacio_en_memoria;
 
@@ -106,10 +105,8 @@ void iniciar_planificador_mediano_plazo() {
 void iniciar_planificador_corto_plazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
-        log_error(logger_kernel, "LOG DE CONTROL");
         sem_wait(&sem_cantidad_pcbs_en_ready);
-        log_error(logger_kernel, "LOG DE DESCONTROL");
-        
+
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0) {
             
             planificar_con_fifo();
