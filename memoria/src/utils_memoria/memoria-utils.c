@@ -9,14 +9,12 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     memoria.tam_pagina = atoi(config_memoria->TAM_PAGINA);
     memoria.cant_marcos = memoria.tam_memoria / memoria.tam_pagina;
 
-    // Reservamos la memoria principal según el tamaño del config
     memoria.memoria_principal = malloc(memoria.tam_memoria);
     if (memoria.memoria_principal == NULL) {
         log_error(logger_memoria, "Error al reservar la memoria principal");
         exit(EXIT_FAILURE);
     }
 
-    // Instanciamos el bitmap
     memoria.bitmap_marcos_ocupados = calloc(memoria.cant_marcos, sizeof(bool));
     if (memoria.bitmap_marcos_ocupados == NULL) {
         log_error(logger_memoria, "Error al instanciar el bitmap de frames");

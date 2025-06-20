@@ -22,8 +22,15 @@ int manejar_conexion_cliente(int socket_cliente){
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
 				recibir_mensaje(socket_cliente, logger_memoria);
+				free(paquete);
 				break;
-				
+			case CPU_PIDE_DATOS:
+				log_info(logger_memoria, "Recibí petición de datos desde CPU");
+				recibir_mensaje(socket_cliente, logger_memoria);
+				enviar_datos_a_cpu(socket_cliente);
+				log_info(logger_memoria, "Datos enviados a CPU");
+				free(paquete);
+				break;
 			case PROCESO_MEMORIA:
 
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
@@ -455,6 +462,34 @@ void avisar_kernel_mande_otro_proceso(int socket_cliente) {
 	
 	int bytes = paquete->buffer->size + 2*sizeof(int);
 
+	void* a_enviar = serializar_paquete(paquete, bytes);
+
+	send(socket_cliente, a_enviar, bytes, 0);
+
+	free(a_enviar);
+	eliminar_paquete(paquete);
+}
+
+void enviar_datos_a_cpu(int socket_cliente){
+	// Serializar los datos de memoria en el buffer del paquete
+	uint32_t tam_pagina = atoi(config_memoria->TAM_PAGINA);
+	uint32_t cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	uint32_t entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+
+	t_paquete* paquete = malloc(sizeof(t_paquete));
+	paquete->codigo_operacion = DATOS_DE_MEMORIA;
+	paquete->buffer = malloc(sizeof(t_buffer));
+	paquete->buffer->size = sizeof(uint32_t) * 3;
+	paquete->buffer->stream = malloc(paquete->buffer->size);
+
+	int offset = 0;
+	memcpy(paquete->buffer->stream + offset, &tam_pagina, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(paquete->buffer->stream + offset, &cantidad_niveles, sizeof(uint32_t));
+	offset += sizeof(uint32_t);
+	memcpy(paquete->buffer->stream + offset, &entradas_por_tabla, sizeof(uint32_t));
+
+	int bytes = paquete->buffer->size + sizeof(int) + sizeof(uint32_t);
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
 	send(socket_cliente, a_enviar, bytes, 0);

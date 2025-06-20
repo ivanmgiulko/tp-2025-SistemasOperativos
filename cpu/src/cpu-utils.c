@@ -99,7 +99,7 @@ void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) {
 		abort();
 	}
 	
-	enviar_mensaje("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+	pedir_datos("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
 }
 
 void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
@@ -159,4 +159,14 @@ void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
     free(a_enviar);
     eliminar_paquete(paquete);
 
+}
+void inicializar_mmu(mmu_t* mmu){
+	mmu->tamanio_pagina = 0;
+	mmu->cantidad_entradas_tabla = 0; 
+	mmu->cantidad_niveles = 0; 
+
+	mmu = malloc(sizeof(mmu_t));
+
+	log_info(logger_cpu, "MMU inicializada");
+			
 }

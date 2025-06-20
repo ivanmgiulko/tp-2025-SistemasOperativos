@@ -7,7 +7,8 @@ int main(int argc, char* argv[]){
 	char* cpu_id = argv[1];
 
 	t_config* config_cpu = iniciar_config("./cpu.config");
-    
+    mmu_t* mmu = malloc(sizeof(mmu_t));
+	
 	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
 	char* puerto_kernel_dispatch = config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH");
     char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");

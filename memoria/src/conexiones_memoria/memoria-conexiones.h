@@ -42,5 +42,8 @@
 	bool realizar_dump_memory(int pid);
 
 	void avisar_kernel_mande_otro_proceso(int socket_cliente);
+
+	void enviar_datos_a_cpu(int );
+					
 	
 #endif // MEMORIA_CONEXIONES_H_
