@@ -125,9 +125,10 @@ void check_interrupt(){
 	if(flag_interrupt){
 		log_warning(logger_cpu, "Interrupcion detectada, se procede a desalojar el proceso actual");
 		// Enviar el proceso desalojado a kernel
-		enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
-		sem_post(&sem_cpu_kernel);
 		flag_interrupt = false; 
+		sem_post(&sem_cpu_kernel);
+		enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
+	
 	} else {
 		log_info(logger_cpu, "No hay interrupciones, se procede a pedir la siguiente instrucción a memoria");
 		pedir_instruccion_a_memoria(pcb_actual);

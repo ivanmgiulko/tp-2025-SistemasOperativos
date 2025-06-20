@@ -53,7 +53,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			recibir_paquete(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
-			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado);
+			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado);
 			
 			pthread_mutex_lock(&lista_de_io->mutex_lista);
 			t_io* _io_que_usa_pcb_bloqueado    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado);
@@ -73,7 +73,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			recibir_paquete(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
-			log_info(logger_kernel, "## %d finalizó IO y pasa a READY", pid_desbloqueado_susp);
+			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado_susp);
 			
 			pthread_mutex_lock(&lista_de_io->mutex_lista);
 			t_io* _io_que_usa_pcb_bloqueado_susp    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado_susp);

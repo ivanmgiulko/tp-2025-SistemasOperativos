@@ -30,10 +30,12 @@ t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu)
     cpu_agregada->socket_dispatch  = -1; 
     cpu_agregada->pid_en_cpu       = -1; 
     
-    // PROTEGER CON MUTEX
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
     list_add(lista_cpus->lista_cpus, cpu_agregada);
-    // PROTEGER CON MUTEX
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
+
     sem_post(&bin_cpu_disponible); // Posteo en base a los cpus disponibles -> 50000000 DE IQ
+   
 
     return cpu_agregada;
 }
