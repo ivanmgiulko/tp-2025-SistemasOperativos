@@ -78,8 +78,8 @@ t_instruccion* parse_write(char* linea) {
     // Crear la instrucción
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_WRITE;
-    instr->parametros.write.datos = string_duplicate(partes[1]);
-    instr->parametros.write.direccion = string_duplicate(partes[2]);
+    instr->parametros.write.direccion = string_duplicate(partes[1]);
+    instr->parametros.write.datos = string_duplicate(partes[2]);
 
   
     // Liberar memoria de las partes
@@ -171,6 +171,8 @@ t_instruccion* decode(char* linea) {
 
 void ejecutar_instruccion(t_instruccion* instruccion) {
     int bytes;
+    int direccion_logica; 
+    t_direccion_fisica direccion_fisica;
     t_paquete* paquete = malloc(sizeof(t_paquete));
     crear_buffer(paquete);
         log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
@@ -189,23 +191,28 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
                 instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
-                t_direccion_fisica direccion_fisica = traducir_direccion_logica_a_fisica(atoi(instruccion->parametros.write.direccion));
+            direccion_logica = atoi(instruccion->parametros.write.direccion);
+            direccion_fisica = calcular_direccion_fisica(direccion_logica);
             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
-            agregar_a_paquete(paquete_write, &direccion_fisica.nro_pagina, sizeof(int));
-            agregar_a_paquete(paquete_write, &direccion_fisica.desplazamiento, sizeof(int));
-            agregar_a_paquete(paquete_write, direccion_fisica.entrada_nivel, sizeof(int) * CANT_NIVELES);
+            agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_write, &direccion_fisica.nro_pagina, sizeof(uint32_t));
+            agregar_a_paquete(paquete_write, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            agregar_a_paquete(paquete_write, direccion_fisica.entrada_nivel, sizeof(uint32_t) * mmu->cantidad_niveles);
             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
             bytes = paquete_write->buffer->size + 2*sizeof(int);
+
             void* a_enviar_write = serializar_paquete(paquete_write, bytes);
 
             send(fd_conexion_memoria, a_enviar_write, bytes, 0);
 
+            free(direccion_fisica.entrada_nivel);
             free(a_enviar_write);
             eliminar_paquete(paquete_write);
             
             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
 
             sem_post(&sem_write);
+
             
 			break;
 		case INSTR_READ:
@@ -213,14 +220,19 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> con parametros %s %d",
             pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
-
+            direccion_logica = atoi(instruccion->parametros.read.direccion);
+            direccion_fisica = calcular_direccion_fisica(direccion_logica);
             t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
-            agregar_a_paquete(paquete_read, instruccion->parametros.read.direccion, strlen(instruccion->parametros.read.direccion) + 1);
+            agregar_a_paquete(paquete_read, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_read, &direccion_fisica.nro_pagina, sizeof(uint32_t));
+            agregar_a_paquete(paquete_read, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            agregar_a_paquete(paquete_read, direccion_fisica.entrada_nivel, sizeof(uint32_t) * mmu->cantidad_niveles);
             bytes = paquete_read->buffer->size + 2*sizeof(int);
             void* a_enviar_read = serializar_paquete(paquete_read, bytes);
 
             send(fd_conexion_memoria, a_enviar_read, bytes, 0);
 
+            free(direccion_fisica.entrada_nivel);
             free(a_enviar_read);
             eliminar_paquete(paquete_read);
             

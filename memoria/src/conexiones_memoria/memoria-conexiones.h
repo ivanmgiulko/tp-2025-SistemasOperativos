@@ -8,7 +8,6 @@
 	 * @file
 	 * @brief #include "conexiones_memoria/memoria-conexiones-main.h"
 	 */
-    
 
     /**
 	* @brief Crea un hilo cuando se conecta el Kernel o CPU
@@ -25,11 +24,11 @@
     int manejar_conexion_cliente(int socket_cliente);
 
 	
-	void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete, t_log* logger);
+	void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete);
 
-	void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger);
+	void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete);
 
-	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger);
+	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
 
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 

@@ -227,14 +227,22 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
     return string;
 }
 
-int leer_int_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int entero;
-    memcpy(&entero, buffer->stream + *desplazamiento, sizeof(int));
+uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
+    int tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
     *desplazamiento += sizeof(int);
 
-    return entero;
-}
+    if (tamanio != sizeof(uint32_t)) {
+        log_error(logger_memoria, "Tamaño inesperado al deserializar un uint32_t: %d", tamanio);
+        return 0;
+    }
 
+    uint32_t valor;
+    memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
+
+    return valor;
+}
 
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales){
     t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));

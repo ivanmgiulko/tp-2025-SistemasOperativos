@@ -32,9 +32,9 @@ typedef struct t_tabla_pagina {
 } t_tabla_pagina;
 
 typedef struct {
-    int nro_pagina;
-    int desplazamiento;
-    int entrada_nivel[config_memoria.CANT_NIVELES];
+    uint32_t  nro_pagina;
+    uint32_t  desplazamiento;
+    uint32_t  * entrada_nivel;
 } t_direccion_fisica;
 
 typedef struct {
@@ -61,7 +61,7 @@ extern t_memoria_del_sistema* memoria_del_sistema; // variable global para almac
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad);
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
-int leer_int_desde_buffer(t_buffer* buffer, int* desplazamiento);
+uint32_t  leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
 void agregar_proceso(t_pcbMemoria* pcb);
 void informar_metricas_memoria(int pid);
 int finalizar_proceso(int pid);

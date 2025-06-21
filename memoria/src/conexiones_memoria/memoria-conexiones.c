@@ -116,7 +116,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					break;
 				}
 				//	log_info(logger_memoria, "Tamaño del buffer recibido: %d", paquete_tmp->buffer->size);
-				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp, logger_memoria);
+				manejar_peticion_de_instruccion(socket_cliente, paquete_tmp);
 
 				// Libera el paquete
 				eliminar_paquete(paquete_tmp);
@@ -131,7 +131,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de WRITE");
 					break;
 				}
-				manejar_escritura_memoria(socket_cliente, paquete_write, logger_memoria);
+				manejar_escritura_memoria(socket_cliente, paquete_write);
 
 				eliminar_paquete(paquete_write);
 				eliminar_paquete(paquete);
@@ -144,7 +144,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de READ");
 					break;
 				}
-				manejar_lectura_memoria(socket_cliente, paquete_read, logger_memoria);
+				manejar_lectura_memoria(socket_cliente, paquete_proceso_eliminado);
 			
 				eliminar_paquete(paquete_read);
 				eliminar_paquete(paquete);
@@ -192,16 +192,16 @@ int manejar_conexion_cliente(int socket_cliente){
 	return EXIT_SUCCESS;
 }
 
-void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_log* logger) {
+void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete) {
     if (paquete->buffer->size < sizeof(int) * 2) {
-        log_error(logger, "El tamaño del buffer es insuficiente para deserializar la instrucción");
+        log_error(logger_memoria, "El tamaño del buffer es insuficiente para deserializar la instrucción");
         return;
     }
 
     t_peticion_instruccion* peticion = deserializar_peticion_instruccion(paquete->buffer->stream);
 
-    log_info(logger, "PID recibido: %d", peticion->pid);
-    log_info(logger, "PC recibido: %d", peticion->pc);
+    log_info(logger_memoria, "PID recibido: %d", peticion->pid);
+    log_info(logger_memoria, "PC recibido: %d", peticion->pc);
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
@@ -209,9 +209,9 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	//Entra a este if cuando el pc es mayor a cant de instrucciones
 	if(strcmp(respuesta->instruccion, "PC FINALIZADO")== 0){
 	
-		log_info(logger, "No hay más instrucciones a ejecutar para este proceso");
-		log_debug(logger, "Serializando paquete:");
-		log_debug(logger, "Código de operación: %d", FIN_PID);
+		log_info(logger_memoria, "No hay más instrucciones a ejecutar para este proceso");
+		log_debug(logger_memoria, "Serializando paquete:");
+		log_debug(logger_memoria, "Código de operación: %d", FIN_PID);
 
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 
@@ -219,7 +219,7 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 		int bytes = sizeof(int);
 		void* paquete_pc_fin = malloc(bytes);
 		memcpy(paquete_pc_fin, &(paquete->codigo_operacion), sizeof(int));
-		log_debug(logger, "Tamaño del buffer: %d", bytes);
+		log_debug(logger_memoria, "Tamaño del buffer: %d", bytes);
 		send(socket_cliente, paquete_pc_fin, bytes, 0);
 
 		free(paquete->buffer);
@@ -230,31 +230,31 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 
 	//Entra aca si Memoria del sistema no incializada o pid no encontrado
 	else if(strcmp(respuesta->instruccion, "NULL")== 0){
-	 	log_error(logger, "pid no encontrado o memoria_del_sistema/procesos no están inicializados");
+	 	log_error(logger_memoria, "pid no encontrado o memoria_del_sistema/procesos no están inicializados");
 		return;
 	} 
 
 	//Entra acá si encontro el proceso y la instrucción
 	else{
-		log_info(logger, "## PID: %d - Obtener instrucción: %d - Instrucción: %s",peticion->pid, peticion->pc, respuesta->instruccion);
+		log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s",peticion->pid, peticion->pc, respuesta->instruccion);
 		//Serializo la respuesta
 		int size_respuesta;
 		void* respuesta_serializada = serializar_respuesta_instruccion(respuesta, &size_respuesta);
 		if(respuesta_serializada == NULL) {
-			log_warning(logger, "Error al serializar la respuesta de instruccion");
+			log_warning(logger_memoria, "Error al serializar la respuesta de instruccion");
 			return;
 		}
-		log_debug(logger, "Serializando paquete:");
-		log_debug(logger, "Código de operación: %d", INSTRUCCION);
-		log_debug(logger, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
-		log_debug(logger, "Instrucción: %s", respuesta->instruccion);
+		log_debug(logger_memoria, "Serializando paquete:");
+		log_debug(logger_memoria, "Código de operación: %d", INSTRUCCION);
+		log_debug(logger_memoria, "Tamaño del buffer: %ld", size_respuesta - sizeof(op_code) - sizeof(uint32_t));
+		log_debug(logger_memoria, "Instrucción: %s", respuesta->instruccion);
 
 		//Envio la instruccion serializada envio a CPU 
 		//log_info(logger, "Size_respuesta= %d", size_respuesta);
-		log_info(logger, "Enviando Instrucción a CPU");
+		log_info(logger_memoria, "Enviando Instrucción a CPU");
 		int bytes_enviados = send(socket_cliente, respuesta_serializada, size_respuesta, 0);
 		if (bytes_enviados <= 0) {
-			log_error(logger, "Fallo al enviar la instrucción al CPU");
+			log_error(logger_memoria, "Fallo al enviar la instrucción al CPU");
 		}
 	}
 
@@ -265,21 +265,27 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete, t_l
 	free(respuesta);
 }
 
-void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger) {
-    t_buffer* buffer = paquete->buffer;
+void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
+    //t_buffer* buffer = paquete->buffer;
 	
 	//Deserializo el paquete:
     int desplazamiento = 0;
-
+	uint32_t pid;
     t_direccion_fisica direccion;
-	direccion.nro_pagina = leer_int_desde_buffer(buffer, &desplazamiento);
-	direccion.desplazamiento = leer_int_desde_buffer(buffer, &desplazamiento);
-	for (int i = 0; i < CANT_NIVELES; i++){
-		direccion.entrada_nivel[i] = leer_int_desde_buffer(buffer, &desplazamiento);
+	pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	direccion.nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	direccion.desplazamiento = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	direccion.entrada_nivel = malloc(sizeof(uint32_t ) * cantidad_niveles);
+	if (!direccion.entrada_nivel) {
+		log_error(logger_memoria, "No se pudo reservar memoria para entrada_nivel");
 	}
-	char* datos = leer_string_desde_buffer(buffer, &desplazamiento);
+	for (int i = 0; i < cantidad_niveles; i++) {
+		direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	}
+	char* datos = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
 
-    log_info(logger, "[MEMORIA] WRITE recibido - Direccion: %d | Datos: %s", direccion, datos);
+    log_info(logger_memoria, "[MEMORIA] WRITE recibido - Página: %d | Desplazamiento: %d | Datos: %s", direccion.nro_pagina,direccion.desplazamiento, datos);
 
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de escritura en memoria)
 	t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
@@ -293,25 +299,36 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete, t_log* lo
 	int bytes_confirmacion_write = paquete_confirmacion_write->buffer->size + 2 * sizeof(int);
 	void* a_enviar_write = serializar_paquete(paquete_confirmacion_write, bytes_confirmacion_write);
 	send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
-	log_info(logger, "Enviando confirmación de WRITE a CPU");
-	log_info(logger, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
+	log_info(logger_memoria, "Enviando confirmación de WRITE a CPU");
+	log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
 	//“## PID: <PID> - <Escritura/Lectura> - Dir. Física: <DIRECCIÓN_FÍSICA> - Tamaño: <TAMAÑO>”
 
-	log_info(logger, "## PID: %d - WRITE - Dir. Física: %d | Tamaño: %d", direccion.nro_pagina, direccion.desplazamiento);
-	free(direccion);
-    free(datos);
+	//log_info(logger, "## PID: %d - WRITE - Dir. Física: %d | Tamaño: %d", direccion.nro_pagina, direccion.desplazamiento);
+    free(direccion.entrada_nivel);
+	free(datos);
 	free(a_enviar_write);
 	eliminar_paquete(paquete_confirmacion_write);
 }
 
-void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete, t_log* logger) {
-    t_buffer* buffer = paquete->buffer;
+void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 
+    //Deserializo el paquete:
     int desplazamiento = 0;
+	uint32_t  pid;
+    t_direccion_fisica direccion;
+	pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	direccion.nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	direccion.desplazamiento = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	uint32_t cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	direccion.entrada_nivel = malloc(sizeof(uint32_t ) * cantidad_niveles);
+	if (!direccion.entrada_nivel) {
+		log_error(logger_memoria, "No se pudo reservar memoria para entrada_nivel");
+	}
+	for (int i = 0; i < cantidad_niveles; i++) {
+		direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	}
 
-    char* direccion = leer_string_desde_buffer(buffer, &desplazamiento);
-
-    log_info(logger, "[MEMORIA] READ recibido - Direccion: %s", direccion);
+    log_info(logger_memoria, "[MEMORIA] READ recibido - Página: %d | Desplazamiento: %d", direccion.nro_pagina,direccion.desplazamiento);
 
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
 	t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
@@ -325,10 +342,9 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete, t_log* logg
 	int bytes_confirmacion_read = paquete_confirmacion_read->buffer->size + 2 * sizeof(int);
 	void* a_enviar_read = serializar_paquete(paquete_confirmacion_read, bytes_confirmacion_read);
 	send(socket_cliente, a_enviar_read, bytes_confirmacion_read, 0);
-	log_info(logger, "Enviando confirmación de READ a CPU");
-	log_info(logger, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
-
-	free(direccion);
+	log_info(logger_memoria, "Enviando confirmación de READ a CPU");
+	log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
+	free(direccion.entrada_nivel);
 	free(a_enviar_read);
 	eliminar_paquete(paquete_confirmacion_read);
 }

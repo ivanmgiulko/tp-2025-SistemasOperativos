@@ -32,11 +32,11 @@ void check_interrupt();
 void enviar_proceso_desalojado(int , int , int );
 
     typedef struct {
-        int nro_pagina;
-        int desplazamiento;
-        int entrada_nivel[CANT_NIVELES];
+        uint32_t  nro_pagina;
+        uint32_t  desplazamiento;
+        uint32_t  * entrada_nivel; // entradas de cada nivel
     } t_direccion_fisica;
 
-    t_direccion_fisica calcular_direccion_fisica(int );
+    t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
 
 #endif // CPU_UTILS_H

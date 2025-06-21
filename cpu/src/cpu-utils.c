@@ -1,6 +1,7 @@
 
 
 #include "./cpu-utils.h"
+#include <math.h>
 
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
 void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
@@ -206,12 +207,28 @@ void recibir_datos_de_memoria(mmu_t* mmu) {
 //Traduce una direccion logica de W/R a su direccion fisica
 t_direccion_fisica calcular_direccion_fisica(int direccion_logica) {
     t_direccion_fisica resultado;
-
+	
+	uint32_t  TAMANIO_PAGINA = mmu->tamanio_pagina;
+	uint32_t  CANT_NIVELES = mmu->cantidad_niveles;
+	uint32_t  CANT_ENTRADAS_TABLA = mmu->cantidad_entradas_tabla;
+	log_debug(logger_cpu,"Tamanio Pagina = %d", TAMANIO_PAGINA);
+	log_debug(logger_cpu,"Cantdad niveles = %d", CANT_NIVELES);
+	log_debug(logger_cpu,"entradas tabla = %d", CANT_ENTRADAS_TABLA);
+	log_debug(logger_cpu, "direccion logica = %d", direccion_logica);
+	
     resultado.nro_pagina = direccion_logica / TAMANIO_PAGINA;
     resultado.desplazamiento = direccion_logica % TAMANIO_PAGINA;
 
+	// Reservar memoria dinámica para el array de niveles
+    resultado.entrada_nivel = malloc(sizeof(int) * CANT_NIVELES);
+	if (resultado.entrada_nivel == NULL) {
+		log_error(logger_cpu, "Error al reservar memoria para las entradas de nivel");
+		exit(EXIT_FAILURE);
+	}
+	//Teniendo una cantidad de niveles N y un identificador X de cada nivel podemos utilizar las siguientes fórmulas:
+	//entrada_nivel_X = floor(nro_página  / cant_entradas_tabla ^ (N - X)) % cant_entradas_tabla
     for (int i = 0; i < CANT_NIVELES; i++) {
-        int divisor = (int)pow(CANT_ENTRADAS_TABLA, CANT_NIVELES - i - 1);
+        int divisor = (int)pow(CANT_ENTRADAS_TABLA, CANT_NIVELES - (i + 1));
         resultado.entrada_nivel[i] = (resultado.nro_pagina / divisor) % CANT_ENTRADAS_TABLA;
     }
 	//Devuelve nro de pagina, desplazamiento y entradas de cada nivel
