@@ -1,6 +1,7 @@
 #ifndef MEMORIA_UTILS_H_
 #define MEMORIA_UTILS_H_
 #define MAX_LINEA 256
+#include <math.h>
 #include "memoria-gestor.h"
 #include "config_memoria/memoria-config.h"
 
@@ -73,5 +74,6 @@ t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
 void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria, int paginas_necesarias, int* paginas_asignadas);
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
+int buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, int nro_pagina, int cantidad_niveles, int entradas_por_tabla);
 
 #endif // MEMORIA_UTILS_H_

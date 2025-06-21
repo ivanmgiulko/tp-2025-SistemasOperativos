@@ -144,7 +144,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de READ");
 					break;
 				}
-				manejar_lectura_memoria(socket_cliente, paquete_proceso_eliminado);
+				manejar_lectura_memoria(socket_cliente, paquete_read);
 			
 				eliminar_paquete(paquete_read);
 				eliminar_paquete(paquete);
@@ -276,6 +276,8 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	direccion.nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	direccion.desplazamiento = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+	int tam_pagina = atoi(config_memoria->TAM_PAGINA);
 	direccion.entrada_nivel = malloc(sizeof(uint32_t ) * cantidad_niveles);
 	if (!direccion.entrada_nivel) {
 		log_error(logger_memoria, "No se pudo reservar memoria para entrada_nivel");
@@ -284,10 +286,29 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 		direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	}
 	char* datos = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
+	int tamanio = strlen(datos);
 
     log_info(logger_memoria, "[MEMORIA] WRITE recibido - Página: %d | Desplazamiento: %d | Datos: %s", direccion.nro_pagina,direccion.desplazamiento, datos);
 
-    // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de escritura en memoria)
+	// Busco proceso en memoria - Busco marco coincidiente con la página en tabla - Calculo dirección física - Escribo en memoria
+	t_proceso_en_memoria* proceso_encontrado = buscar_proceso_en_memoria(pid);
+	if (proceso_encontrado == NULL) {
+        log_error(logger_memoria, "No se pudo encontrar el proceso con PID %d", pid);
+        return;
+    }
+
+    int marco = buscar_marco_en_tabla(proceso_encontrado->tabla_primera, direccion.nro_pagina, cantidad_niveles, entradas_por_tabla);
+    if (marco == -1) {
+        log_error(logger_memoria, "No se pudo encontrar el marco para la página %d del proceso de PID %d", direccion.nro_pagina, pid);
+        return;
+    }
+
+	int direccion_fisica = marco * tam_pagina + direccion.desplazamiento;
+	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
+	// Log obligatorio
+	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio);
+	
+    // Enviar confirmación de éxito al cliente
 	t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
 	paquete_confirmacion_write->codigo_operacion = WRITE_MEMORIA;
 	paquete_confirmacion_write->buffer = malloc(sizeof(t_buffer));
@@ -299,11 +320,8 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	int bytes_confirmacion_write = paquete_confirmacion_write->buffer->size + 2 * sizeof(int);
 	void* a_enviar_write = serializar_paquete(paquete_confirmacion_write, bytes_confirmacion_write);
 	send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
-	log_info(logger_memoria, "Enviando confirmación de WRITE a CPU");
-	log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_write);
-	//“## PID: <PID> - <Escritura/Lectura> - Dir. Física: <DIRECCIÓN_FÍSICA> - Tamaño: <TAMAÑO>”
+	log_info(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
 
-	//log_info(logger, "## PID: %d - WRITE - Dir. Física: %d | Tamaño: %d", direccion.nro_pagina, direccion.desplazamiento);
     free(direccion.entrada_nivel);
 	free(datos);
 	free(a_enviar_write);
@@ -319,7 +337,10 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	direccion.nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	direccion.desplazamiento = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	uint32_t tamanio_a_leer = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	uint32_t cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+	int tam_pagina = atoi(config_memoria->TAM_PAGINA);
 	direccion.entrada_nivel = malloc(sizeof(uint32_t ) * cantidad_niveles);
 	if (!direccion.entrada_nivel) {
 		log_error(logger_memoria, "No se pudo reservar memoria para entrada_nivel");
@@ -330,11 +351,33 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 
     log_info(logger_memoria, "[MEMORIA] READ recibido - Página: %d | Desplazamiento: %d", direccion.nro_pagina,direccion.desplazamiento);
 
+	// Busco proceso en memoria - Busco marco coincidiente con la página en tabla - Calculo dirección física - Leo en memoria
+	t_proceso_en_memoria* proceso_encontrado = buscar_proceso_en_memoria(pid);
+	if (proceso_encontrado == NULL) {
+        log_error(logger_memoria, "No se pudo encontrar el proceso con PID %d", pid);
+        return;
+    }
+
+	int marco = buscar_marco_en_tabla(proceso_encontrado->tabla_primera, direccion.nro_pagina, cantidad_niveles, entradas_por_tabla);
+    if (marco == -1) {
+        log_error(logger_memoria, "No se pudo encontrar el marco para la página %d del proceso de PID %d", direccion.nro_pagina, pid);
+        return;
+    }
+
+	int direccion_fisica = marco * tam_pagina + direccion.desplazamiento;
+	void* datos_leidos = malloc(tamanio_a_leer);
+	memcpy(datos_leidos, memoria_del_sistema->memoria_principal + direccion_fisica, tamanio_a_leer);
+	char* datos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
+	memcpy(datos_como_string, datos_leidos, tamanio_a_leer);
+	// Log obligatorio
+	log_trace(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
+	log_trace(logger_memoria, "Contenido leído: %s", datos_como_string);
+
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
 	t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
 	paquete_confirmacion_read->codigo_operacion = READ_MEMORIA;
 	paquete_confirmacion_read->buffer = malloc(sizeof(t_buffer));
-	char* mensaje_confirmacion_read = "READ completado con éxito";
+	char* mensaje_confirmacion_read = datos_como_string;
 	paquete_confirmacion_read->buffer->size = strlen(mensaje_confirmacion_read) + 1;
 	paquete_confirmacion_read->buffer->stream = malloc(paquete_confirmacion_read->buffer->size);
 	memcpy(paquete_confirmacion_read->buffer->stream, mensaje_confirmacion_read, paquete_confirmacion_read->buffer->size);
@@ -342,10 +385,12 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	int bytes_confirmacion_read = paquete_confirmacion_read->buffer->size + 2 * sizeof(int);
 	void* a_enviar_read = serializar_paquete(paquete_confirmacion_read, bytes_confirmacion_read);
 	send(socket_cliente, a_enviar_read, bytes_confirmacion_read, 0);
-	log_info(logger_memoria, "Enviando confirmación de READ a CPU");
-	log_info(logger_memoria, "Mensaje de confirmación: %s", mensaje_confirmacion_read);
+	log_info(logger_memoria, "Enviando lectura de READ a CPU: %s", mensaje_confirmacion_read);
+
 	free(direccion.entrada_nivel);
 	free(a_enviar_read);
+	free(datos_leidos);
+	free(datos_como_string);
 	eliminar_paquete(paquete_confirmacion_read);
 }
 

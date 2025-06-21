@@ -18,7 +18,7 @@ extern pthread_mutex_t mutex_cpu;
 
 extern t_peticion_instruccion* pcb_actual;
 extern int valor_sem_cpu;
-
+extern char* ultima_escritura;
 extern bool flag_interrupt;
 //conexiones
 extern int fd_conexion_kernel_interrupt;
