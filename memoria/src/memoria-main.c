@@ -11,6 +11,9 @@ int main(int argc, char* argv[]) {
     memoria_del_sistema = malloc(sizeof(t_memoria_del_sistema));
     *memoria_del_sistema = crear_memoria_del_sistema();
 
+    procesos_en_swap = list_create();
+    inicializar_swap();
+
     puerto_servidor_memoria = config_memoria->PUERTO_ESCUCHA;
 
     int server_memoria_fd = iniciar_servidor(puerto_servidor_memoria, logger_memoria);

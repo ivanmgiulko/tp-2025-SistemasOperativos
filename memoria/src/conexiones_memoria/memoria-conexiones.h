@@ -46,5 +46,6 @@
 
 	void enviar_datos_a_cpu(int );
 					
+	uint32_t* calcular_entradas_por_nivel(uint32_t nro_pagina, int cantidad_niveles, int entradas_por_tabla);
 	
 #endif // MEMORIA_CONEXIONES_H_

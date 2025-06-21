@@ -470,6 +470,10 @@ bool realizar_dump_memory(int pid) {
         return false;
     }
 
+	int tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+
     // Creo directorio
     char* dump_path = config_memoria->DUMP_PATH;
     int resultado = mkdir(dump_path, 0755);
@@ -496,21 +500,29 @@ bool realizar_dump_memory(int pid) {
         return false;
     }
 
-    // Escribimos las instrucciones del proceso - CAMBIAR AL TERMINAR DE HACER LA MEMORIA
-    for (int i = 0; i < proceso->cant_instrucciones; i++) {
-        fprintf(file, "%s\n", proceso->instrucciones[i]);
-    }
-	log_trace(logger_memoria, "DUMP_MEMORY: se escribieron todas las instrucciones");
+	// Recorrer páginas y volcar su contenido
+    int paginas_totales = proceso->tamanioMemoria / tam_pagina;
 
-	// ELIMINAR - Leemos lo escrito para chequear que esté bien
-    fseek(file, 0, SEEK_SET);
+    for (int nro_pagina = 0; nro_pagina < paginas_totales; nro_pagina++) {
+		uint32_t* entradas_por_nivel = calcular_entradas_por_nivel(nro_pagina, cantidad_niveles, entradas_por_tabla);
+		if (!entradas_por_nivel) {
+			log_error(logger_memoria, "Error al calcular las entradas por nivel");
+			break;
+		}
 
-    char linea[256];
-    log_trace(logger_memoria, "DUMP_MEMORY: leyendo contenido escrito:");
-    while (fgets(linea, sizeof(linea), file)) {
-        log_debug(logger_memoria, "DUMP DEBUG: %s", linea);
+        int marco = buscar_marco_en_tabla(proceso->tabla_primera, entradas_por_nivel, cantidad_niveles);
+		free(entradas_por_nivel);
+
+        if (marco == -1) {
+            log_warning(logger_memoria, "Página %d no asignada (se saltea)", nro_pagina);
+            char vacio[tam_pagina];
+            memset(vacio, 0, tam_pagina);
+            fwrite(vacio, 1, tam_pagina, file);  // rellena con ceros si no está asignada
+        } else {
+            void* origen = memoria_del_sistema->memoria_principal + (marco * tam_pagina);
+            fwrite(origen, 1, tam_pagina, file);
+        }
     }
-	// ELIMINAR - Leemos lo escrito para chequear que esté bien
 
     fclose(file);
     log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
@@ -559,4 +571,16 @@ void enviar_datos_a_cpu(int socket_cliente){
 
 	free(a_enviar);
 	eliminar_paquete(paquete);
+}
+
+uint32_t* calcular_entradas_por_nivel(uint32_t nro_pagina, int cantidad_niveles, int entradas_por_tabla) {
+    uint32_t* entradas = malloc(sizeof(uint32_t) * cantidad_niveles);
+    if (!entradas) return NULL;
+
+    for (int nivel = cantidad_niveles - 1; nivel >= 0; nivel--) {
+        entradas[nivel] = nro_pagina % entradas_por_tabla;
+        nro_pagina /= entradas_por_tabla;
+    }
+
+    return entradas;
 }

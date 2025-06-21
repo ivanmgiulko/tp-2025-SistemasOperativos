@@ -26,6 +26,20 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     return memoria;
 }
 
+void inicializar_swap() {
+    char* path_swap = config_memoria->PATH_SWAPFILE;
+
+    FILE* archivo_swap = fopen(path_swap, "w+b");
+    if (!archivo_swap) {
+        log_error(logger_memoria, "No se pudo crear el archivo SWAP.");
+        exit(EXIT_FAILURE);
+    }
+
+    fclose(archivo_swap);
+
+    log_info(logger_memoria, "SWAP inicializado en: %s", path_swap);
+}
+
 //hecho por nosotros
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {

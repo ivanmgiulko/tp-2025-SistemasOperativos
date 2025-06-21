@@ -48,6 +48,12 @@ typedef struct {
 } t_proceso_en_memoria;
 
 typedef struct {
+    uint32_t pid;
+    uint32_t* posiciones_swap; // índice de cada página del proceso en SWAP
+    uint32_t cantidad_paginas;
+} t_proceso_swap;
+
+typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
     void* memoria_principal;
