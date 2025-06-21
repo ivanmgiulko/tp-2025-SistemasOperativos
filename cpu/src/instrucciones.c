@@ -227,6 +227,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             agregar_a_paquete(paquete_read, &(pcb_actual->pid), sizeof(uint32_t));
             agregar_a_paquete(paquete_read, &direccion_fisica.nro_pagina, sizeof(uint32_t));
             agregar_a_paquete(paquete_read, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            agregar_a_paquete(paquete_read, &instruccion->parametros.read.tamanio, sizeof(uint32_t));
             for (int i = 0; i < mmu->cantidad_niveles; i++)
                 agregar_a_paquete(paquete_read, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t));
             bytes = paquete_read->buffer->size + 2*sizeof(int);
