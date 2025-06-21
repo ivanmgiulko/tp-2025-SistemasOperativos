@@ -144,7 +144,7 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_error(logger_memoria, "Fallo al recibir paquete de READ");
 					break;
 				}
-				manejar_lectura_memoria(socket_cliente, paquete_proceso_eliminado);
+				manejar_lectura_memoria(socket_cliente, paquete_read);
 			
 				eliminar_paquete(paquete_read);
 				eliminar_paquete(paquete);
@@ -347,6 +347,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	free(direccion.entrada_nivel);
 	free(a_enviar_read);
 	eliminar_paquete(paquete_confirmacion_read);
+
 }
 
 void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
