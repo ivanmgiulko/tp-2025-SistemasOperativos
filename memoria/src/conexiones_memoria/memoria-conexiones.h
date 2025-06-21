@@ -30,7 +30,7 @@
 
 	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
 
-	void manejar_traduccion_direccion(int socket_cliente, t_paquete* paquete);
+	void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete);
 
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 

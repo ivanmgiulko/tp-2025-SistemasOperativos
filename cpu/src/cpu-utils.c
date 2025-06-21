@@ -167,6 +167,7 @@ mmu_t* inicializar_mmu(){
     mmu->tamanio_pagina = 0;
     mmu->cantidad_entradas_tabla = 0; 
     mmu->cantidad_niveles = 0; 
+	mmu->ultima_direccion_fisica_calculada = 0;
     log_info(logger_cpu, "MMU inicializada");
     return mmu;
 }
@@ -204,9 +205,9 @@ void recibir_datos_de_memoria(mmu_t* mmu) {
 	free(buffer_stream);
 }
 
-//Traduce una direccion logica de W/R a su direccion fisica
-t_direccion_fisica calcular_direccion_fisica(int direccion_logica) {
-    t_direccion_fisica resultado;
+//Traduce una direccion logica de W/R a sus componentes utiles para calcular la direccion fisica
+t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica) {
+    t_pre_direccion_fisica resultado;
 	
 	uint32_t  TAMANIO_PAGINA = mmu->tamanio_pagina;
 	uint32_t  CANT_NIVELES = mmu->cantidad_niveles;
@@ -235,4 +236,11 @@ t_direccion_fisica calcular_direccion_fisica(int direccion_logica) {
 	log_debug(logger_cpu, "Dirección lógica %d traducida a dirección física: Página %d, Desplazamiento %d", 
 			  direccion_logica, resultado.nro_pagina, resultado.desplazamiento);
     return resultado;
+}
+
+// Calcula la direccion fisica real para una procesos con su pid y marco + desplazamiento
+uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica){
+	uint32_t direccion_fisica_final = (marco * mmu->tamanio_pagina) + pre_direccion_fisica.desplazamiento;
+	log_debug(logger_cpu, "Dirección física final calculada: %d", direccion_fisica_final);
+	return direccion_fisica_final;
 }

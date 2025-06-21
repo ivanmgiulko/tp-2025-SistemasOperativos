@@ -36,7 +36,7 @@ typedef struct {
     uint32_t  nro_pagina;
     uint32_t  desplazamiento;
     uint32_t  * entrada_nivel;
-} t_direccion_fisica;
+} t_pre_direccion_fisica;
 
 typedef struct {
     int pid;
@@ -60,20 +60,28 @@ typedef struct {
 
 extern t_memoria_del_sistema* memoria_del_sistema; // variable global para almacenar la memoria del sistema
 
-char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad);
+//Funciones de serializacion
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 uint32_t  leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
+
+//funciones de buscar instrucciones
+char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad);
+char* obtener_instruccion(int pid, int pc);
+
+//funciones de Inicio/fin/susp procesos
 void agregar_proceso(t_pcbMemoria* pcb);
 void informar_metricas_memoria(int pid);
 int finalizar_proceso(int pid);
-char* obtener_instruccion(int pid, int pc);
+
+//Funciones de memoria
 t_memoria_del_sistema crear_memoria_del_sistema();
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales);
-void liberar_tabla(t_tabla_pagina* tabla);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
+
+//Funciones de tablas
+void liberar_tabla(t_tabla_pagina* tabla);
 void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria, int paginas_necesarias, int* paginas_asignadas);
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
-int buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, int nro_pagina, int cantidad_niveles, int entradas_por_tabla);
-
+uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
 #endif // MEMORIA_UTILS_H_
