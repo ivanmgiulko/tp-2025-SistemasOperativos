@@ -7,7 +7,6 @@ int main(int argc, char* argv[]){
 	char* cpu_id = argv[1];
 
 	t_config* config_cpu = iniciar_config("./cpu.config");
-    
 	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
 	char* puerto_kernel_dispatch = config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH");
     char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
@@ -31,6 +30,7 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
 	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
+	mmu = inicializar_mmu();	
 
 	//	IP_MEMORIA=127.0.0.4
 	//	PUERTO_MEMORIA=40074

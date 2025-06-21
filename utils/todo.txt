@@ -125,3 +125,8 @@ CHECKPOINT 2
 
 - CPU: 
         - Eliminar semaforo que maneja cuando NO le llega un proceso, dado que es un caso imposible habiendo implementado lo anterior.
+
+
+        tamaño pagina
+        cantidad de entradas x tabla
+        cantidad de niveles

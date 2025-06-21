@@ -99,7 +99,7 @@ void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) {
 		abort();
 	}
 	
-	enviar_mensaje("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+	pedir_datos("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
 }
 
 void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
@@ -160,6 +160,47 @@ void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
     free(a_enviar);
     eliminar_paquete(paquete);
 
+}
+mmu_t* inicializar_mmu(){
+    mmu_t* mmu = malloc(sizeof(mmu_t));
+    mmu->tamanio_pagina = 0;
+    mmu->cantidad_entradas_tabla = 0; 
+    mmu->cantidad_niveles = 0; 
+    log_info(logger_cpu, "MMU inicializada");
+    return mmu;
+}
+void recibir_datos_de_memoria(mmu_t* mmu) {
+    uint32_t buffer_size;
+    // Recibir tamaño del buffer
+    if (recv(fd_conexion_memoria, &buffer_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+        log_error(logger_cpu, "Error al recibir el tamaño del buffer");
+        return;
+    }
+
+    // Recibir el contenido del buffer
+    void* buffer_stream = malloc(buffer_size);
+    if (recv(fd_conexion_memoria, buffer_stream, buffer_size, MSG_WAITALL) <= 0) {
+        log_error(logger_cpu, "Error al recibir el contenido del buffer");
+        free(buffer_stream);
+        return;
+    }
+
+    // Ahora sí, deserializá los datos
+    if (buffer_size < sizeof(uint32_t) * 3) {
+        log_error(logger_cpu, "El tamaño del buffer es insuficiente para deserializar los datos de memoria");
+        free(buffer_stream);
+        return;
+    }
+    void* stream = buffer_stream;
+
+    memcpy(&(mmu->tamanio_pagina), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    memcpy(&(mmu->cantidad_niveles), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    memcpy(&(mmu->cantidad_entradas_tabla), stream, sizeof(uint32_t));
+
+    log_info(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
+             mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+			 
+	free(buffer_stream);
 }
 
 //Traduce una direccion logica de W/R a su direccion fisica

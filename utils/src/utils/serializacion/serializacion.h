@@ -26,5 +26,6 @@ void* recibir_buffer(int*, int);
 void recibir_paquete(int , t_paquete* );
 t_paquete* recibir_paquete_instruccion(int);
 int recibir_operacion(int);
+void pedir_datos(char* , int );
 
 #endif // SERIALIZACION_H_
