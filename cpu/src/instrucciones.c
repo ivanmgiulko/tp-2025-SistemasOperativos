@@ -193,17 +193,30 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             //     instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
             direccion_logica = atoi(instruccion->parametros.write.direccion);
             direccion_fisica = calcular_direccion_fisica(direccion_logica);
+
+            // Mandamos el pedido de traducción
+            t_paquete* paquete_traduccion = crear_paquete_con_codigo(OBTENER_DIRECCION_FISICA);
+            agregar_a_paquete(paquete_traduccion, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_traduccion, &direccion_fisica.nro_pagina, sizeof(uint32_t));
+            agregar_a_paquete(paquete_traduccion, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            for (int i = 0; i < mmu->cantidad_niveles; i++)
+                agregar_a_paquete(paquete_traduccion, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+            int bytes_trad = paquete_traduccion->buffer->size + 2*sizeof(int);
+            void* a_enviar_trad = serializar_paquete(paquete_traduccion, bytes_trad);
+            send(fd_conexion_memoria, a_enviar_trad, bytes_trad, 0);
+
+            uint32_t direccion_fisica_final;
+            recv(fd_conexion_memoria, &direccion_fisica_final, sizeof(uint32_t), MSG_WAITALL);
+
+            // Mandamos la ejecución con la dirección física final
             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
             agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_write, &direccion_fisica.nro_pagina, sizeof(uint32_t));
-            agregar_a_paquete(paquete_write, &direccion_fisica.desplazamiento, sizeof(uint32_t));
-            for (int i = 0; i < mmu->cantidad_niveles; i++)
-                agregar_a_paquete(paquete_write, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+            agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
             bytes = paquete_write->buffer->size + 2*sizeof(int);
 
             void* a_enviar_write = serializar_paquete(paquete_write, bytes);
-            mmu->direccion_fisica_actual = &direccion_fisica; 
+            mmu->direccion_fisica_actual = &direccion_fisica_final; 
             if (ultima_escritura) 
                 free(ultima_escritura);
             ultima_escritura = strdup(instruccion->parametros.write.datos);

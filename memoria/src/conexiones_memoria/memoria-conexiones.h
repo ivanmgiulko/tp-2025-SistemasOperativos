@@ -30,6 +30,8 @@
 
 	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
 
+	void manejar_traduccion_direccion(int socket_cliente, t_paquete* paquete);
+
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 
     void enviar_proceso_terminado(uint8_t, t_paquete* , int );
