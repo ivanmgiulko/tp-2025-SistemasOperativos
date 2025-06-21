@@ -124,6 +124,18 @@ int manejar_conexion_cliente(int socket_cliente){
 				eliminar_paquete(paquete);
 				break;
 
+			case OBTENER_DIRECCION_FISICA:
+				log_info(logger_memoria, "Recibí solicitud de traducción de dirección física");
+				t_paquete* paquete_trad = recibir_paquete_instruccion(socket_cliente);
+				if (!paquete_trad) {
+					log_error(logger_memoria, "Error al recibir paquete de traducción");
+					break;
+				}
+				manejar_traduccion_direccion(socket_cliente, paquete_trad);
+				eliminar_paquete(paquete_trad);
+				eliminar_paquete(paquete);
+				break;
+
 			case WRITE_MEMORIA:
 				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
 				t_paquete* paquete_write = recibir_paquete_instruccion(socket_cliente);
@@ -269,44 +281,14 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
     //t_buffer* buffer = paquete->buffer;
 	
 	//Deserializo el paquete:
-    int desplazamiento = 0;
-	uint32_t pid;
-    t_direccion_fisica direccion;
-	pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
-	direccion.nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
-	direccion.desplazamiento = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
-	int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
-	int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
-	int tam_pagina = atoi(config_memoria->TAM_PAGINA);
-	direccion.entrada_nivel = malloc(sizeof(uint32_t ) * cantidad_niveles);
-	if (!direccion.entrada_nivel) {
-		log_error(logger_memoria, "No se pudo reservar memoria para entrada_nivel");
-	}
-	for (int i = 0; i < cantidad_niveles; i++) {
-		direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
-	}
-	char* datos = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
-	int tamanio = strlen(datos);
+    int offset = 0;
+	uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	char* datos = leer_string_desde_buffer(paquete->buffer, &offset);
 
-    log_info(logger_memoria, "[MEMORIA] WRITE recibido - Página: %d | Desplazamiento: %d | Datos: %s", direccion.nro_pagina,direccion.desplazamiento, datos);
-
-	// Busco proceso en memoria - Busco marco coincidiente con la página en tabla - Calculo dirección física - Escribo en memoria
-	t_proceso_en_memoria* proceso_encontrado = buscar_proceso_en_memoria(pid);
-	if (proceso_encontrado == NULL) {
-        log_error(logger_memoria, "No se pudo encontrar el proceso con PID %d", pid);
-        return;
-    }
-
-    int marco = buscar_marco_en_tabla(proceso_encontrado->tabla_primera, direccion.nro_pagina, cantidad_niveles, entradas_por_tabla);
-    if (marco == -1) {
-        log_error(logger_memoria, "No se pudo encontrar el marco para la página %d del proceso de PID %d", direccion.nro_pagina, pid);
-        return;
-    }
-
-	int direccion_fisica = marco * tam_pagina + direccion.desplazamiento;
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 	// Log obligatorio
-	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio);
+	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, strlen(datos));
 	
     // Enviar confirmación de éxito al cliente
 	t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
@@ -322,7 +304,7 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
 	log_info(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
 
-    free(direccion.entrada_nivel);
+    // free(direccion.entrada_nivel);
 	free(datos);
 	free(a_enviar_write);
 	eliminar_paquete(paquete_confirmacion_write);
@@ -392,6 +374,40 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	free(datos_leidos);
 	free(datos_como_string);
 	eliminar_paquete(paquete_confirmacion_read);
+}
+
+void manejar_traduccion_direccion(int socket_cliente, t_paquete* paquete) {
+    int desplazamiento = 0;
+    uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+    uint32_t nro_pagina = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+    uint32_t despl = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+    
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    
+    uint32_t* entradas = malloc(sizeof(uint32_t) * cantidad_niveles);
+    for (int i = 0; i < cantidad_niveles; i++)
+        entradas[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "PID %d no encontrado para traducción", pid);
+        return;
+    }
+
+    int marco = buscar_marco_en_tabla(proceso->tabla_primera, nro_pagina, cantidad_niveles, entradas_por_tabla);
+    if (marco == -1) {
+        log_error(logger_memoria, "No se pudo traducir dirección lógica para PID %d", pid);
+        return;
+    }
+
+    uint32_t direccion_fisica = marco * tam_pagina + despl;
+    log_trace(logger_memoria, "PID: %d - Traducción final: marco %d * %d + %d = %d",
+        pid, marco, tam_pagina, despl, direccion_fisica);
+
+    send(socket_cliente, &direccion_fisica, sizeof(uint32_t), 0);
+    free(entradas);
 }
 
 void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
