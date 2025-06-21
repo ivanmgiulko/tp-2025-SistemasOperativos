@@ -172,8 +172,11 @@ t_instruccion* decode(char* linea) {
 void ejecutar_instruccion(t_instruccion* instruccion) {
     int bytes;
     int direccion_logica; 
-    t_direccion_fisica direccion_fisica;
+    t_pre_direccion_fisica pre_direccion_fisica;
+    uint32_t direccion_fisica_final;
     t_paquete* paquete = malloc(sizeof(t_paquete));
+    t_paquete* paquete_solicitud_marco = malloc(sizeof(t_paquete));
+    void* a_enviar_peticion_marco;
     crear_buffer(paquete);
         log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
 
@@ -192,22 +195,26 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             //     pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
             //     instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
             direccion_logica = atoi(instruccion->parametros.write.direccion);
-            direccion_fisica = calcular_direccion_fisica(direccion_logica);
+            pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
 
-            // Mandamos el pedido de traducción
-            t_paquete* paquete_traduccion = crear_paquete_con_codigo(OBTENER_DIRECCION_FISICA);
-            agregar_a_paquete(paquete_traduccion, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_traduccion, &direccion_fisica.nro_pagina, sizeof(uint32_t));
-            agregar_a_paquete(paquete_traduccion, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            // Mandamos el pedido de marco correspondiente
+            paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+            agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
+            //agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.desplazamiento, sizeof(uint32_t));
             for (int i = 0; i < mmu->cantidad_niveles; i++)
-                agregar_a_paquete(paquete_traduccion, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
-            int bytes_trad = paquete_traduccion->buffer->size + 2*sizeof(int);
-            void* a_enviar_trad = serializar_paquete(paquete_traduccion, bytes_trad);
-            send(fd_conexion_memoria, a_enviar_trad, bytes_trad, 0);
+                agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+            bytes = paquete_solicitud_marco->buffer->size + 2*sizeof(int);
+            a_enviar_peticion_marco = serializar_paquete(paquete_solicitud_marco, bytes);
+            send(fd_conexion_memoria, a_enviar_peticion_marco, bytes, 0);
 
-            uint32_t direccion_fisica_final;
-            recv(fd_conexion_memoria, &direccion_fisica_final, sizeof(uint32_t), MSG_WAITALL);
+            free(a_enviar_peticion_marco);
+            eliminar_paquete(paquete_solicitud_marco);
 
+            uint32_t marco_correspondiente_a_pagina_write;
+            recv(fd_conexion_memoria, &marco_correspondiente_a_pagina_write, sizeof(uint32_t), MSG_WAITALL);
+
+            direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente_a_pagina_write, pre_direccion_fisica);
             // Mandamos la ejecución con la dirección física final
             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
             agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
@@ -216,13 +223,13 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             bytes = paquete_write->buffer->size + 2*sizeof(int);
 
             void* a_enviar_write = serializar_paquete(paquete_write, bytes);
-            mmu->direccion_fisica_actual = &direccion_fisica_final; 
+            mmu->ultima_direccion_fisica_calculada = direccion_fisica_final; 
             if (ultima_escritura) 
                 free(ultima_escritura);
             ultima_escritura = strdup(instruccion->parametros.write.datos);
             send(fd_conexion_memoria, a_enviar_write, bytes, 0);
 
-            free(direccion_fisica.entrada_nivel);
+            free(pre_direccion_fisica.entrada_nivel);
             free(a_enviar_write);
             eliminar_paquete(paquete_write);
             
@@ -238,22 +245,38 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             // pcb_actual->pid,obtener_nombre_instruccion(instruccion->tipo),
             // instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio);
             direccion_logica = atoi(instruccion->parametros.read.direccion);
-            direccion_fisica = calcular_direccion_fisica(direccion_logica);
+            pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
+
+             // Mandamos el pedido de marco correspondiente
+            paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+            agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
+            //agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.desplazamiento, sizeof(uint32_t));
+            for (int i = 0; i < mmu->cantidad_niveles; i++)
+                agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+            bytes = paquete_solicitud_marco->buffer->size + 2*sizeof(int);
+            a_enviar_peticion_marco = serializar_paquete(paquete_solicitud_marco, bytes);
+            send(fd_conexion_memoria, a_enviar_peticion_marco, bytes, 0);
+
+            free(a_enviar_peticion_marco);
+            eliminar_paquete(paquete_solicitud_marco);
+
+            uint32_t marco_correspondiente_a_pagina_read;
+            recv(fd_conexion_memoria, &marco_correspondiente_a_pagina_read, sizeof(uint32_t), MSG_WAITALL);
+
+            direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente_a_pagina_read, pre_direccion_fisica);
+            mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
+
             t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
             agregar_a_paquete(paquete_read, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_read, &direccion_fisica.nro_pagina, sizeof(uint32_t));
-            agregar_a_paquete(paquete_read, &direccion_fisica.desplazamiento, sizeof(uint32_t));
+            agregar_a_paquete(paquete_read, &direccion_fisica_final, sizeof(uint32_t));
             agregar_a_paquete(paquete_read, &instruccion->parametros.read.tamanio, sizeof(uint32_t));
-            for (int i = 0; i < mmu->cantidad_niveles; i++)
-                agregar_a_paquete(paquete_read, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t));
             bytes = paquete_read->buffer->size + 2*sizeof(int);
             void* a_enviar_read = serializar_paquete(paquete_read, bytes);
-           //     agregar_a_paquete(paquete_write, &direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
-            mmu->direccion_fisica_actual = &direccion_fisica; 
 
             send(fd_conexion_memoria, a_enviar_read, bytes, 0);
 
-            free(direccion_fisica.entrada_nivel);
+            free(pre_direccion_fisica.entrada_nivel);
             free(a_enviar_read);
             eliminar_paquete(paquete_read);
             

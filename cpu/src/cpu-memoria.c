@@ -44,8 +44,8 @@ int manejar_conexion_memoria(){
 					free(mensaje_confirmacion_write);
 					break;
 				}
-			log_info(logger_cpu, "PID: <%d> - Accion: <ESCRIBIR> - Direccion Fisica: <%d%d%d> - Valor : <%s>", pcb_actual->pid, mmu->direccion_fisica_actual->nro_pagina, 
-				mmu->direccion_fisica_actual->desplazamiento, mmu->direccion_fisica_actual->entrada_nivel[0], ultima_escritura);
+			//log obligatorio
+			log_info(logger_cpu, "PID: <%d> - Accion: <ESCRIBIR> - Direccion Fisica: <%d> - Valor : <%s>",pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_escritura);
 			
 
 			pcb_actual->pc++;
@@ -70,8 +70,8 @@ int manejar_conexion_memoria(){
 					break;
 				}
 
-			log_info(logger_cpu, "PID: <%d> - Accion: <LEER> - Direccion Fisica: <%d%d%d> - Valor : <%s>", pcb_actual->pid, mmu->direccion_fisica_actual->nro_pagina, 
-				mmu->direccion_fisica_actual->desplazamiento, mmu->direccion_fisica_actual->entrada_nivel[0], mensaje_confirmacion_read);
+			//log_obligatorio
+			log_info(logger_cpu, "PID: <%d> - Accion: <LEER> - Direccion Fisica: <%d> - Valor : <%s>", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje_confirmacion_read);
 
 			pcb_actual->pc++;
 			sem_wait(&sem_read);

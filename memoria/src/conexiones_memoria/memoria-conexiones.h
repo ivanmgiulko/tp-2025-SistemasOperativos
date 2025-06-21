@@ -30,7 +30,7 @@
 
 	void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
 
-	void manejar_traduccion_direccion(int socket_cliente, t_paquete* paquete);
+	void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete);
 
 	void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
 
@@ -46,5 +46,6 @@
 
 	void enviar_datos_a_cpu(int );
 					
+	uint32_t* calcular_entradas_por_nivel(uint32_t nro_pagina, int cantidad_niveles, int entradas_por_tabla);
 	
 #endif // MEMORIA_CONEXIONES_H_

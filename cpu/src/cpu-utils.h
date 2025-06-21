@@ -34,7 +34,7 @@ typedef struct{
     uint32_t tamanio_pagina;
     uint32_t cantidad_entradas_tabla;
     uint32_t cantidad_niveles;
-    t_direccion_fisica* direccion_fisica_actual; 
+    uint32_t ultima_direccion_fisica_calculada;
 }mmu_t;
 
 typedef struct{
@@ -51,5 +51,15 @@ extern tlb_t* tlb;
 tlb_t* inicializar_tlb(uint32_t);
 mmu_t* inicializar_mmu();
 void recibir_datos_de_memoria(mmu_t*);
+
+
+typedef struct {
+    uint32_t  nro_pagina;
+    uint32_t  desplazamiento;
+    uint32_t  * entrada_nivel; // entradas de cada nivel
+} t_pre_direccion_fisica;
+
+t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica);
+uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica);
 extern tlb_t* tlb;
 #endif // CPU_UTILS_H

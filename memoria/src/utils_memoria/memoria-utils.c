@@ -26,6 +26,20 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     return memoria;
 }
 
+void inicializar_swap() {
+    char* path_swap = config_memoria->PATH_SWAPFILE;
+
+    FILE* archivo_swap = fopen(path_swap, "w+b");
+    if (!archivo_swap) {
+        log_error(logger_memoria, "No se pudo crear el archivo SWAP.");
+        exit(EXIT_FAILURE);
+    }
+
+    fclose(archivo_swap);
+
+    log_info(logger_memoria, "SWAP inicializado en: %s", path_swap);
+}
+
 //hecho por nosotros
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
@@ -353,25 +367,21 @@ int buscar_marco_libre(t_memoria_del_sistema* memoria) {
     return -1;
 }
 
-int buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, int nro_pagina, int cantidad_niveles, int entradas_por_tabla) {
+uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
     t_tabla_pagina* actual = tabla_primera;
-    int pagina_restante = nro_pagina;
 
-    // Recorremos hasta el nivel final
+    // Recorremos los niveles intermedios
     for (int nivel = 0; nivel < cantidad_niveles - 1; nivel++) {
-        int indice = pagina_restante / (int)pow(entradas_por_tabla, cantidad_niveles - 1 - nivel);
-        pagina_restante %= (int)pow(entradas_por_tabla, cantidad_niveles - 1 - nivel);
-
+        int indice = entradas_por_nivel[nivel];
         if (indice >= actual->cant_entradas || actual->subtablas[indice] == NULL) {
             log_error(logger_memoria, "Entrada de tabla de nivel intermedio inválida (nivel %d, índice %d)", nivel, indice);
             return -1;
         }
-
         actual = actual->subtablas[indice];
     }
 
-    // En nivel final, buscamos la entrada que representa la página lógica
-    int entrada_final = pagina_restante;
+    // En el nivel final, buscamos la entrada correspondiente
+    int entrada_final = entradas_por_nivel[cantidad_niveles - 1];
     if (entrada_final >= actual->cant_entradas) {
         log_error(logger_memoria, "Entrada de nivel final inválida: %d", entrada_final);
         return -1;
