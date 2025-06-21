@@ -4,19 +4,10 @@
 #include "./cpu-gestor.h"
 #include "./instrucciones.h"
 
-typedef struct{
-    uint32_t tamanio_pagina;
-    uint32_t cantidad_entradas_tabla;
-    uint32_t cantidad_niveles;
-}mmu_t;
 
-extern mmu_t* mmu;
 
-void recibir_datos_de_memoria(mmu_t*);
 
 void pedir_instruccion_a_memoria(t_peticion_instruccion*);
-
-mmu_t* inicializar_mmu();
 
 void manejar_respuesta_de_instruccion(t_paquete* paquete);
 
@@ -38,5 +29,16 @@ void enviar_proceso_desalojado(int , int , int );
     } t_direccion_fisica;
 
     t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
+
+typedef struct{
+    uint32_t tamanio_pagina;
+    uint32_t cantidad_entradas_tabla;
+    uint32_t cantidad_niveles;
+    t_direccion_fisica* direccion_fisica_actual; 
+}mmu_t;
+
+extern mmu_t* mmu;
+mmu_t* inicializar_mmu();
+void recibir_datos_de_memoria(mmu_t*);
 
 #endif // CPU_UTILS_H

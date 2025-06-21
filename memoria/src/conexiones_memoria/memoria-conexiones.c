@@ -377,7 +377,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
 	paquete_confirmacion_read->codigo_operacion = READ_MEMORIA;
 	paquete_confirmacion_read->buffer = malloc(sizeof(t_buffer));
-	char* mensaje_confirmacion_read = "READ completado con éxito";
+	char* mensaje_confirmacion_read = datos_como_string;
 	paquete_confirmacion_read->buffer->size = strlen(mensaje_confirmacion_read) + 1;
 	paquete_confirmacion_read->buffer->stream = malloc(paquete_confirmacion_read->buffer->size);
 	memcpy(paquete_confirmacion_read->buffer->stream, mensaje_confirmacion_read, paquete_confirmacion_read->buffer->size);
@@ -385,7 +385,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	int bytes_confirmacion_read = paquete_confirmacion_read->buffer->size + 2 * sizeof(int);
 	void* a_enviar_read = serializar_paquete(paquete_confirmacion_read, bytes_confirmacion_read);
 	send(socket_cliente, a_enviar_read, bytes_confirmacion_read, 0);
-	log_info(logger_memoria, "Enviando confirmación de READ a CPU: %s", mensaje_confirmacion_read);
+	log_info(logger_memoria, "Enviando lectura de READ a CPU: %s", mensaje_confirmacion_read);
 
 	free(direccion.entrada_nivel);
 	free(a_enviar_read);

@@ -20,5 +20,5 @@ int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;
 int valor_sem_cpu;
-
+char* ultima_escritura = NULL;
 #endif // CPU_H_
