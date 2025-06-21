@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
     char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	char* puerto_memoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
     char* ip_memoria = config_get_string_value(config_cpu, "IP_MEMORIA");
-
+    uint32_t maximas_entradas_tlb = atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
 	/* ---------------- LOGGING ---------------- */
 	char *directorioLogger = string_new(); // Gloria eterna al creador de las commons
 	string_append(&directorioLogger,"cpu-");
@@ -31,6 +31,7 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
 	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
 	mmu = inicializar_mmu();	
+	tlb = inicializar_tlb(maximas_entradas_tlb);
 
 	//	IP_MEMORIA=127.0.0.4
 	//	PUERTO_MEMORIA=40074

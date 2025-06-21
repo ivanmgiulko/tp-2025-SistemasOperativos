@@ -236,3 +236,12 @@ t_direccion_fisica calcular_direccion_fisica(int direccion_logica) {
 			  direccion_logica, resultado.nro_pagina, resultado.desplazamiento);
     return resultado;
 }
+
+tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
+	tlb_t* tlb = malloc(sizeof(tlb_t));
+	tlb->cantidad_entradas = maximas_entradas_tlb;
+	tlb->entradas = malloc(sizeof(entradas_tlb_t) * tlb->cantidad_entradas);
+
+	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
+	return tlb;
+}

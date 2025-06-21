@@ -22,13 +22,13 @@ void _handshake_kernel_con_cpu_id(int, char*);
 void check_interrupt();
 void enviar_proceso_desalojado(int , int , int );
 
-    typedef struct {
-        uint32_t  nro_pagina;
-        uint32_t  desplazamiento;
-        uint32_t  * entrada_nivel; // entradas de cada nivel
-    } t_direccion_fisica;
+typedef struct {
+    uint32_t  nro_pagina;
+    uint32_t  desplazamiento;
+    uint32_t  * entrada_nivel; // entradas de cada nivel
+} t_direccion_fisica;
 
-    t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
+t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
 
 typedef struct{
     uint32_t tamanio_pagina;
@@ -37,8 +37,19 @@ typedef struct{
     t_direccion_fisica* direccion_fisica_actual; 
 }mmu_t;
 
+typedef struct{
+    uint32_t nro_pagina;
+    uint32_t marco_asociado;
+}entradas_tlb_t;
+typedef struct{
+    entradas_tlb_t* entradas;
+    uint32_t cantidad_entradas;
+}tlb_t;
+
 extern mmu_t* mmu;
+extern tlb_t* tlb;
+tlb_t* inicializar_tlb(uint32_t);
 mmu_t* inicializar_mmu();
 void recibir_datos_de_memoria(mmu_t*);
-
+extern tlb_t* tlb;
 #endif // CPU_UTILS_H

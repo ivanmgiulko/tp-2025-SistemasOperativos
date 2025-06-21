@@ -13,6 +13,7 @@ sem_t sem_cpu;
 sem_t sem_read;
 sem_t sem_write;
  mmu_t* mmu;
+ tlb_t* tlb;
 sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 bool flag_interrupt = false;
