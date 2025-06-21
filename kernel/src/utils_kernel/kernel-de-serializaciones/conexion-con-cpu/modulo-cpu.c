@@ -108,3 +108,26 @@ void enviar_pid_a_desalojar(int socket_cliente) {
     free(a_enviar);
     free(paquete);
 }
+
+// void enviar_pid_a_desalojar(int socket_cliente) {
+//     t_buffer* buffer = malloc(sizeof(t_buffer));
+//     buffer->size = sizeof(uint8_t); 
+//     buffer->stream = malloc(buffer->size);
+//     uint32_t offset = 0;
+
+//     t_paquete* paquete = malloc(sizeof(t_paquete));
+//     paquete->codigo_operacion = PROCESO_DESALOJAR;
+//     paquete->buffer = buffer;
+//     void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
+//     offset = 0;
+
+//     memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));   offset += sizeof(int);
+//     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));  offset += sizeof(uint32_t);
+//     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
+//     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+
+//     free(a_enviar);
+//     eliminar_paquete(paquete);
+    
+    
+// }

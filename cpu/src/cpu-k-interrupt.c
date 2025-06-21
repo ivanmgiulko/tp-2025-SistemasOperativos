@@ -16,12 +16,12 @@ int manejar_conexion_kernel_interrupt(){
 			
 			case PROCESO_DESALOJAR:
 
-				recibir_paquete(fd_conexion_kernel_interrupt, paquete); 
+				// recibir_paquete(fd_conexion_kernel_interrupt, paquete); 
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
 
-				eliminar_paquete(paquete);
+				free(paquete);
 			
 				break;
 				
