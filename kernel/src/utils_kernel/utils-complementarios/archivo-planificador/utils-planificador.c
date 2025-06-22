@@ -71,6 +71,16 @@ void _iniciar_cuando_apreta_enter()
 			free(leido);
 		}
 	} while(!lineaVacia);
+    free(leido);
+
+    pthread_t hilo_planificador_corto_plazo;
+    pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_corto_plazo, NULL);
+    pthread_detach(hilo_planificador_corto_plazo);
+
+    pthread_t hilo_planificador_mediano_plazo;
+ 	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
+	pthread_detach(hilo_planificador_mediano_plazo);
+
 }
 
 void crear_proceso_cero(char* path, int tamanio)

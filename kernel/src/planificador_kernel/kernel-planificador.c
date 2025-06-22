@@ -34,19 +34,10 @@ void iniciar_planificacion_largo_plazo(){
 
     _iniciar_cuando_apreta_enter();
 
-    pthread_t hilo_planificador_corto_plazo;
-    pthread_create(&hilo_planificador_corto_plazo, NULL, (void*)iniciar_planificador_corto_plazo, NULL);
-    pthread_detach(hilo_planificador_corto_plazo);
-
-    pthread_t hilo_planificador_mediano_plazo;
- 	pthread_create(&hilo_planificador_mediano_plazo, NULL, (void*)iniciar_planificador_mediano_plazo, NULL);
-	pthread_detach(hilo_planificador_mediano_plazo);
-
     t_pcb* proceso_1 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt", 500, asignar_pid(), 50000);
     log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", proceso_1->pid);
     pasar_pcb_a_new(proceso_1);
     
-
     t_pcb* proceso_2 = iniciarPCB("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES2.txt", 500, asignar_pid(), 50);
     log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", proceso_2->pid);
     pasar_pcb_a_new(proceso_2);
