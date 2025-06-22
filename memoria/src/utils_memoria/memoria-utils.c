@@ -160,7 +160,7 @@ void informar_metricas_memoria(int pid){
 }
 
 int finalizar_proceso(int pid) {
-    encontrado = buscar_indice_de_proceso_en_memoria(pid);
+    int encontrado = buscar_indice_de_proceso_en_memoria(pid);
 
     // Liberar instrucciones del proceso
     pthread_mutex_lock(&memoria_del_sistema->mutex); 
