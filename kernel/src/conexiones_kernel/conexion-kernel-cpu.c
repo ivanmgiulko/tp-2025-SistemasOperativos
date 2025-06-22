@@ -64,6 +64,8 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     _info_proceso_bloqueado->pid    = _proceso_a_bloquear->pid;
                     _info_proceso_bloqueado->tiempo = _syscall_io_recibida.tiempo;
 
+                    free(_syscall_io_recibida.dispositivo);
+
                     encolar_pcb_en_interfaz(interfaz_disponible, _info_proceso_bloqueado);
     
                     pasar_de_exec_a_blocked(_proceso_a_bloquear); 
