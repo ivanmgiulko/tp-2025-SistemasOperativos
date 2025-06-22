@@ -92,6 +92,14 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
 			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
 
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnBlocked);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnExec);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnExit);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnNew);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnReady);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked);
+			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspReady);
+
 			free(proceso_finalizado->metricas_estado);
 			free(proceso_finalizado->metricas_tiempo);
 			free(proceso_finalizado);
