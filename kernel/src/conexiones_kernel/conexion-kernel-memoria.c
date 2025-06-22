@@ -6,7 +6,7 @@
 #include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
 // #include <utils_kernel/utils-complementarios/conexion-con-memoria
 
-char* recibir_respuestaMemoria(int socket_cliente) { 
+char* recibir_respuesta_memoria(int socket_cliente) { 
     int size;
 	char* buffer = recibir_buffer(&size, socket_cliente);
 	return buffer;
@@ -23,7 +23,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case PROCESO_MEMORIA:
-			char* validacionMemo = recibir_respuestaMemoria(socket_cliente);
+			char* validacionMemo = recibir_respuesta_memoria(socket_cliente);
 			if(strcmp(validacionMemo, "No hay espacio en memoria") == 0) {
 				// El proceso sigue en la cola NEW
 				return 0;
@@ -40,14 +40,18 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			t_pcb* proceso_desbloqueado = _sacar_pcb_de_cola(resp_dump->pid, estado_blocked);
 
 			if(resp_dump->respuesta == false){
-				
+
+				free(resp_dump);
 				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
 				log_debug(logger_kernel, "Fallo en el DUMP");
+				
 
 			} else {
-				
+
+				free(resp_dump);
 				pasar_pcb_blocked_a_ready(proceso_desbloqueado);
 				log_debug(logger_kernel, "Acierto en el DUMP");
+				
 			}
 			return EXIT_SUCCESS;
 
@@ -87,7 +91,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
 			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
 
-			
+
 			free(proceso_finalizado->metricas_estado);
 			free(proceso_finalizado->metricas_tiempo);
 			free(proceso_finalizado);
