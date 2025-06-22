@@ -28,7 +28,7 @@ typedef struct {
     uint32_t  * entrada_nivel; // entradas de cada nivel
 } t_direccion_fisica;
 
-t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
+// t_direccion_fisica calcular_direccion_fisica(int direccion_logica);
 
 typedef struct{
     uint32_t tamanio_pagina;
@@ -40,6 +40,7 @@ typedef struct{
 typedef struct{
     uint32_t nro_pagina;
     uint32_t marco_asociado;
+    int bit_en_uso;
 }entradas_tlb_t;
 typedef struct{
     entradas_tlb_t* entradas;
@@ -62,4 +63,11 @@ typedef struct {
 t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica);
 uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica);
 extern tlb_t* tlb;
+
+
+int esta_en_tlb(uint32_t );
+uint32_t tlb_miss(t_pre_direccion_fisica);
+void agregar_a_tlb(uint32_t , uint32_t );
+
+
 #endif // CPU_UTILS_H

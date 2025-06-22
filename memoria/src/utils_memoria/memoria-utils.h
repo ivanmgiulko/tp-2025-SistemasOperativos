@@ -90,4 +90,7 @@ void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria,
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
 uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
+
+void  inicializar_swap();
+
 #endif // MEMORIA_UTILS_H_

@@ -244,3 +244,72 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 	log_debug(logger_cpu, "Dirección física final calculada: %d", direccion_fisica_final);
 	return direccion_fisica_final;
 }
+tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
+	tlb_t* tlb = malloc(sizeof(tlb_t));
+	tlb->cantidad_entradas = maximas_entradas_tlb;
+	tlb->entradas = malloc(sizeof(entradas_tlb_t) * tlb->cantidad_entradas);
+	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+		tlb->entradas[i].bit_en_uso = 0;
+	}
+	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
+	return tlb;
+}
+void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante){
+	
+ 	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+        if (tlb->entradas[i].bit_en_uso == 0) {
+            tlb->entradas[i].nro_pagina = nro_pagina_entrante;
+            tlb->entradas[i].marco_asociado = marco_asociado_entrante;
+            log_info(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
+            return;
+        }
+    }
+    log_warning(logger_cpu, "No hay espacio libre en la TLB para agregar Pagina <%d>", nro_pagina_entrante);
+
+}
+void limpiar_tlb(){
+	for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+		tlb->entradas[i].bit_en_uso = 1;
+
+	}
+}
+int esta_en_tlb(uint32_t nro_pagina){
+	int marco_asociado = 0;
+	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+		if ((tlb->entradas[i].nro_pagina == nro_pagina) && tlb->entradas[i].bit_en_uso == 1) {
+			marco_asociado = tlb->entradas[i].marco_asociado;
+			log_info(logger_cpu, "TLB HIT: PID <%d> - TLB HIT - Pagina: <%d>",pcb_actual->pid, nro_pagina);
+			// TLB Hit: “PID: <PID> - TLB HIT - Pagina: <NUMERO_PAGINA>”
+
+			return marco_asociado;
+		}
+	}
+	log_info(logger_cpu, "TLB MISS: Página %d no encontrada en TLB", nro_pagina);
+	return -1;
+}
+uint32_t tlb_miss(t_pre_direccion_fisica pre_direccion_fisica) {
+	// TLB Miss: “PID: <PID> - TLB MISS - Pagina: <NUMERO_PAGINA>”
+	uint32_t marco_correspondiente;
+	t_paquete* paquete_solicitud_marco;
+	void* a_enviar_peticion_marco;
+	uint32_t bytes = 0;
+ 			paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+            agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
+            agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
+            //agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.desplazamiento, sizeof(uint32_t));
+            for (int i = 0; i < mmu->cantidad_niveles; i++)
+                agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+            bytes = paquete_solicitud_marco->buffer->size + 2*sizeof(int);
+            a_enviar_peticion_marco = serializar_paquete(paquete_solicitud_marco, bytes);
+            send(fd_conexion_memoria, a_enviar_peticion_marco, bytes, 0);
+
+            free(a_enviar_peticion_marco);
+            eliminar_paquete(paquete_solicitud_marco);
+
+            recv(fd_conexion_memoria, &marco_correspondiente, sizeof(uint32_t), MSG_WAITALL);
+
+			agregar_a_tlb(pre_direccion_fisica.nro_pagina, marco_correspondiente);
+
+	return marco_correspondiente;
+}
+

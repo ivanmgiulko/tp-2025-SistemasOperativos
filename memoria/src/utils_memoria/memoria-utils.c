@@ -366,6 +366,34 @@ int buscar_marco_libre(t_memoria_del_sistema* memoria) {
     }
     return -1;
 }
+uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
+    t_tabla_pagina* actual = tabla_primera;
+
+    // Recorremos los niveles intermedios
+    for (int nivel = 0; nivel < cantidad_niveles - 1; nivel++) {
+        int indice = entradas_por_nivel[nivel];
+        if (indice >= actual->cant_entradas || actual->subtablas[indice] == NULL) {
+            log_error(logger_memoria, "Entrada de tabla de nivel intermedio inválida (nivel %d, índice %d)", nivel, indice);
+            return -1;
+        }
+        actual = actual->subtablas[indice];
+    }
+
+    // En el nivel final, buscamos la entrada correspondiente
+    int entrada_final = entradas_por_nivel[cantidad_niveles - 1];
+    if (entrada_final >= actual->cant_entradas) {
+        log_error(logger_memoria, "Entrada de nivel final inválida: %d", entrada_final);
+        return -1;
+    }
+
+    t_entrada_pagina entrada = actual->entradas[entrada_final];
+    if (!entrada.presente) {
+        log_error(logger_memoria, "Página no presente en memoria: %d", entrada.num_pagina);
+        return -1;
+    }
+
+    return entrada.marco;
+}
 
 uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
     t_tabla_pagina* actual = tabla_primera;
