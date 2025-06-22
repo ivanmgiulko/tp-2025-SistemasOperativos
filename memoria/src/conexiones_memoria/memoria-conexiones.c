@@ -22,17 +22,22 @@ int manejar_conexion_cliente(int socket_cliente){
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
 				recibir_mensaje(socket_cliente, logger_memoria);
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				free(paquete);
 				break;
 			case CPU_PIDE_DATOS:
 				log_info(logger_memoria, "Recibí petición de datos desde CPU");
 				recibir_mensaje(socket_cliente, logger_memoria);
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				enviar_datos_a_cpu(socket_cliente);
 				log_info(logger_memoria, "Datos enviados a CPU");
 				free(paquete);
 				break;
 			case PROCESO_MEMORIA:
-
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
 				
 				recibir_paquete(socket_cliente, paquete);
@@ -69,9 +74,11 @@ int manejar_conexion_cliente(int socket_cliente){
 				break; 
 		
 			case PROCESO_SUSPENDIDO_MEMORIA:
-
+				
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
 
+				//RETARDO DE MEMORIA
+				usleep( atoi(config_memoria->RETARDO_SWAP) * 1000);
 				recibir_paquete(socket_cliente, paquete);
 			
 				t_pcbMemoria* proceso_suspendido = deserializarProceso(paquete->buffer);
@@ -87,6 +94,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case PROCESO_FINALIZAR:
+				
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 
 				recibir_paquete(socket_cliente, paquete);
 
@@ -109,6 +119,9 @@ int manejar_conexion_cliente(int socket_cliente){
 			
 				break; 
 			case INSTRUCCION:
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
+
 				log_info(logger_memoria, "Recibi la petición de instruccion desde CPU");
 				t_paquete* paquete_tmp = recibir_paquete_instruccion(socket_cliente);
 				if (paquete_tmp == NULL) {
@@ -125,6 +138,10 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case OBTENER_MARCO_CORRESPONDIENTE:
+				//RETARDO DE MEMORIA
+				retardo_memoria *= ;
+				usleep( retardo_memoria * atoi(config_memoria->CANTIDAD_NIVELES) * 1000);
+
 				log_info(logger_memoria, "Recibí solicitud de ACCESO A TABLA DE PAGINAS	");
 				t_paquete* paquete_marco= recibir_paquete_instruccion(socket_cliente);
 				if (!paquete_marco) {
@@ -137,6 +154,8 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case WRITE_MEMORIA:
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				log_info(logger_memoria, "Recibí paquete de ejecución de WRITE");
 				t_paquete* paquete_write = recibir_paquete_instruccion(socket_cliente);
 				if (paquete_write == NULL) {
@@ -150,6 +169,8 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case READ_MEMORIA:
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				log_info(logger_memoria, "Recibí paquete de ejecución de READ");
 				t_paquete* paquete_read = recibir_paquete_instruccion(socket_cliente);
 				if (paquete_read == NULL) {
@@ -163,7 +184,8 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 
 			case PROCESO_DUMPEAR:
-
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
 				log_info(logger_memoria, "Recibí paquete de ejecución de DUMP_MEMORY");
 				recibir_paquete(socket_cliente, paquete);
 				if (paquete == NULL) {
@@ -384,7 +406,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
         log_error(logger_memoria, "No se pudo encontrar el marco solicitado de la pagina %d para PID %d",direccion.nro_pagina, pid);
         return;
     }
-
+	
     log_trace(logger_memoria, "PID: %d - Página: %d - Marco: %d", pid, direccion.nro_pagina, marco);
 
 	//METRICAS
