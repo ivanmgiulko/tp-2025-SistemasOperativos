@@ -91,7 +91,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
 			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
 
-
 			free(proceso_finalizado->metricas_estado);
 			free(proceso_finalizado->metricas_tiempo);
 			free(proceso_finalizado);
@@ -101,6 +100,8 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 			sem_post(&bin_proceso_eliminar);
 			
+			free(offset);
+
 			eliminar_paquete(paquete);
 			
 			return EXIT_SUCCESS;
