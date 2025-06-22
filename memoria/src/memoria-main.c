@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
     cantMemoria = atoi(config_memoria->TAM_MEMORIA);
     memoria_del_sistema = malloc(sizeof(t_memoria_del_sistema));
     *memoria_del_sistema = crear_memoria_del_sistema();
-    retardo_ms = atoi(config_memoria->RETARDO_MEMORIA);
+    retardo_memoria = atoi(config_memoria->RETARDO_MEMORIA);
     procesos_en_swap = list_create();
     inicializar_swap();
 

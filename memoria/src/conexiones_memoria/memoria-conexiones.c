@@ -139,7 +139,7 @@ int manejar_conexion_cliente(int socket_cliente){
 
 			case OBTENER_MARCO_CORRESPONDIENTE:
 				//RETARDO DE MEMORIA
-				retardo_memoria *= ;
+
 				usleep( retardo_memoria * atoi(config_memoria->CANTIDAD_NIVELES) * 1000);
 
 				log_info(logger_memoria, "Recibí solicitud de ACCESO A TABLA DE PAGINAS	");
@@ -411,7 +411,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
-	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesTP + config_memoria->CANTIDAD_NIVELES;
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesTP += config_memoria->CANTIDAD_NIVELES;
 
     send(socket_cliente, &marco, sizeof(uint32_t), 0);
 	free(direccion.entrada_nivel);
