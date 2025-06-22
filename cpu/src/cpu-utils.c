@@ -254,22 +254,39 @@ tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
 	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
 	return tlb;
 }
-void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante){
+void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante, algoritmo_tlb_t algoritmo){
 	
  	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
         if (tlb->entradas[i].bit_en_uso == 0) {
             tlb->entradas[i].nro_pagina = nro_pagina_entrante;
             tlb->entradas[i].marco_asociado = marco_asociado_entrante;
+			tlb->entradas[i].bit_en_uso = 1; 
             log_info(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
-            return;
-        }
-    }
-    log_warning(logger_cpu, "No hay espacio libre en la TLB para agregar Pagina <%d>", nro_pagina_entrante);
+            log_warning(logger_cpu, "TLB: bit en uso <%d> - Marco <%d> en numero de pagina <%d>", tlb->entradas[i].bit_en_uso, tlb->entradas[i].marco_asociado, 
+						tlb->entradas[i].nro_pagina);
 
+			return;
+        }
+	}
+	switch (algoritmo)
+	{
+	case FIFO:
+        agregar_a_tlb_fifo(nro_pagina_entrante, marco_asociado_entrante);
+
+		break;
+	case LRU:
+	    agregar_a_tlb_lru(nro_pagina_entrante, marco_asociado_entrante);
+
+		break;
+	default:
+			log_error(logger_cpu, "Algoritmo re raro che....");
+		break;
+	}
+    
 }
 void limpiar_tlb(){
 	for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-		tlb->entradas[i].bit_en_uso = 1;
+		tlb->entradas[i].bit_en_uso = 0;
 
 	}
 }
@@ -308,8 +325,39 @@ uint32_t tlb_miss(t_pre_direccion_fisica pre_direccion_fisica) {
 
             recv(fd_conexion_memoria, &marco_correspondiente, sizeof(uint32_t), MSG_WAITALL);
 
-			agregar_a_tlb(pre_direccion_fisica.nro_pagina, marco_correspondiente);
+			agregar_a_tlb(pre_direccion_fisica.nro_pagina, marco_correspondiente, algoritmo);
 
 	return marco_correspondiente;
 }
 
+algoritmo_tlb_t algoritmo_from_string(const char* str) {
+    if (strcmp(str, "FIFO") == 0) return FIFO;
+    if (strcmp(str, "LRU") == 0) return LRU;
+    return EXIT_FAILURE;
+}
+
+ void agregar_a_tlb_fifo(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante) {
+    tlb->entradas[proxima_a_reemplazar].nro_pagina = nro_pagina_entrante;
+    tlb->entradas[proxima_a_reemplazar].marco_asociado = marco_asociado_entrante;
+    tlb->entradas[proxima_a_reemplazar].bit_en_uso = 1;
+    tlb->entradas[proxima_a_reemplazar].instante_referencia = ++contador_accesos_tlb;
+    log_info(logger_cpu, "TLB llena. Reemplazo FIFO en posicion <%d>: Pagina <%d> - Marco <%d>", proxima_a_reemplazar, nro_pagina_entrante, marco_asociado_entrante);
+    proxima_a_reemplazar = (proxima_a_reemplazar + 1) % tlb->cantidad_entradas;
+}
+
+ void agregar_a_tlb_lru(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante) {
+    uint64_t min_ref = tlb->entradas[0].instante_referencia;
+    int indice_lru = 0;
+    for (uint32_t i = 1; i < tlb->cantidad_entradas; i++) {
+        if (tlb->entradas[i].instante_referencia < min_ref) {
+            min_ref = tlb->entradas[i].instante_referencia;
+            indice_lru = i;
+        }
+    }
+    tlb->entradas[indice_lru].nro_pagina = nro_pagina_entrante;
+    tlb->entradas[indice_lru].marco_asociado = marco_asociado_entrante;
+    tlb->entradas[indice_lru].bit_en_uso = 1;
+    tlb->entradas[indice_lru].instante_referencia = ++contador_accesos_tlb;
+    log_info(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>", 
+            indice_lru, nro_pagina_entrante, marco_asociado_entrante);
+}

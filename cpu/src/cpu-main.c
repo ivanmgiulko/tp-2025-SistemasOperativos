@@ -13,6 +13,9 @@ int main(int argc, char* argv[]){
 	char* puerto_memoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
     char* ip_memoria = config_get_string_value(config_cpu, "IP_MEMORIA");
     uint32_t maximas_entradas_tlb = atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
+	char* algoritmo_reemplazo_tlb = config_get_string_value(config_cpu, "REEMPLAZO_TLB");
+	algoritmo = algoritmo_from_string(algoritmo_reemplazo_tlb);
+
 	/* ---------------- LOGGING ---------------- */
 	char *directorioLogger = string_new(); // Gloria eterna al creador de las commons
 	string_append(&directorioLogger,"cpu-");

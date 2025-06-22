@@ -14,6 +14,7 @@ sem_t sem_read;
 sem_t sem_write;
  mmu_t* mmu;
  tlb_t* tlb;
+ algoritmo_tlb_t algoritmo;
 sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 bool flag_interrupt = false;
@@ -21,5 +22,7 @@ int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;
 int valor_sem_cpu;
+uint32_t  proxima_a_reemplazar= 0;
+uint32_t contador_accesos_tlb = 0;
 char* ultima_escritura = NULL;
 #endif // CPU_H_

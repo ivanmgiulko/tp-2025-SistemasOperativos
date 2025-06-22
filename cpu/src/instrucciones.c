@@ -203,8 +203,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 marco_correspondiente = aux_tlb;
             else
                 marco_correspondiente = tlb_miss(pre_direccion_fisica);
-
-
+         
             direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
             // Mandamos la ejecución con la dirección física final
             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
@@ -243,28 +242,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 marco_correspondiente = aux_tlb;
             else
                 marco_correspondiente = tlb_miss(pre_direccion_fisica);
-
-            
-// ----------------------------- TLB MISS ---------------------------------------------//
-
-             // Mandamos el pedido de marco correspondiente
-            // paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
-            // agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
-            // agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
-            // //agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.desplazamiento, sizeof(uint32_t));
-            // for (int i = 0; i < mmu->cantidad_niveles; i++)
-            //     agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
-            // bytes = paquete_solicitud_marco->buffer->size + 2*sizeof(int);
-            // a_enviar_peticion_marco = serializar_paquete(paquete_solicitud_marco, bytes);
-            // send(fd_conexion_memoria, a_enviar_peticion_marco, bytes, 0);
-
-            // free(a_enviar_peticion_marco);
-            // eliminar_paquete(paquete_solicitud_marco);
-
-            // uint32_t marco_correspondiente_a_pagina_read;
-            // recv(fd_conexion_memoria, &marco_correspondiente_a_pagina_read, sizeof(uint32_t), MSG_WAITALL);
-
-// ----------------------------- TLB MISS ---------------------------------------------//
 
             direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
             mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
@@ -418,7 +395,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_exit);
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
-            
+
+            limpiar_tlb();
+
             sem_post(&sem_cpu_kernel);
 			break;
 		default:
