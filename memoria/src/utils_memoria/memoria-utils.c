@@ -26,6 +26,23 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
     return memoria;
 }
 
+int buscar_indice_de_proceso_en_memoria(int pid){
+    int encontrado = -1;
+    // Buscar el indice de proceso por PID
+    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
+        if (memoria_del_sistema->procesos[i].pid == pid) {
+            encontrado = i;
+            break;
+        }
+    }
+
+    if (encontrado == -1) {
+        log_error(logger_memoria, "No se encontró el proceso con PID %d\n", pid);
+        return -1;
+    }
+    return encontrado;
+}
+
 void inicializar_swap() {
     char* path_swap = config_memoria->PATH_SWAPFILE;
 
@@ -143,20 +160,7 @@ void informar_metricas_memoria(int pid){
 }
 
 int finalizar_proceso(int pid) {
-    int encontrado = -1;
-
-    // Buscar el proceso por PID
-    for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
-        if (memoria_del_sistema->procesos[i].pid == pid) {
-            encontrado = i;
-            break;
-        }
-    }
-
-    if (encontrado == -1) {
-        log_error(logger_memoria, "No se encontró el proceso con PID %d\n", pid);
-        return -1;
-    }
+    encontrado = buscar_indice_de_proceso_en_memoria(pid);
 
     // Liberar instrucciones del proceso
     pthread_mutex_lock(&memoria_del_sistema->mutex); 
@@ -166,6 +170,10 @@ int finalizar_proceso(int pid) {
     }
     log_trace(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
+
+    //Liberar espacio en memoria
+    liberar_espacios_memoria_usuario(memoria_del_sistema->procesos[encontrado].tabla_primera,memoria_del_sistema);
+    //Liberar tablas de pagina
     liberar_marcos_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera, memoria_del_sistema);
     liberar_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera);
     log_trace(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
@@ -210,6 +218,7 @@ char* obtener_instruccion(int pid, int pc) {
         if (memoria_del_sistema->procesos[i].pid == pid) {
             log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
             if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
+                //METRICA
                 memoria_del_sistema->procesos[i].metricas_proceso.cantVecesInstrucciones++;
                 //log_debug(logger_memoria, "Se incrementa la métrica CantInstrucciones del proceso pid: %d", pid);
                 pthread_mutex_unlock(&memoria_del_sistema->mutex);
@@ -366,6 +375,7 @@ int buscar_marco_libre(t_memoria_del_sistema* memoria) {
     }
     return -1;
 }
+
 uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
     t_tabla_pagina* actual = tabla_primera;
 
@@ -393,4 +403,25 @@ uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas
     }
 
     return entrada.marco;
+}
+
+void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera, t_memoria_del_sistema* memoria_del_sistema) {
+    if (!tabla_primera) return;
+
+    if (tabla_primera->tipo == NIVEL_INTERMEDIO) {
+        for (int i = 0; i < tabla_primera->cant_entradas; i++) {
+            if (tabla_primera->subtablas[i])
+                liberar_espacios_memoria_usuario(tabla_primera->subtablas[i], memoria_del_sistema);
+        }
+    } else if (tabla_primera->tipo == NIVEL_FINAL) {
+        for (int i = 0; i < tabla_primera->cant_entradas; i++) {
+            t_entrada_pagina* entrada = &tabla_primera->entradas[i];
+            if (entrada->presente) {
+                int marco = entrada->marco;
+                memoria_del_sistema->bitmap_marcos_ocupados[marco] = false;
+                //  limpiar el contenido de la página en memoria_principal
+                memset(memoria_del_sistema->memoria_principal + marco * memoria_del_sistema->tam_pagina, 0, memoria_del_sistema->tam_pagina);
+            }
+        }
+    }
 }

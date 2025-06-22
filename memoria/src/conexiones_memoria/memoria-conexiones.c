@@ -289,8 +289,10 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 	// Log obligatorio
 	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d ", pid, direccion_fisica);
-	
-    // Enviar confirmación de éxito al cliente
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
+    // Enviar confirmación de éxito al cpu
 	t_paquete* paquete_confirmacion_write = malloc(sizeof(t_paquete));
 	paquete_confirmacion_write->codigo_operacion = WRITE_MEMORIA;
 	paquete_confirmacion_write->buffer = malloc(sizeof(t_buffer));
@@ -304,7 +306,6 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	send(socket_cliente, a_enviar_write, bytes_confirmacion_write, 0);
 	log_info(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
 
-    // free(direccion.entrada_nivel);
 	free(datos);
 	free(a_enviar_write);
 	eliminar_paquete(paquete_confirmacion_write);
@@ -327,7 +328,9 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	// Log obligatorio
 	log_trace(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
 	log_trace(logger_memoria, "Contenido leído: %s", datos_como_string);
-
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
 	t_paquete* paquete_confirmacion_read = malloc(sizeof(t_paquete));
 	paquete_confirmacion_read->codigo_operacion = READ_MEMORIA;
@@ -378,11 +381,15 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 
     uint32_t marco = buscar_marco_en_tabla(proceso->tabla_primera, direccion.entrada_nivel, cantidad_niveles);
     if (marco == -1) {
-        log_error(logger_memoria, "No se pudo traducir dirección lógica para PID %d", pid);
+        log_error(logger_memoria, "No se pudo encontrar el marco solicitado de la pagina %d para PID %d",direccion.nro_pagina, pid);
         return;
     }
 
     log_trace(logger_memoria, "PID: %d - Página: %d - Marco: %d", pid, direccion.nro_pagina, marco);
+
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesTP + config_memoria->CANTIDAD_NIVELES;
 
     send(socket_cliente, &marco, sizeof(uint32_t), 0);
 	free(direccion.entrada_nivel);

@@ -83,6 +83,7 @@ int finalizar_proceso(int pid);
 t_memoria_del_sistema crear_memoria_del_sistema();
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales);
 t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
+int buscar_indice_de_proceso_en_memoria(int pid);
 
 //Funciones de tablas
 void liberar_tabla(t_tabla_pagina* tabla);
@@ -90,7 +91,7 @@ void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria,
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
 uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
-
+void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera,t_memoria_del_sistema* memoria_del_sistema);
 void  inicializar_swap();
 
 #endif // MEMORIA_UTILS_H_
