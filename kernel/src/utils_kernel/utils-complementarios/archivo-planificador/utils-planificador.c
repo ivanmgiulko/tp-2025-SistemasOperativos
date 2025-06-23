@@ -265,7 +265,7 @@ void* _mayor_estimacion(void* a, void* b)
 
 void planificar_con_fifo() 
 {
-    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+    t_cpu_conectada* cpu_libre = NULL;
 
     sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
     cpu_libre = _buscar_cpu_libre();
@@ -278,10 +278,12 @@ void planificar_con_fifo()
 
 void planificar_con_sjf()
 {
-    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+    t_cpu_conectada* cpu_libre = NULL;
 
     sem_wait(&bin_cpu_disponible); // Iniciado con la cant de CPUs
+    pthread_mutex_lock(&lista_cpus->mutex_lista);
     cpu_libre = _buscar_cpu_libre();
+    pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
     list_sort(estado_ready->cola, _menor_estimacion);
     t_pcb* pcb_a_operar = pop_cola_mutex(estado_ready);   
@@ -303,7 +305,7 @@ t_pcb* proceso_a_desalojar()
 
 void planificar_con_srt()
 {
-    t_cpu_conectada* cpu_libre = malloc(sizeof(t_cpu_conectada));
+    t_cpu_conectada* cpu_libre = NULL;
 
     pthread_mutex_lock(&lista_cpus->mutex_lista);
     cpu_libre = _buscar_cpu_libre();
