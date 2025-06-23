@@ -42,7 +42,7 @@ t_cpu_conectada* _agregar_cpu_en_lista(uint8_t id_cpu)
 
 void liberar_cpu_de_proceso(uint8_t pid) 
 {
-    t_cpu_conectada* cpu_a_liberar = malloc(sizeof(t_cpu_conectada));
+    t_cpu_conectada* cpu_a_liberar = NULL;
     
     pthread_mutex_lock(&lista_cpus->mutex_lista);
     cpu_a_liberar = _buscar_proceso_en_lista_cpu(pid);

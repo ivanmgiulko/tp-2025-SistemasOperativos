@@ -14,21 +14,26 @@ char* recibir_respuesta_memoria(int socket_cliente) {
 
 int manejar_conexion_kernel_memoria(int socket_cliente){
 	while (1) {
+		
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente, logger_kernel);
+			free(paquete);
 			break;
 
 		case PROCESO_MEMORIA:
 			char* validacion_espacio = recibir_respuesta_memoria(socket_cliente);
 			if(strcmp(validacion_espacio, "No hay espacio en memoria") == 0) {
+				eliminar_paquete(paquete);
 				free(validacion_espacio);
 				return 0;
 			} else {
 				// El proceso pasa a la cola de Ready
+				eliminar_paquete(paquete);
 				free(validacion_espacio);
 				return 1;
 			}
@@ -44,7 +49,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 				free(resp_dump);
 				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
-				log_debug(logger_kernel, "Fallo en el DUMP");
+				log_debug(logger_kernel, "Fallo en el DUMP");	
 				
 
 			} else {
@@ -54,6 +59,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 				log_debug(logger_kernel, "Acierto en el DUMP");
 				
 			}
+			eliminar_paquete(paquete);
 			return EXIT_SUCCESS;
 
 			break;
@@ -64,6 +70,8 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 			sem_post(&sem_cantidad_pcbs_en_new);
 			sem_post(&sem_hay_espacio_en_memoria);
+
+			free(paquete);
 
 			return EXIT_SUCCESS;
 
@@ -118,9 +126,11 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 		
 		case -1:
 			log_error(logger_kernel, "el cliente [MEMORIA] se desconecto .");
+			eliminar_paquete(paquete);
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");
+			eliminar_paquete(paquete);
 			break;
 		}
 	}

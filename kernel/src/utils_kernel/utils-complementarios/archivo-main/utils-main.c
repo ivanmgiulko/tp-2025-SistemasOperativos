@@ -13,3 +13,14 @@ void _chequear_segundo_argumento_es_numero(char* numero_en_string)
         abort();
     }
 }
+
+void eliminar_lista_cpu() {
+
+    void destruir_cpus(void* ptr) {
+        t_cpu_conectada* cpu = (t_cpu_conectada*) cpu;
+        free(cpu);
+    }
+    
+    list_destroy_and_destroy_elements(lista_cpus->lista_cpus, destruir_cpus);
+    free(lista_cpus);
+}

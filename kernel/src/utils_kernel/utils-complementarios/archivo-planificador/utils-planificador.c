@@ -401,6 +401,8 @@ void administrar_proceso_bloqueado(void* pcb)
                 
     } while(!flag);
 
+    temporal_destroy(tiempo_esperando);
+
     pthread_exit(NULL);
 
 }
