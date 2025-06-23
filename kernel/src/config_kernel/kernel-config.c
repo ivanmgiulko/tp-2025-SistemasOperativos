@@ -1,7 +1,7 @@
 #include "kernel-config.h"
 
 t_kernel_config* inicializar_config_kernel(t_config* config_kernel_estructurada){
-    t_kernel_config* config_kernel = malloc(sizeof(*config_kernel));
+    t_kernel_config* config_kernel = malloc(sizeof(t_kernel_config));
 
     config_kernel->IP_MEMORIA                = config_get_string_value(config_kernel_estructurada, "IP_MEMORIA");
     config_kernel->PUERTO_MEMORIA            = config_get_string_value(config_kernel_estructurada, "PUERTO_MEMORIA");
@@ -18,12 +18,13 @@ t_kernel_config* inicializar_config_kernel(t_config* config_kernel_estructurada)
 }
 
 t_kernel_config* crear_config_kernel(char* path_a_config, t_log* logger){
-    t_config* config_kernel = iniciar_config(path_a_config);
+    t_config* config_kernel = config_create(path_a_config);
     if(config_kernel == NULL){
         log_error(logger, "Error al iniciar config de KERNEL");
         abort();
+    } else {
+        t_kernel_config* config_kernel_estructurada =  inicializar_config_kernel(config_kernel);
+        return config_kernel_estructurada;
     }
-
-    t_kernel_config* config_kernel_estructurada =  inicializar_config_kernel(config_kernel);
-    return config_kernel_estructurada;
+    
 }
