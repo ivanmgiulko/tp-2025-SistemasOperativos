@@ -31,6 +31,8 @@ int main(int argc, char* argv[]) {
  	pthread_create(&hilo_planificador_largo_plazo, NULL, (void*)iniciar_planificacion_largo_plazo, NULL);
 	pthread_join(hilo_planificador_largo_plazo, NULL);
 
+	free(configuracion_kernel);	
+
 	eliminar_lista_cpu();
 	
 }

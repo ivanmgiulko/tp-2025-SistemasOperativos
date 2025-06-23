@@ -197,6 +197,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
             }
         }
     
+    pthread_exit(NULL);
     close(socket_interrupt);
     log_info(logger_kernel, "Conexión cerrada en interrupt: socket %d", socket_interrupt);
 	return EXIT_SUCCESS;
@@ -227,7 +228,8 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 			break;
 		}
 	}
-
+    
+    pthread_exit(NULL);
 	close(socket_dispatch);
 	return EXIT_SUCCESS;
 }

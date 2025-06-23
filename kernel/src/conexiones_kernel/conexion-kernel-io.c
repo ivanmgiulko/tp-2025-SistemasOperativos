@@ -46,6 +46,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente_io, logger_kernel);
+			free(paquete);
 			break;
 
 		case PROCESO_DESBLOQUEADO:
@@ -64,12 +65,12 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked_aux);
 
-
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
 			break;
 
 		case PROCESO_SUSPENDIDO_DESBLOQUEADO:
+
 			recibir_paquete(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
@@ -91,14 +92,16 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 		case -1:
 
 			log_error(logger_kernel, "el cliente [%d] se desconecto", socket_cliente_io);
-
+			eliminar_paquete(paquete);
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");
+			eliminar_paquete(paquete);
 			break;
 		}
 	}
 
+	pthread_exit(NULL);
 	close(socket_cliente_io);
 	return EXIT_SUCCESS;
 }

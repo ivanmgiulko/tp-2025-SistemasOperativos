@@ -422,5 +422,6 @@ void enviar_a_ejecutar_proceso(t_cpu_conectada* cpu, t_pcb* pcb) {
     pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
     enviar_proc_cpu(*infoProceso, cpu->socket_dispatch);
+    free(infoProceso);
 
 }

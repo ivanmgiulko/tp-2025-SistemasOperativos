@@ -64,6 +64,8 @@ void iniciar_planificacion_largo_plazo(){
             }
         } 
     }
+
+    pthread_exit(NULL);
 }
 
 void iniciar_planificador_mediano_plazo() {
@@ -93,6 +95,8 @@ void iniciar_planificador_mediano_plazo() {
 
         }
     }
+
+    pthread_exit(NULL);
 }
 
 // CONSUMIDOR
@@ -119,5 +123,7 @@ void iniciar_planificador_corto_plazo(){
             exit(1);
         }
     }
+
+    pthread_exit(NULL);
 }
 
