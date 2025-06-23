@@ -25,6 +25,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
         switch (paquete->codigo_operacion){
             case MENSAJE:
                 recibir_mensaje(socket_interrupt, logger_kernel);
+                free(paquete);
                 free(offset);
                 break;
             
@@ -78,9 +79,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     pasar_de_exec_a_exit(_proceso_a_bloquear);
 
                 }
-
                 eliminar_paquete(paquete);
-                
                 break;
 
             case SYSCALL_INIT_PROC:
@@ -188,10 +187,12 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
             case -1:
                 log_error(logger_kernel, "El cliente [CPU - Interrupt] se desconectó.");
                 free(offset);
+                eliminar_paquete(paquete);
                 return EXIT_FAILURE;
             default:
                 free(offset);
                 log_warning(logger_kernel, "Operación desconocida en interrupt.");
+                eliminar_paquete(paquete);
                 break;
             }
         }
@@ -205,21 +206,23 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 	int socket_dispatch = *(int*)socket_cliente_ptr;
     bool flag = false;
 	while (!flag) {
+
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
 		paquete->codigo_operacion = recibir_operacion(socket_dispatch);
+
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_dispatch, logger_kernel);
-			break;
-
-		case INSTRUCCION:
+            free(paquete);
 			break;
 		case -1:
 			log_error(logger_kernel, "el cliente [CPU - Dispatch] se desconecto.");
+            eliminar_paquete(paquete);
             flag = true;
 			break;
 		default:
+            eliminar_paquete(paquete);
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");
 			break;
 		}
