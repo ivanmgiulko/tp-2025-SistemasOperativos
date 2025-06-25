@@ -32,7 +32,7 @@ void insertar_nueva_instancia_io(t_list* instancias, int socket_io){
 void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t pid) 
 {
     pthread_mutex_lock(&(lista_de_io->mutex_lista));
-    list_add(interfaz->procesos, pid);
+    list_add(interfaz->procesos, &pid);
     pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 }
 
@@ -44,19 +44,17 @@ void alternar_estado_io(t_io* io){
 
 void eliminar_proceso_de_io(t_list* procesos_en_io, uint8_t pid) 
 {
+    void _destruir_pid(void* ptr) {
+        uint8_t* proceso_pid = (uint8_t*) ptr; 
+        free(proceso_pid);
+    }
+
     // Función para comparar el PID
     bool _pid_en_io(void* ptr) {
-        uint8_t proceso_pid = *((uint8_t*) ptr); // Desreferenciar el puntero correctamente
-        return proceso_pid == pid;
+        uint8_t* proceso_pid = (uint8_t*) ptr; 
+        return *proceso_pid == pid;
     }
 
     // Eliminar el proceso de la lista
-    void* elemento_eliminado = list_remove_by_condition(procesos_en_io, _pid_en_io);
-
-    if (elemento_eliminado == NULL) {
-        log_warning(logger_kernel, "No se encontró el proceso con PID %d en la lista de IO.", pid);
-    } else {
-        log_info(logger_kernel, "Proceso con PID %d eliminado de la lista de IO.", pid);
-        free(elemento_eliminado); // Liberar la memoria del elemento eliminado
-    }
+    list_remove_and_destroy_by_condition(procesos_en_io, _pid_en_io, _destruir_pid);
 }

@@ -47,7 +47,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                
                 t_pcb* _proceso_a_bloquear = _sacar_pcb_de_cola(pid, estado_exec);
                 
                 _proceso_a_bloquear->pc = pc;
@@ -59,14 +58,11 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
                 if(interfaz_io_existente != NULL) { 
 
-                  
                     log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
                     _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
                     _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
                 
-            
-
                     encolar_pcb_en_interfaz(interfaz_io_existente, _proceso_a_bloquear->pid);
     
                     pasar_de_exec_a_blocked(_proceso_a_bloquear); 

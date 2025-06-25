@@ -55,7 +55,6 @@ typedef struct { // Elemento en 't_list* lista_ios'
         t_list* instancias;
         int socket;
         bool enabled;
-        
         sem_t bin_interfaz_disponible;
         t_list* procesos;
 } t_io;
