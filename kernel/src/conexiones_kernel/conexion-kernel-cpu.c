@@ -56,8 +56,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
                 
                 t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
+                
                 if(interfaz_io_existente != NULL) { 
-
+                    
                     log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
                     _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;

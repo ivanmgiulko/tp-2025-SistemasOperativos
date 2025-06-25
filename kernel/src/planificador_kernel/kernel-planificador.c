@@ -80,7 +80,9 @@ void iniciar_planificador_mediano_plazo() {
         t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
         t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
         
+    
         if(instancia_disponible != NULL) {
+            instancia_disponible->pid = _proceso_bloqueado->pid;
             _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
             enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
             

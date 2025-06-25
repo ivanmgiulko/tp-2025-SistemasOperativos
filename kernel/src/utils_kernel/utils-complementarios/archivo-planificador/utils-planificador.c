@@ -368,7 +368,10 @@ void administrar_proceso_bloqueado(void* pcb)
     
     do { 
         t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
+        
+        
         if(instancia_disponible != NULL) {
+            instancia_disponible->pid = _proceso_bloqueado->pid;
 
             if(proceso_suspendido) {
 
