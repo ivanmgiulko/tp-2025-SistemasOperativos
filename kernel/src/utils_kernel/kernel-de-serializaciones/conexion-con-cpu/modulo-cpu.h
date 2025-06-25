@@ -10,7 +10,7 @@
 	*/
 	void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente);
 
-    t_syscall_io _deserializar_syscall_io(int* , t_paquete* );
+    t_datos_io _deserializar_syscall_io(int* , t_paquete* );
 
     char* deserializar_archivo_instrucciones(int* offset, t_paquete* paquete);
 

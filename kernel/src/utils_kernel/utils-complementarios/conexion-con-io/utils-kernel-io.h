@@ -15,9 +15,11 @@
 	 * @param char nombre del interfaz agregada en la lista
 	 * @param int socket de la conexion IO - Kernel
 	 */
-    void inicializar_io(char* nombre_io, int socket_io);
+    t_io* inicializar_io(char* nombre_io, int socket_io);
 
-	void encolar_pcb_en_interfaz(t_io* interfaz, t_info_proceso_en_io* pcb);
+	void insertar_nueva_instancia_io(t_list* instancias, int socket_io);
+
+	void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t pid);
 
 	void alternar_estado_io(t_io* io);
 

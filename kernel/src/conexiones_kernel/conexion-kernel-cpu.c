@@ -39,7 +39,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 // Cantidad de rafagas = 5 | pc - 1
                 
-                t_syscall_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
+                t_datos_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
                 free(offset);
                 
@@ -47,27 +47,27 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                t_io* interfaz_disponible = funcion_syscall_IO(_syscall_io_recibida.dispositivo);
                 
                 t_pcb* _proceso_a_bloquear = _sacar_pcb_de_cola(pid, estado_exec);
-
+                
                 _proceso_a_bloquear->pc = pc;
-
+                
                 _proceso_a_bloquear->tiempo_rafaga = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec) - _proceso_a_bloquear->estimacion_aux;
-
+                
                 _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
+                
+                t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
+                if(interfaz_io_existente != NULL) { 
 
-                if(interfaz_disponible != NULL) { 
-                    
+                  
                     log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                     
-                    t_info_proceso_en_io* _info_proceso_bloqueado = malloc(sizeof(t_info_proceso_en_io));
-                    _info_proceso_bloqueado->pid    = _proceso_a_bloquear->pid;
-                    _info_proceso_bloqueado->tiempo = _syscall_io_recibida.tiempo;
+                    _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
+                    _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
+                
+            
 
-                    free(_syscall_io_recibida.dispositivo);
-
-                    encolar_pcb_en_interfaz(interfaz_disponible, _info_proceso_bloqueado);
+                    encolar_pcb_en_interfaz(interfaz_io_existente, _proceso_a_bloquear->pid);
     
                     pasar_de_exec_a_blocked(_proceso_a_bloquear); 
 

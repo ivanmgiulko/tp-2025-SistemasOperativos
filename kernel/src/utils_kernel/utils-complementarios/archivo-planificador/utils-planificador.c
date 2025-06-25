@@ -359,30 +359,28 @@ void administrar_proceso_bloqueado(void* pcb)
     tiempo_esperando->elapsed_ms = 0;
     
     t_pcb* _proceso_bloqueado = (t_pcb*)pcb;
-
-    t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
-    t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
-
+    t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
+      
     int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
     bool flag = false, proceso_suspendido = false;
-
+    
     temporal_resume(tiempo_esperando);
-
+    
     do { 
-        if(_chequear_interfaz_disponible(_io_que_usa_pcb_bloqueado)) {
-
-            alternar_estado_io(_io_que_usa_pcb_bloqueado);
+        t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
+        if(instancia_disponible != NULL) {
 
             if(proceso_suspendido) {
 
                 t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
                 encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
 
-                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io);
                 
             } else {
+                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+                eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
 
-                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
             }
             flag = !flag;
 

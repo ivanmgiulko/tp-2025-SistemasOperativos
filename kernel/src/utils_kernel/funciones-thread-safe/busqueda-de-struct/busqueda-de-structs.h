@@ -25,9 +25,11 @@
     /**
 	 * @brief nos confirma si es que existe o no la interfaz que debe usar el proceso al bloquearse
 	 * @param char nombre de la interfaz que usa el proceso
-	 * @return devuelve TRUE si existe la lista que la pasamos, o FALSE caso contrario
+	 * @return devuelve un t_instancia_io en caso de busqueda satisfactoria y NULL caso contrario
 	 */
-    t_io* funcion_syscall_IO(char* nombreInterfaz);
+    t_instancia_io* devolver_instancia_disponible(char* nombreInterfaz);
+
+    t_instancia_io* buscar_instancia_disponible(t_list* lista_de_instancias);
 
     t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid);
 

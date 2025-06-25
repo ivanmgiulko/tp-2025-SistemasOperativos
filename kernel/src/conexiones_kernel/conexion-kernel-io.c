@@ -35,7 +35,14 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 		inicializar_lista_io();
 	}
 
-	inicializar_io(nombre_io, socket_cliente_io);
+	// Busco si existe IO del mismo tipo en la lista de IOs
+	t_io* io_a_encolar_instancia = buscar_io(lista_de_io->lista_ios, nombre_io);
+
+	if(io_a_encolar_instancia == NULL) {
+		io_a_encolar_instancia = inicializar_io(nombre_io, socket_cliente_io);
+	}
+
+	insertar_nueva_instancia_io(io_a_encolar_instancia->instancias, socket_cliente_io);
 
 	free(stream);
 
@@ -56,14 +63,11 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado);
 			
-			pthread_mutex_lock(&lista_de_io->mutex_lista);
-			t_io* _io_que_usa_pcb_bloqueado    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado);
-			_io_que_usa_pcb_bloqueado->enabled = true;
-			pthread_mutex_unlock(&lista_de_io->mutex_lista);
-
-			eliminar_proceso_de_io(_io_que_usa_pcb_bloqueado->procesos, pid_desbloqueado);
-
 			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked_aux);
+
+			pthread_mutex_lock(&lista_de_io->mutex_lista);
+			_proceso_desbloqueado->datos_io->instancia_utilizada->pid = -1;
+			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 
@@ -75,15 +79,13 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado_susp);
-			
-			pthread_mutex_lock(&lista_de_io->mutex_lista);
-			t_io* _io_que_usa_pcb_bloqueado_susp    = buscar_io_en_lista(lista_de_io->lista_ios, pid_desbloqueado_susp);
-			_io_que_usa_pcb_bloqueado_susp->enabled = true;
-			pthread_mutex_unlock(&lista_de_io->mutex_lista);
-
-			eliminar_proceso_de_io(_io_que_usa_pcb_bloqueado->procesos, pid_desbloqueado);
 
 			t_pcb* _proceso_desbloqueado_suspendido = _sacar_pcb_de_cola(pid_desbloqueado_susp, estado_blocked_aux);
+			
+			pthread_mutex_lock(&lista_de_io->mutex_lista);
+			_proceso_desbloqueado_suspendido->datos_io->instancia_utilizada->pid = -1;
+			pthread_mutex_unlock(&lista_de_io->mutex_lista);
+
 			
 			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
 

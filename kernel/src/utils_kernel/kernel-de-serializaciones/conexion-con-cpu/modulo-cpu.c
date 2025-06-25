@@ -27,9 +27,9 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
 
 
 
-t_syscall_io _deserializar_syscall_io(int* offset, t_paquete* paquete) 
+t_datos_io _deserializar_syscall_io(int* offset, t_paquete* paquete) 
 { 
-    t_syscall_io _syscall_io_recibida;
+    t_datos_io _syscall_io_recibida;
 
     int len_dispositivo = 0;
     memcpy(&len_dispositivo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);

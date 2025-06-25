@@ -10,10 +10,7 @@
 		SOCKET_DISPATCH
 	 } t_sockets_cpu;
 
-	typedef struct {
-        char* dispositivo;
-        int64_t tiempo;
-    } t_syscall_io;
+
 
     /* LISTAS COMPARTIDAS CON SUS ELEMENTOS */
     
@@ -30,21 +27,8 @@
 	    int8_t pid_en_cpu;
     } t_cpu_conectada; // Este elemento se agrega en el t_list* lista_cpus
 
-    // Lista de las IOs
-    
-    typedef struct {
-        t_list* lista_ios;
-        pthread_mutex_t mutex_lista;
-    } t_lista_io;
 
-    typedef struct { // Elemento en 't_list* lista_ios'
-        char* nombre;
-        int socket;
-        bool enabled;
-        sem_t bin_interfaz_disponible;
-        t_list* procesos;
-    } t_io;
-   
+
     typedef struct { // Elemento en 't_list* procesos'
         uint8_t pid;
 	    int64_t tiempo;

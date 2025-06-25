@@ -60,8 +60,23 @@ t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
     return list_find(lista_de_io, _es_el_io);
 }
 
-t_io* funcion_syscall_IO(char* nombreInterfaz) { 
-    return buscar_io(lista_de_io->lista_ios, nombreInterfaz);
+t_instancia_io* buscar_instancia_disponible(t_list* lista_de_instancias) {
+    bool _esta_libre(void* elemento) {
+        t_instancia_io* io = (t_instancia_io*) elemento;
+        return io->pid == -1; 
+    }
+    t_instancia_io* instancia_libre = list_find(lista_de_instancias, _esta_libre);
+    return instancia_libre;
+}
+
+t_instancia_io* devolver_instancia_disponible(char* nombre_interfaz) { 
+    t_io* tipo_de_io = buscar_io(lista_de_io->lista_ios, nombre_interfaz);
+    
+    if(tipo_de_io != NULL){
+        return buscar_instancia_disponible(tipo_de_io->instancias);
+    }
+
+    return NULL;
 }
 
 t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid) 

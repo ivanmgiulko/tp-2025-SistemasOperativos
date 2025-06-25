@@ -17,6 +17,13 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial)
 
     nuevoPCB->metricas_estado = iniciarMetricasEstado();
     nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();
+
+    t_datos_io* datos_io = malloc(sizeof(t_datos_io));
+    datos_io->dispositivo = "";
+    datos_io->tiempo = 0;
+    datos_io->instancia_utilizada = NULL;
+    nuevoPCB->datos_io = datos_io;
+
     return nuevoPCB;
 }
 

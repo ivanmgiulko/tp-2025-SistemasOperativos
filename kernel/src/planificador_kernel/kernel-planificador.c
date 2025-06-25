@@ -77,14 +77,14 @@ void iniciar_planificador_mediano_plazo() {
         t_pcb* _proceso_bloqueado = pop_cola_mutex(estado_blocked);
         encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
 
-        t_io* _io_que_usa_pcb_bloqueado = buscar_io_en_lista(lista_de_io->lista_ios, _proceso_bloqueado->pid);
-        t_info_proceso_en_io* _proceso_que_usa_io = buscar_proceso_en_io(_io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+        t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
+        t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
         
-        if(_io_que_usa_pcb_bloqueado->enabled) {
-            
-            alternar_estado_io(_io_que_usa_pcb_bloqueado);
-
-            enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_que_usa_io->tiempo, _io_que_usa_pcb_bloqueado->socket);
+        if(instancia_disponible != NULL) {
+            _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
+            enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+            uint8_t pid_bloqueado = list_get(io_que_usa_pcb_bloqueado->procesos, 0);
+            eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
 
         } else { 
 

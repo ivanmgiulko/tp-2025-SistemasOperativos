@@ -2,7 +2,7 @@
 #define PROCESS_H_
 
     #include <./utils/utils.h>
-
+    
 typedef enum {
     NEW, 
     READY, 
@@ -45,6 +45,32 @@ typedef struct metricas_proceso
     uint8_t cantVecesWrite;
 } metricas_proceso;
 
+typedef struct {
+        t_list* lista_ios;
+        pthread_mutex_t mutex_lista;
+} t_lista_io;
+
+typedef struct { // Elemento en 't_list* lista_ios'
+        char* nombre;
+        t_list* instancias;
+        int socket;
+        bool enabled;
+        
+        sem_t bin_interfaz_disponible;
+        t_list* procesos;
+} t_io;
+   
+typedef struct { // Elemento en 't_list* instancias'
+        int socket_io;
+        int8_t pid;
+} t_instancia_io;
+
+typedef struct {
+        char* dispositivo;
+        t_instancia_io* instancia_utilizada; 
+        int64_t tiempo;
+} t_datos_io;
+
 typedef struct 
 {
     uint8_t pid;
@@ -62,7 +88,10 @@ typedef struct
     uint32_t path_length;
     uint32_t tamanioMemoria;
 
+    // Datos de IO
+    t_datos_io* datos_io; 
 } t_pcb; 
+
 
 typedef struct 
 {
