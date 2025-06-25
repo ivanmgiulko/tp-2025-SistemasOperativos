@@ -19,11 +19,13 @@
 
 	void insertar_nueva_instancia_io(t_list* instancias, int socket_io);
 
-	void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t pid);
+	void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t* pid);
 
 	void alternar_estado_io(t_io* io);
 
 	void eliminar_proceso_de_io(t_list* procesos_en_io, uint8_t pid);
+
+	void eliminar_interfaz(t_io* nombre);
 	
 #endif // UTILS_KERNEL_IO_H_
 

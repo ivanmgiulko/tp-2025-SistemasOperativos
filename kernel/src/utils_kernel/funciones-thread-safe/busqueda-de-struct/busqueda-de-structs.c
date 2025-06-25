@@ -61,17 +61,32 @@ t_io* buscar_io(t_list* lista_de_io, char* nombre_io) {
 }
 
 t_instancia_io* buscar_instancia_disponible(t_list* lista_de_instancias) {
+    
     bool _esta_libre(void* elemento) {
         t_instancia_io* io = (t_instancia_io*) elemento;
         return io->pid == -1; 
     }
-    t_instancia_io* instancia_libre = list_find(lista_de_instancias, _esta_libre);
-    return instancia_libre;
+
+    return list_find(lista_de_instancias, _esta_libre);
+}
+
+t_instancia_io* eliminar_y_devolver_instancia(t_list* lista_de_instancias, int socket_io) {
+    
+    bool _esta_libre(void* elemento) {
+        t_instancia_io* io = (t_instancia_io*) elemento;
+        return io->socket_io == socket_io; 
+    }
+    
+    return list_remove_by_condition(lista_de_instancias, _esta_libre);
 }
 
 t_instancia_io* devolver_instancia_disponible(char* nombre_interfaz) { 
     t_io* tipo_de_io = buscar_io(lista_de_io->lista_ios, nombre_interfaz);
     
+    if(tipo_de_io->nombre == NULL) {
+        return NULL;
+    }
+
     if(tipo_de_io != NULL){
         return buscar_instancia_disponible(tipo_de_io->instancias);
     }
@@ -89,34 +104,32 @@ t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid)
 }
 
 // funcion que busca la io donde se encuentra el pid
-t_io* buscar_io_en_lista(t_list* lista_base, uint8_t pid) {
-    bool flag = false;
+t_io* buscar_io_en_lista(t_list* lista_base, int socket) {
     int tamanio_lista = list_size(lista_base), cont = 0;
     
     do {
         
         t_io* _elemento_pivote = list_get(lista_de_io->lista_ios, cont);
         
-        t_info_proceso_en_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->procesos, pid);
+        t_instancia_io* _proceso_encontrado = buscar_proceso_en_elemento(_elemento_pivote->instancias, socket);
 
         if(_proceso_encontrado == NULL) { 
             cont++;
         } else { 
-            flag = true; // Creo que esto es al pedo si haces un return. En todo caso sacás el return y que el return fuera del while te de _proceso_encontrado
             return _elemento_pivote;
         }
 
-    } while(!flag && cont <= tamanio_lista);
+    } while(cont <= tamanio_lista);
     
     return NULL;
 }
 
-t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, uint8_t pid) {
+t_instancia_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, int socket) {
 
-    bool _es_el_proceso(void* elemento) {
-        t_info_proceso_en_io* info_proc = (t_info_proceso_en_io*) elemento;
-        return info_proc->pid == pid;
+    bool _es_la_instancia(void* elemento) {
+        t_instancia_io* instancia = (t_instancia_io*) elemento;
+        return instancia->socket_io == socket;
     }
 
-    return list_find(lista_procesos_de_io, _es_el_proceso);
+    return list_find(lista_procesos_de_io, _es_la_instancia);
 }

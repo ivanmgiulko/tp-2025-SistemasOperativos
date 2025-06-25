@@ -158,7 +158,7 @@ void pasar_de_exec_a_exit(t_pcb* pcb)
     _enviar_a_finalizar_proceso(pcb);
 }
 
-t_pcb* _sacar_pcb_de_cola(int pid, t_estado* estado) 
+t_pcb* _sacar_pcb_de_cola(uint8_t pid, t_estado* estado) 
 { 
     pthread_mutex_lock(&(estado->mutex));
     t_pcb* proceso_a_devolver = NULL;

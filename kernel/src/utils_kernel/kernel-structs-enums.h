@@ -27,8 +27,6 @@
 	    int8_t pid_en_cpu;
     } t_cpu_conectada; // Este elemento se agrega en el t_list* lista_cpus
 
-
-
     typedef struct { // Elemento en 't_list* procesos'
         uint8_t pid;
 	    int64_t tiempo;

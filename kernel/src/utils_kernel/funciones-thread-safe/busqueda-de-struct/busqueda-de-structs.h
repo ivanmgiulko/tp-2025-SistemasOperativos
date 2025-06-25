@@ -6,7 +6,7 @@
 
     t_cpu_conectada* _buscar_cpu_libre();
 
-    t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid);
+    t_instancia_io* buscar_proceso_en_elemento(t_list* lista_procesos_de_io, int socket);
 
     t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid);
 
@@ -30,11 +30,11 @@
     t_instancia_io* devolver_instancia_disponible(char* nombreInterfaz);
 
     t_instancia_io* buscar_instancia_disponible(t_list* lista_de_instancias);
+    
+    t_instancia_io* eliminar_y_devolver_instancia(t_list* lista_de_instancias, int socket_io);
 
     t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid);
 
-    t_io* buscar_io_en_lista(t_list*, uint8_t);
-
-    t_info_proceso_en_io* buscar_proceso_en_elemento(t_list* , uint8_t );
+    t_io* buscar_io_en_lista(t_list* lista_base, int socket);
 
 #endif // BUSQUEDA_DE_STRUCTS_H_

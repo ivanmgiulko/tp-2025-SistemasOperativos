@@ -63,9 +63,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     
                     _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
                     _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
-                
-                    encolar_pcb_en_interfaz(interfaz_io_existente, _proceso_a_bloquear->pid);
-    
+
+                    encolar_pcb_en_interfaz(interfaz_io_existente, &_proceso_a_bloquear->pid);
+
                     pasar_de_exec_a_blocked(_proceso_a_bloquear); 
 
                     sem_post(&sem_cantidad_pcbs_en_blocked);
@@ -77,6 +77,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 }
                 eliminar_paquete(paquete);
+
                 break;
 
             case SYSCALL_INIT_PROC:

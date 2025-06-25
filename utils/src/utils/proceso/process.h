@@ -52,11 +52,10 @@ typedef struct {
 
 typedef struct { // Elemento en 't_list* lista_ios'
         char* nombre;
-        t_list* instancias;
         int socket;
         bool enabled;
-        sem_t bin_interfaz_disponible;
-        t_list* procesos;
+        t_list* instancias;
+        t_list* procesos; // Solo PIDs (uint8_t)
 } t_io;
    
 typedef struct { // Elemento en 't_list* instancias'

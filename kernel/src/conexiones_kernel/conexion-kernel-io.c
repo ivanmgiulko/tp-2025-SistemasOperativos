@@ -86,14 +86,51 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			_proceso_desbloqueado_suspendido->datos_io->instancia_utilizada->pid = -1;
 			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
-			
 			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
 
 			break;
 	
 		case -1:
 
-			log_error(logger_kernel, "el cliente [%d] se desconecto", socket_cliente_io);
+			t_io* interfaz_de_instancia_finalizada = buscar_io_en_lista(lista_de_io->lista_ios, socket_cliente_io);
+
+			t_instancia_io* instancia_a_eliminar = eliminar_y_devolver_instancia(interfaz_de_instancia_finalizada->instancias, socket_cliente_io);
+
+			if(instancia_a_eliminar->pid != -1) {
+
+				log_error(logger_kernel, "Se elimino una instancia de [%s]", interfaz_de_instancia_finalizada->nombre);
+
+				t_pcb* proceso_a_eliminar = _sacar_pcb_de_cola(instancia_a_eliminar->pid, estado_blocked_aux);
+
+				eliminar_proceso_de_io(interfaz_de_instancia_finalizada->procesos, proceso_a_eliminar->pid);
+				
+				pasar_pcb_blocked_a_exit(proceso_a_eliminar);
+
+				free(instancia_a_eliminar);
+
+				if(list_is_empty(interfaz_de_instancia_finalizada->instancias)) {
+				
+					for (int i = 0; i < list_size(interfaz_de_instancia_finalizada->procesos); i++) 
+					{
+						proceso_a_eliminar = list_get(interfaz_de_instancia_finalizada->procesos, i);
+
+						_sacar_pcb_de_cola(proceso_a_eliminar->pid, estado_blocked_aux);
+
+						eliminar_proceso_de_io(interfaz_de_instancia_finalizada->procesos, proceso_a_eliminar->pid);
+
+						pasar_pcb_blocked_a_exit(proceso_a_eliminar);
+					}
+
+					interfaz_de_instancia_finalizada->socket = -1;
+
+					eliminar_interfaz(interfaz_de_instancia_finalizada);
+				} 
+
+			} else {
+
+				log_error(logger_kernel, "La interfaz que se elimino no tenia ningun proceso...");
+			}
+
 			eliminar_paquete(paquete);
 			return EXIT_FAILURE;
 		default:

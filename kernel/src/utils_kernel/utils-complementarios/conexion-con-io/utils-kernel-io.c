@@ -26,13 +26,13 @@ void insertar_nueva_instancia_io(t_list* instancias, int socket_io){
     instancia->socket_io = socket_io;
     instancia->pid = -1;
     list_add(instancias, instancia);
-    log_debug(logger_kernel, "Nueva instancia de IO agregada");
+    log_debug(logger_kernel, "Nueva instancia de IO agregada | socket: [%d]", socket_io);
 }
 
-void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t pid) 
+void encolar_pcb_en_interfaz(t_io* interfaz, uint8_t* pid) 
 {
     pthread_mutex_lock(&(lista_de_io->mutex_lista));
-    list_add(interfaz->procesos, &pid);
+    list_add(interfaz->procesos, pid);
     pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 }
 
@@ -44,17 +44,22 @@ void alternar_estado_io(t_io* io){
 
 void eliminar_proceso_de_io(t_list* procesos_en_io, uint8_t pid) 
 {
-    void _destruir_pid(void* ptr) {
-        uint8_t* proceso_pid = (uint8_t*) ptr; 
-        free(proceso_pid);
-    }
 
     // Función para comparar el PID
     bool _pid_en_io(void* ptr) {
-        uint8_t* proceso_pid = (uint8_t*) ptr; 
+        uint8_t* proceso_pid = (uint8_t*) ptr;
         return *proceso_pid == pid;
     }
 
     // Eliminar el proceso de la lista
-    list_remove_and_destroy_by_condition(procesos_en_io, _pid_en_io, _destruir_pid);
+    list_remove_by_condition(procesos_en_io, _pid_en_io);
+}
+
+void eliminar_interfaz(t_io* interfaz) {
+
+    log_error(logger_kernel, "La interfaz [%s] ya no tiene mas instancias, por lo que fue eliminada la interfaz completamente...", interfaz->nombre);
+	list_destroy(interfaz->instancias);
+	list_destroy(interfaz->procesos);
+	free(interfaz->nombre);
+	free(interfaz);
 }
