@@ -367,41 +367,47 @@ void administrar_proceso_bloqueado(void* pcb)
     temporal_resume(tiempo_esperando);
     
     do { 
-        t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
-        
-        
-        if(instancia_disponible != NULL) {
-            instancia_disponible->pid = _proceso_bloqueado->pid;
-
-            if(proceso_suspendido) {
-
-                t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
-                encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
-
-                enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io);
-                
-            } else {
-                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
-                eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
-
-            }
+        if(io_que_usa_pcb_bloqueado->socket == -1) {
+            // Esto esta puesto para cuando finaliza la interfaz mientras el hilo sigue ejecutandose
             flag = !flag;
-
-        } else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
-            pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
-
-            // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-            // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-            // int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-
-            // enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
-
-            // manejar_conexion_kernel_memoria(fd_conexion_memoria);
-
-            // avisar a memo para que aumente el tamanio
-            proceso_suspendido = !proceso_suspendido;
-        }
+        } else {
+            
+            t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
+    
+            if(instancia_disponible != NULL) {
                 
+                instancia_disponible->pid = _proceso_bloqueado->pid;
+
+                if(proceso_suspendido) {
+
+                    t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
+                    encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
+
+                    enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io);
+                
+                } else {
+                    enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+                    eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+                }
+
+                flag = !flag;
+
+            } else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
+                pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
+
+                // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                // int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+
+                // enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
+
+                // manejar_conexion_kernel_memoria(fd_conexion_memoria);
+
+                // avisar a memo para que aumente el tamanio
+                
+                proceso_suspendido = !proceso_suspendido;
+            }
+        }        
     } while(!flag);
 
     temporal_destroy(tiempo_esperando);
