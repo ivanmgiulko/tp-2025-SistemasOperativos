@@ -81,28 +81,32 @@ void iniciar_planificador_mediano_plazo() {
         t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
         pthread_mutex_unlock(&(lista_de_io->mutex_lista));
         
-        pthread_mutex_lock(&(lista_de_io->mutex_lista));
-        t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
-        pthread_mutex_unlock(&(lista_de_io->mutex_lista));
-
-        if(instancia_disponible != NULL) {
-
-            instancia_disponible->pid = _proceso_bloqueado->pid;
-            _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
-            
-            enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+        if(io_que_usa_pcb_bloqueado != NULL || io_que_usa_pcb_bloqueado->socket != -1) {
             
             pthread_mutex_lock(&(lista_de_io->mutex_lista));
-            eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+            t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
             pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 
-        } else { 
+            if(instancia_disponible != NULL) {
 
-            // La interfaz no esta disponible -> sigue en BLOCKED
-            pthread_t hilo_administrar_proceso_bloqueado;
- 	        pthread_create(&hilo_administrar_proceso_bloqueado, NULL, (void*)administrar_proceso_bloqueado, (void*)_proceso_bloqueado);
-	        pthread_detach(hilo_administrar_proceso_bloqueado);
+                instancia_disponible->pid = _proceso_bloqueado->pid;
+                _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
+            
+                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+            
+                pthread_mutex_lock(&(lista_de_io->mutex_lista));
+                eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+                pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 
+            } else { 
+
+                // La interfaz no esta disponible -> sigue en BLOCKED
+                pthread_t hilo_administrar_proceso_bloqueado;
+ 	            pthread_create(&hilo_administrar_proceso_bloqueado, NULL, (void*)administrar_proceso_bloqueado, (void*)_proceso_bloqueado);
+	            pthread_detach(hilo_administrar_proceso_bloqueado);
+            }
+        } else {
+            pasar_pcb_blocked_a_exit(_proceso_bloqueado);
         }
     }
 
