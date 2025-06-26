@@ -19,8 +19,10 @@ int manejar_conexion_kernel_interrupt(){
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
-				limpiar_tlb();
 
+				//actualizar_memoria_principal();
+				limpiar_tlb();
+				
 				free(paquete);
 			
 				break;

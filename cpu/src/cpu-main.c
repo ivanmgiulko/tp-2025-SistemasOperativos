@@ -12,6 +12,8 @@ int main(int argc, char* argv[]){
     char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
 	char* puerto_memoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
     char* ip_memoria = config_get_string_value(config_cpu, "IP_MEMORIA");
+	uint32_t entradas_cache = atoi(config_get_string_value(config_cpu,"ENTRADAS_CACHE"));
+	uint32_t retardo_cache = atoi(config_get_string_value(config_cpu, "RETARDO_CACHE"));
     uint32_t maximas_entradas_tlb = atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
 	char* algoritmo_reemplazo_tlb = config_get_string_value(config_cpu, "REEMPLAZO_TLB");
 	algoritmo = algoritmo_from_string(algoritmo_reemplazo_tlb);
@@ -34,6 +36,7 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
 	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
 	mmu = inicializar_mmu();	
+	memoria_cache = inicializar_cache(entradas_cache, mmu->tamanio_pagina);
 	tlb = inicializar_tlb(maximas_entradas_tlb);
 
 	//	IP_MEMORIA=127.0.0.4
@@ -72,10 +75,12 @@ int main(int argc, char* argv[]){
 
 
 
-	//Libera config y logger
-    config_destroy(config_cpu);
+	//Libera config y logger,y otros
+	destruir_tlb(tlb);
+	destruir_cache(memoria_cache, mmu->tamanio_pagina);
+	destruir_mmu(mmu);
+	config_destroy(config_cpu);
 	log_destroy(logger_cpu);
-
 
     return 0;
 }

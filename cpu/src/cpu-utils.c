@@ -162,6 +162,7 @@ void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
     eliminar_paquete(paquete);
 
 }
+//FUNCIONES DE MMU
 mmu_t* inicializar_mmu(){
     mmu_t* mmu = malloc(sizeof(mmu_t));
     mmu->tamanio_pagina = 0;
@@ -171,6 +172,11 @@ mmu_t* inicializar_mmu(){
     log_info(logger_cpu, "MMU inicializada");
     return mmu;
 }
+
+void destruir_mmu(mmu_t* mmu) {
+    free(mmu);  // no hay punteros internos, solo liberar la struct
+}
+
 void recibir_datos_de_memoria(mmu_t* mmu) {
     uint32_t buffer_size;
     // Recibir tamaño del buffer
@@ -205,6 +211,7 @@ void recibir_datos_de_memoria(mmu_t* mmu) {
 	free(buffer_stream);
 }
 
+//FUNCIONES DE DIRECCIONES
 //Traduce una direccion logica de W/R a sus componentes utiles para calcular la direccion fisica
 t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica) {
     t_pre_direccion_fisica resultado;
@@ -244,6 +251,9 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 	log_debug(logger_cpu, "Dirección física final calculada: %d", direccion_fisica_final);
 	return direccion_fisica_final;
 }
+
+//FUNCIONES DE TLB
+
 tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
 	tlb_t* tlb = malloc(sizeof(tlb_t));
 	tlb->cantidad_entradas = maximas_entradas_tlb;
@@ -254,6 +264,14 @@ tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
 	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
 	return tlb;
 }
+
+void destruir_tlb(tlb_t* tlb) {
+    if (!tlb) return;
+
+    free(tlb->entradas);  // liberar array de entradas
+    free(tlb);            // liberar estructura completa
+}
+
 void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante, algoritmo_tlb_t algoritmo){
 	
  	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
@@ -361,3 +379,87 @@ algoritmo_tlb_t algoritmo_from_string(const char* str) {
     log_info(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>", 
             indice_lru, nro_pagina_entrante, marco_asociado_entrante);
 }
+
+// FUNCIONES DE CACHE
+//Inicializo cache
+t_memoria_cache* inicializar_cache(uint32_t cant_paginas, uint32_t tam_pagina) {
+    t_memoria_cache* cache = malloc(sizeof(t_memoria_cache));
+    cache->cantidad_paginas = cant_paginas;
+    cache->paginas = malloc(sizeof(t_pagina_de_cache) * cant_paginas);
+
+    for (uint32_t i = 0; i < cant_paginas; i++) {
+        cache->paginas[i].nro_pagina = -1; // -1 significa que está libre
+        cache->paginas[i].contenido = malloc(tam_pagina);
+        cache->paginas[i].bit_uso = false;
+        cache->paginas[i].bit_modificado = false;
+    }
+
+    return cache;
+}
+
+void destruir_cache(t_memoria_cache* cache, uint32_t tam_pagina) {
+    if (!cache) return;
+
+    for (uint32_t i = 0; i < cache->cantidad_paginas; i++) {
+        free(cache->paginas[i].contenido);  // liberar el contenido de cada página
+    }
+
+    free(cache->paginas);  // liberar array de páginas
+    free(cache);           // liberar la estructura completa
+}
+
+int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado) {
+    for (int i = 0; i < cache->cantidad_paginas; i++) {
+        if (cache->paginas[i].nro_pagina == nro_pagina_buscado) {
+            cache->paginas[i].bit_uso = true;
+
+            log_info(logger_cpu, "PID: %d - Cache Hit - Pagina: %d", pcb_actual->pid, nro_pagina_buscado);
+            return i; // devuelve el índice de esa página dentro del array
+        }
+    }
+
+    log_info(logger_cpu, "PID: %d - Cache Miss - Pagina: %d", pcb_actual->pid, nro_pagina_buscado);
+    return -1; // no se encontró
+}
+
+//ACA SE HACE EL WRITE DE TODAS LAS PAGINAS DEL CACHE EN LA MEMORIA PRINCIPAL
+// void actualizar_memoria_principal(){
+
+
+// 	direccion_logica = atoi(instruccion->parametros.write.direccion);
+//             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
+
+//             //CACHE
+
+//             //TLB
+//             aux_tlb = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+
+//             if (aux_tlb != -1)
+//                 marco_correspondiente = aux_tlb;
+//             else
+//                 marco_correspondiente = tlb_miss(pre_direccion_fisica);
+         
+//             direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
+//             // Mandamos la ejecución con la dirección física final
+//             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
+//             agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
+//             agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
+//             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
+//             bytes = paquete_write->buffer->size + 2*sizeof(int);
+
+//             void* a_enviar_write = serializar_paquete(paquete_write, bytes);
+//             mmu->ultima_direccion_fisica_calculada = direccion_fisica_final; 
+//             if (ultima_escritura) 
+//                 free(ultima_escritura);
+//             ultima_escritura = strdup(instruccion->parametros.write.datos);
+//             send(fd_conexion_memoria, a_enviar_write, bytes, 0);
+
+//             free(pre_direccion_fisica.entrada_nivel);
+//             free(a_enviar_write);
+//             eliminar_paquete(paquete_write);
+            
+//             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
+
+//             sem_post(&sem_write);
+
+// }

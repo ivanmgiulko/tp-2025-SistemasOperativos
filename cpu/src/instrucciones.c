@@ -197,6 +197,12 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             direccion_logica = atoi(instruccion->parametros.write.direccion);
             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
 
+            //CACHE
+            // if(buscar_pagina_en_cache(memoria_cache, direccion.nro_pagina) != -1){
+                //Encontro La pagina en cache
+            //}
+
+            //TLB
             aux_tlb = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
             if (aux_tlb != -1)
@@ -379,7 +385,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
 			log_info(logger_cpu, "syscall detectada... parametros ");
 
-
+            
             paquete->codigo_operacion = SYSCALL_EXIT;
 
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
@@ -395,9 +401,10 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_exit);
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
-
+            
+            //actualizar_memoria_principal();
             limpiar_tlb();
-
+            
             sem_post(&sem_cpu_kernel);
 			break;
 		default:
