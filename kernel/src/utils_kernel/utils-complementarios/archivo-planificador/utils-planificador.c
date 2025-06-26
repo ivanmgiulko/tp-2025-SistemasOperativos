@@ -121,6 +121,7 @@ void inicializar_estructuras()
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
     
+    sem_init(&bin_eliminar_procesos_en_interfaces, 0, 0);
     sem_init(&bin_proceso_eliminar, 0, 1);
     sem_init(&bin_cpu_disponible, 0, 0);
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
@@ -333,7 +334,6 @@ void planificar_con_srt()
             
             sem_wait(&bin_cpu_disponible); // Espera se desaloje el CPU que usaba el otro proceso que tenia mas estimacion
             
-
             enviar_a_ejecutar_proceso(cpu_de_proceso_a_desalojar, pcb_a_operar);
 
         } else {
@@ -359,41 +359,57 @@ void administrar_proceso_bloqueado(void* pcb)
     tiempo_esperando->elapsed_ms = 0;
     
     t_pcb* _proceso_bloqueado = (t_pcb*)pcb;
+
+    pthread_mutex_lock(&(lista_de_io->mutex_lista));
     t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
+    pthread_mutex_unlock(&(lista_de_io->mutex_lista));
       
     int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
     bool flag = false, proceso_suspendido = false;
     
     temporal_resume(tiempo_esperando);
     
-    do { 
-        if(io_que_usa_pcb_bloqueado->socket == -1) {
-            // Esto esta puesto para cuando finaliza la interfaz mientras el hilo sigue ejecutandose
+    do {
+        
+        pthread_mutex_lock(&(lista_de_io->mutex_lista));
+        t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
+        pthread_mutex_unlock(&(lista_de_io->mutex_lista));
+
+        if(io_que_usa_pcb_bloqueado == NULL) {
+            sem_wait(&bin_eliminar_procesos_en_interfaces);
             flag = !flag;
         } else {
-            
-            t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
-    
             if(instancia_disponible != NULL) {
                 
+                pthread_mutex_lock(&(lista_de_io->mutex_lista));
                 instancia_disponible->pid = _proceso_bloqueado->pid;
+                pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 
                 if(proceso_suspendido) {
 
                     t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
-                    encolar_pcb_en_estado(estado_blocked_aux, _proceso_suspendido);
 
                     enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io);
                 
                 } else {
                     enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+                
+                    pthread_mutex_lock(&(lista_de_io->mutex_lista));
                     eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+                    pthread_mutex_unlock(&(lista_de_io->mutex_lista));
                 }
 
                 flag = !flag;
 
+            } else if (io_que_usa_pcb_bloqueado == NULL || io_que_usa_pcb_bloqueado->socket == -1){
+                
+                flag = !flag;
+
             } else if(temporal_gettime(tiempo_esperando) >= tiempo_maximo_espera && !proceso_suspendido){
+            
                 pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
+
+                encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
 
                 // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
                 // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
@@ -406,8 +422,9 @@ void administrar_proceso_bloqueado(void* pcb)
                 // avisar a memo para que aumente el tamanio
                 
                 proceso_suspendido = !proceso_suspendido;
-            }
-        }        
+            }    
+        }
+
     } while(!flag);
 
     temporal_destroy(tiempo_esperando);

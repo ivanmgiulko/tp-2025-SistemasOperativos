@@ -60,6 +60,15 @@ void eliminar_interfaz(t_io* interfaz) {
     log_error(logger_kernel, "La interfaz [%s] ya no tiene mas instancias, por lo que fue eliminada la interfaz completamente...", interfaz->nombre);
 	list_destroy(interfaz->instancias);
 	list_destroy(interfaz->procesos);
-	free(interfaz->nombre);
+    
+    bool _es_la_interfaz(void* ptr) {
+        t_io* io = (t_io*) ptr;
+        return (strcmp(io->nombre, interfaz->nombre) == 0);
+    }
+
+    list_remove_by_condition(lista_de_io->lista_ios, _es_la_interfaz);
+    
+    free(interfaz->nombre);
 	free(interfaz);
+
 }

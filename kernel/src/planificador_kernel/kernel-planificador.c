@@ -23,6 +23,7 @@ sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
+sem_t bin_eliminar_procesos_en_interfaces;
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
 

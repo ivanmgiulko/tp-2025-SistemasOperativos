@@ -55,29 +55,38 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
                 
-                t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
-                
-                if(interfaz_io_existente != NULL) { 
+                if(lista_de_io == NULL) {
                     
-                    log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
-                    
-                    _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
-                    _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
-
-                    encolar_pcb_en_interfaz(interfaz_io_existente, &_proceso_a_bloquear->pid);
-
-                    pasar_de_exec_a_blocked(_proceso_a_bloquear); 
-
-                    sem_post(&sem_cantidad_pcbs_en_blocked);
-                    // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
-
-                } else {
-
                     pasar_de_exec_a_exit(_proceso_a_bloquear);
 
-                }
-                eliminar_paquete(paquete);
+                } else {
+                    
+                    t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
+                
+                    if(interfaz_io_existente != NULL) { 
+                    
+                        log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
+                    
+                        _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
+                        _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
 
+                        encolar_pcb_en_interfaz(interfaz_io_existente, &_proceso_a_bloquear->pid);
+
+                        pasar_de_exec_a_blocked(_proceso_a_bloquear); 
+
+                        sem_post(&sem_cantidad_pcbs_en_blocked);
+                        // SEMAFORO PARA PLANIFICADOR LARGO PLAZO PARA QUE SALGA DE ESPERA ACTIVA
+
+                        } else {
+
+                        pasar_de_exec_a_exit(_proceso_a_bloquear);
+
+                    }
+                
+                eliminar_paquete(paquete);
+                
+                }
+                
                 break;
 
             case SYSCALL_INIT_PROC:

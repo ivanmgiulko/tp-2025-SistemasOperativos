@@ -83,10 +83,6 @@ t_instancia_io* eliminar_y_devolver_instancia(t_list* lista_de_instancias, int s
 t_instancia_io* devolver_instancia_disponible(char* nombre_interfaz) { 
     t_io* tipo_de_io = buscar_io(lista_de_io->lista_ios, nombre_interfaz);
     
-    if(tipo_de_io->nombre == NULL) {
-        return NULL;
-    }
-
     if(tipo_de_io != NULL){
         return buscar_instancia_disponible(tipo_de_io->instancias);
     }
