@@ -170,15 +170,12 @@ t_instruccion* decode(char* linea) {
 }
 
 void ejecutar_instruccion(t_instruccion* instruccion) {
-    int aux_tlb;
-    int bytes;
-    int direccion_logica; 
+    int indice_pagina_cache, bytes, direccion_logica;
     t_pre_direccion_fisica pre_direccion_fisica;
-    uint32_t direccion_fisica_final;
-    uint32_t marco_correspondiente;
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    crear_buffer(paquete);
-        log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
+    uint32_t direccion_fisica_final, marco_correspondiente;
+    t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
+    
+    log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
 
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
@@ -191,86 +188,102 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete);
 			break;
 		case INSTR_WRITE:
-            // log_info(logger_cpu, "##PID <%d> - Ejecutando: <%s> - <%s> <%s>", 
-            //     pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
-            //     instruccion->parametros.write.datos, instruccion->parametros.write.direccion);
+
+            //Prepara los datos para calculos de direcciones
             direccion_logica = atoi(instruccion->parametros.write.direccion);
             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
 
             //CACHE
-            // if(buscar_pagina_en_cache(memoria_cache, direccion.nro_pagina) != -1){
-                //Encontro La pagina en cache
-            //}
+            if(cache_esta_activada()){
+                indice_pagina_cache = buscar_pagina_en_cache(memoria_cache, pre_direccion_fisica.nro_pagina);
+                //Si NO encuentra La pagina en cache, la carga desde memoria
+                if(indice_pagina_cache == -1){     
+                    indice_pagina_cache = manejar_cache_miss(pre_direccion_fisica);           
+                }
+                //RETARDO DE CACHE:
+                usleep(memoria_cache->retardo * 1000);
+                escribir_en_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.write.datos);
+                log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
+                pcb_actual->pc++;
+                sem_post(&sem_cpu); // Libera el semáforo de CPU
+            }
+            //Si la cache no esta activada
+            else{
+                //TLB
+                //Verifica si la página está en TLB
+                marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
-            //TLB
-            aux_tlb = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+                if (marco_correspondiente == -1){
+                    //TLB_MISS, accede a tabla de paginas en memoria para obtener marco
+                    marco_correspondiente = tlb_miss(pre_direccion_fisica);
+                }
+                //TLB_HIT    
 
-            if (aux_tlb != -1)
-                marco_correspondiente = aux_tlb;
-            else
-                marco_correspondiente = tlb_miss(pre_direccion_fisica);
-         
-            direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
-            // Mandamos la ejecución con la dirección física final
-            t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
-            agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
-            agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
-            bytes = paquete_write->buffer->size + 2*sizeof(int);
+                //Calcula direccion fisica
+                direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
+                mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
+                
+                //Envia el WRITE a memoria
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos);
+                log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
+                free(pre_direccion_fisica.entrada_nivel);
+                eliminar_paquete(paquete);
+                
+                if (ultima_escritura) 
+                    free(ultima_escritura);
+                ultima_escritura = strdup(instruccion->parametros.write.datos);
 
-            void* a_enviar_write = serializar_paquete(paquete_write, bytes);
-            mmu->ultima_direccion_fisica_calculada = direccion_fisica_final; 
-            if (ultima_escritura) 
-                free(ultima_escritura);
-            ultima_escritura = strdup(instruccion->parametros.write.datos);
-            send(fd_conexion_memoria, a_enviar_write, bytes, 0);
-
-            free(pre_direccion_fisica.entrada_nivel);
-            free(a_enviar_write);
-            eliminar_paquete(paquete_write);
-            
-            log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
-
-            sem_post(&sem_write);
-
-            
+               sem_post(&sem_memoria); // Espera a que la memoria confirme el read
+            }
 			break;
+
 		case INSTR_READ:
-
-            
+            //Calculos de predireccion
             direccion_logica = atoi(instruccion->parametros.read.direccion);
-            pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
+            pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);  
 
-            aux_tlb = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+            //CACHE
+            if(cache_esta_activada()){
+                indice_pagina_cache = buscar_pagina_en_cache(memoria_cache, pre_direccion_fisica.nro_pagina);
+                //Si NO encuentra La pagina en cache, la carga desde memoria
+                if(indice_pagina_cache == -1){     
+                    indice_pagina_cache = manejar_cache_miss(pre_direccion_fisica);           
+                }
+                //RETARDO DE CACHE:
+                usleep(memoria_cache->retardo * 1000);
+                char* datos_leidos = leer_de_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.read.tamanio);
+                log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <LEER> - Valor : <%s>", pcb_actual->pid, datos_leidos);
+                free(datos_leidos);
+                pcb_actual->pc++;
+                sem_post(&sem_cpu); // Libera el semáforo de CPU
+            }
+            //Si la cache no esta activada
+            else{
+                //TLB
+                //Verifica si la página está en TLB
+                marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
-            // aux_tlb != 1 TLB_HIT LEAN MATATE
-            if (aux_tlb != -1)
-                marco_correspondiente = aux_tlb;
-            else
-                marco_correspondiente = tlb_miss(pre_direccion_fisica);
+                if (marco_correspondiente == -1){
+                    //TLB_MISS, accede a tabla de paginas en memoria para obtener marco
+                    marco_correspondiente = tlb_miss(pre_direccion_fisica);
+                }
+                //TLB_HIT    
 
-            direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
-            mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
-
-            t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
-            agregar_a_paquete(paquete_read, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_read, &direccion_fisica_final, sizeof(uint32_t));
-            agregar_a_paquete(paquete_read, &instruccion->parametros.read.tamanio, sizeof(uint32_t));
-            bytes = paquete_read->buffer->size + 2*sizeof(int);
-            void* a_enviar_read = serializar_paquete(paquete_read, bytes);
-
-            send(fd_conexion_memoria, a_enviar_read, bytes, 0);
-
-            free(pre_direccion_fisica.entrada_nivel);
-            free(a_enviar_read);
-            eliminar_paquete(paquete_read);
-            
-            log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
-            eliminar_paquete(paquete);
-           
-            sem_post(&sem_read);
-
+                //Calcula direccion fisica
+                direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
+                mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
+                
+                //Envia el read a memoria
+                enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio);
+                log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
+                free(pre_direccion_fisica.entrada_nivel);
+                eliminar_paquete(paquete);
+                
+                sem_post(&sem_memoria); // Espera a que la memoria confirme el read
+               
+            }
 			break;
+        
 		case INSTR_GOTO:
             log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> con parametros %d",
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
@@ -402,7 +415,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             
-            //actualizar_memoria_principal();
+            actualizar_memoria_principal_completa();
             limpiar_tlb();
             
             sem_post(&sem_cpu_kernel);

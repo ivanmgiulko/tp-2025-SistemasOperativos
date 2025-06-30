@@ -4,42 +4,84 @@
 #include <math.h>
 
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
+void pedir_datos_a_memoria(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = crear_paquete_con_codigo(CPU_PIDE_DATOS);
+    
+	agregar_a_paquete(paquete, mensaje, strlen(mensaje) + 1);
+
+    enviar_paquete(paquete, socket_cliente);
+
+	eliminar_paquete(paquete);
+}
+
+void recibir_datos_de_memoria(t_paquete* paquete, mmu_t* mmu) {
+    int offsett = sizeof(uint32_t);
+    memcpy(&(mmu->tamanio_pagina), paquete->buffer->stream + offsett, sizeof(uint32_t)); offsett += sizeof(uint32_t)*2;
+    memcpy(&(mmu->cantidad_niveles), paquete->buffer->stream + offsett, sizeof(uint32_t)); offsett += sizeof(uint32_t)*2;
+    memcpy(&(mmu->cantidad_entradas_tabla), paquete->buffer->stream + offsett, sizeof(uint32_t));
+
+    log_info(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
+          mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+
+    // uint32_t buffer_size;
+    // // Recibir tamaño del buffer
+    // if (recv(fd_conexion_memoria, &buffer_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+    //     log_error(logger_cpu, "Error al recibir el tamaño del buffer");
+    //     return;
+    // }
+
+    // // Recibir el contenido del buffer
+    // void* buffer_stream = malloc(buffer_size);
+    // if (recv(fd_conexion_memoria, buffer_stream, buffer_size, MSG_WAITALL) <= 0) {
+    //     log_error(logger_cpu, "Error al recibir el contenido del buffer");
+    //     free(buffer_stream);
+    //     return;
+    // }
+
+    // // Ahora sí, deserializá los datos
+    // if (buffer_size < sizeof(uint32_t) * 3) {
+    //     log_error(logger_cpu, "El tamaño del buffer es insuficiente para deserializar los datos de memoria");
+    //     free(buffer_stream);
+    //     return;
+    // }
+    // void* stream = buffer_stream;
+    //  memcpy(&(mmu->tamanio_pagina), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    //  memcpy(&(mmu->cantidad_niveles), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
+    //  memcpy(&(mmu->cantidad_entradas_tabla), stream, sizeof(uint32_t));
+    // free(buffer_stream);	 
+}
+
 void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
 	
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
 
-	//Serializa la petición
-	int size_peticion = 0;
-	void* peticion_serializada = serializar_peticion_instruccion(infoPCB, &size_peticion);
-    if(peticion_serializada == NULL) {
-        log_warning(logger_cpu, "Error al serializar la peticion de instruccion");
+    t_paquete* paquete = crear_paquete_instruccion();
+    agregar_a_paquete(paquete, &(infoPCB->pid), sizeof(int));
+    agregar_a_paquete(paquete, &(infoPCB->pc), sizeof(int));
+
+    if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
         return;
-	}
-	
-	//Envía la peticion serializada a MEMORIA
-	log_info(logger_cpu, "Size_peticion= %d", size_peticion);
+    }
+    //Envía la peticion serializada a MEMORIA
+    enviar_paquete(paquete, fd_conexion_memoria);
 	log_debug(logger_cpu, "Petición envíada, aguardo respuesta");
-	send(fd_conexion_memoria, peticion_serializada, size_peticion, 0);
-	free(peticion_serializada);
 }	
 	
-
 void manejar_respuesta_de_instruccion(t_paquete* paquete){
 
 	//Deserializa la instrucción recibida
-	t_respuesta_instruccion* respuesta = deserializar_respuesta_instruccion(paquete->buffer->stream);
-	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta->instruccion);
+    int desplazamiento = 0;
+	char* respuesta_instruccion = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
+	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta_instruccion);
 
 	t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-	instruccion = decode(respuesta->instruccion);
+	instruccion = decode(respuesta_instruccion);
 	if (!instruccion) {
         log_error(logger_cpu, "Error al decodificar la instrucción");
         // No olvides liberar respuesta->instruccion antes de salir
-        free(respuesta->instruccion);
-        free(respuesta);
-        free(paquete->buffer->stream);
-        free(paquete->buffer);
-        free(paquete);
+        free_instruccion(instruccion);
+        free(respuesta_instruccion);
         return;  // Finaliza la función si no se pudo decodificar la instrucción
     }
 	log_debug(logger_cpu, "Instrucción decodificada: %d", instruccion->tipo);
@@ -61,11 +103,7 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 	
 	
 	free_instruccion(instruccion);	
-	free(paquete->buffer->stream);
-	free(paquete->buffer);
-	free(paquete);
-	free(respuesta->instruccion);
-	free(respuesta);
+	free(respuesta_instruccion);
 }
 
 void _crear_conexion_kernel_interrupt(char* ip_kernel, char* puerto_kernel_interrupt, char* cpu_id) 
@@ -93,6 +131,7 @@ void _crear_conexion_kernel_dispatch(char* ip_kernel, char* puerto_kernel_dispat
 }
 
 void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) { 
+	//log_info(logger_cpu, "[CONEXION] Conectando a memoria en ip:%s, puerto:%s", ip_memoria, puerto_memoria);
 	fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 	
 	if(fd_conexion_memoria == -1){
@@ -100,7 +139,8 @@ void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) {
 		abort();
 	}
 	
-	pedir_datos("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+	//log_info(logger_cpu, "[CONEXION] Conectado a memoria con FD: %d", fd_conexion_memoria);
+	pedir_datos_a_memoria("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
 }
 
 void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
@@ -137,7 +177,6 @@ void check_interrupt(){
 	
 }
 
-
 void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 	buffer->size = sizeof(int) + sizeof(int);
@@ -162,6 +201,8 @@ void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
     eliminar_paquete(paquete);
 
 }
+
+
 //FUNCIONES DE MMU
 mmu_t* inicializar_mmu(){
     mmu_t* mmu = malloc(sizeof(mmu_t));
@@ -177,42 +218,107 @@ void destruir_mmu(mmu_t* mmu) {
     free(mmu);  // no hay punteros internos, solo liberar la struct
 }
 
-void recibir_datos_de_memoria(mmu_t* mmu) {
-    uint32_t buffer_size;
-    // Recibir tamaño del buffer
-    if (recv(fd_conexion_memoria, &buffer_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
-        log_error(logger_cpu, "Error al recibir el tamaño del buffer");
-        return;
+
+
+void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32_t tamanio){
+    //Envia el read a memoria
+    t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
+    agregar_a_paquete(paquete_read, &pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_read, &direccion_fisica_final, sizeof(uint32_t));
+    agregar_a_paquete(paquete_read, &tamanio, sizeof(uint32_t));
+    enviar_paquete(paquete_read, fd_conexion_memoria);
+    log_debug(logger_cpu, "Enviando READ a Memoria: PID=%d, Direccion Fisica Final=%d, Tamanio=%d", pid, direccion_fisica_final, tamanio);
+    eliminar_paquete(paquete_read);
+}
+
+void enviar_write_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, char* datos){
+    // Mandamos la ejecución con la dirección física final
+    t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
+    agregar_a_paquete(paquete_write, &pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
+    agregar_a_paquete(paquete_write, datos, strlen(datos) + 1);
+    enviar_paquete(paquete_write, fd_conexion_memoria);
+    log_debug(logger_cpu, "Enviando WRITE a Memoria: PID=%d, Direccion Fisica Final=%d, Contenido: %s", pid, direccion_fisica_final, datos);
+    eliminar_paquete(paquete_write);
+}
+
+char* obtener_pagina_de_memoria(uint32_t pid, uint32_t direccion_fisica) {
+    // Enviar solicitud a memoria para obtener la página correspondiente
+    enviar_read_a_memoria(pid, direccion_fisica, mmu->tamanio_pagina);
+
+    // Esperar respuesta de memoria
+    t_paquete* paquete_respuesta = crear_paquete_con_codigo(PAQUETE);
+    paquete_respuesta->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
+    recibir_buffer_en_paquete(fd_conexion_memoria,paquete_respuesta);
+    if (paquete_respuesta == NULL) {
+        log_error(logger_cpu, "Error al recibir respuesta de memoria");
+        return NULL;
     }
 
-    // Recibir el contenido del buffer
-    void* buffer_stream = malloc(buffer_size);
-    if (recv(fd_conexion_memoria, buffer_stream, buffer_size, MSG_WAITALL) <= 0) {
-        log_error(logger_cpu, "Error al recibir el contenido del buffer");
-        free(buffer_stream);
-        return;
+    // Verificar que la respuesta sea válida
+    if (paquete_respuesta->codigo_operacion != READ_MEMORIA) {
+        log_error(logger_cpu, "Error al obtener página de memoria, código de operación: %d", paquete_respuesta->codigo_operacion);
+        eliminar_paquete(paquete_respuesta);
+        return NULL;
     }
 
-    // Ahora sí, deserializá los datos
-    if (buffer_size < sizeof(uint32_t) * 3) {
-        log_error(logger_cpu, "El tamaño del buffer es insuficiente para deserializar los datos de memoria");
-        free(buffer_stream);
-        return;
+    // Deserializar contenido de la página
+    char* pagina = deserializar_read_o_write_de_memoria(paquete_respuesta);
+    eliminar_paquete(paquete_respuesta);
+    return pagina;
+}
+
+char* recibir_read_o_write_de_memoria() {
+    t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
+    // Espera recibir un paquete de memoria
+    paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
+    // Verifica que el paquete recibido sea de tipo READ_MEMORIA o WRITE_MEMORIA
+    if (paquete->codigo_operacion != READ_MEMORIA && paquete->codigo_operacion != WRITE_MEMORIA) {
+        log_error(logger_cpu, "Error: Código de operación inesperado: %d", paquete->codigo_operacion);
+        eliminar_paquete(paquete);
+        return NULL;
     }
-    void* stream = buffer_stream;
+    recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
+    log_debug(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);
 
-    memcpy(&(mmu->tamanio_pagina), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    memcpy(&(mmu->cantidad_niveles), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    memcpy(&(mmu->cantidad_entradas_tabla), stream, sizeof(uint32_t));
+    // Deserializa el contenido del paquete
+    char* contenido = deserializar_read_o_write_de_memoria(paquete);
+    log_debug(logger_cpu, "Contenido recibido: %s", contenido);
 
-    log_info(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
-             mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
-			 
-	free(buffer_stream);
+    // Procesa el contenido según el tipo de operación
+    if (paquete->codigo_operacion == READ_MEMORIA) {
+        log_info(logger_cpu, "READ_MEMORIA recibido. Contenido: %s", contenido);
+       
+    } else if (paquete->codigo_operacion == WRITE_MEMORIA) {
+        log_info(logger_cpu, "WRITE_MEMORIA recibido. Contenido: %s", contenido);
+    }
+
+    eliminar_paquete(paquete);
+    return contenido;
+}
+
+char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
+    char* contenido = malloc(paquete->buffer->size);
+    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
+    return contenido;
 }
 
 //FUNCIONES DE DIRECCIONES
 //Traduce una direccion logica de W/R a sus componentes utiles para calcular la direccion fisica
+uint32_t * calcular_entradas_por_nivel(int nro_pagina, int cantidad_niveles, int cantidad_entradas_tabla) {
+    uint32_t *entradas_por_nivel = malloc(sizeof(uint32_t) * cantidad_niveles);
+    if (entradas_por_nivel == NULL) {
+        log_error(logger_cpu, "Error al reservar memoria para entradas por nivel");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < cantidad_niveles; i++) {
+        int divisor = (int)pow(cantidad_entradas_tabla, cantidad_niveles - (i + 1));
+        entradas_por_nivel[i] = (nro_pagina / divisor) % cantidad_entradas_tabla;
+    }
+    return entradas_por_nivel;
+}
+
 t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica) {
     t_pre_direccion_fisica resultado;
 	
@@ -228,20 +334,9 @@ t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica) {
     resultado.desplazamiento = direccion_logica % TAMANIO_PAGINA;
 
 	// Reservar memoria dinámica para el array de niveles
-    resultado.entrada_nivel = malloc(sizeof(int) * CANT_NIVELES);
-	if (resultado.entrada_nivel == NULL) {
-		log_error(logger_cpu, "Error al reservar memoria para las entradas de nivel");
-		exit(EXIT_FAILURE);
-	}
-	//Teniendo una cantidad de niveles N y un identificador X de cada nivel podemos utilizar las siguientes fórmulas:
-	//entrada_nivel_X = floor(nro_página  / cant_entradas_tabla ^ (N - X)) % cant_entradas_tabla
-    for (int i = 0; i < CANT_NIVELES; i++) {
-        int divisor = (int)pow(CANT_ENTRADAS_TABLA, CANT_NIVELES - (i + 1));
-        resultado.entrada_nivel[i] = (resultado.nro_pagina / divisor) % CANT_ENTRADAS_TABLA;
-    }
+    resultado.entrada_nivel = calcular_entradas_por_nivel(resultado.nro_pagina, CANT_NIVELES, CANT_ENTRADAS_TABLA);
 	//Devuelve nro de pagina, desplazamiento y entradas de cada nivel
-	log_debug(logger_cpu, "Dirección lógica %d traducida a dirección física: Página %d, Desplazamiento %d", 
-			  direccion_logica, resultado.nro_pagina, resultado.desplazamiento);
+	log_debug(logger_cpu, "Dirección lógica %d traducida a dirección física: Página %d, Desplazamiento %d", direccion_logica, resultado.nro_pagina, resultado.desplazamiento);
     return resultado;
 }
 
@@ -250,6 +345,48 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 	uint32_t direccion_fisica_final = (marco * mmu->tamanio_pagina) + pre_direccion_fisica.desplazamiento;
 	log_debug(logger_cpu, "Dirección física final calculada: %d", direccion_fisica_final);
 	return direccion_fisica_final;
+}
+
+// Solicita a memoria el marco correspondiente a una pagina y devuelve la direccion fisica
+int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint32_t pid) {
+    int32_t marco_solicitado;
+    // Serializar la petición
+    log_debug(logger_cpu, "Solicitando marco a memoria para PID: %d, Página: %d", pid, pre_direccion_fisica.nro_pagina);
+    // Se crea un paquete de solicitud de marco
+    t_paquete* paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+    agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
+    agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
+    for (int i = 0; i < mmu->cantidad_niveles; i++)
+        agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+
+    enviar_paquete(paquete_solicitud_marco, fd_conexion_memoria);
+    log_debug(logger_cpu, "[SEND] Solicitud de marco enviada a memoria por socket: %d", fd_conexion_memoria);
+    
+    // Esperar la respuesta del hilo de recepción
+    log_debug(logger_cpu, "WAIT:Esperando respuesta de memoria...");
+    paquete_solicitud_marco->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
+    if (paquete_solicitud_marco->codigo_operacion != OBTENER_MARCO_CORRESPONDIENTE) {
+        log_error(logger_cpu, "Error al recibir respuesta de memoria, código de operación: %d", paquete_solicitud_marco->codigo_operacion);
+        eliminar_paquete(paquete_solicitud_marco);
+        return -1; // Error al recibir respuesta
+    }
+    marco_solicitado = recibir_marco_solicitado(paquete_solicitud_marco);
+    eliminar_paquete(paquete_solicitud_marco);
+    log_debug(logger_cpu, "Marco obtenido de memoria: %d", marco_solicitado);
+    return marco_solicitado;
+}
+
+int32_t recibir_marco_solicitado(t_paquete* paquete){
+    int32_t marco;
+    recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
+    if (paquete && paquete->buffer && paquete->buffer->stream) {
+        memcpy(&marco, paquete->buffer->stream + sizeof(uint32_t), sizeof(int32_t));
+        return marco;
+    }
+    else{
+        log_error(logger_cpu, "Error al recibir el marco solicitado");
+        return -1;//VALOR DE ERROR PARA INDICAR MARCO INVALIDO
+    }
 }
 
 //FUNCIONES DE TLB
@@ -322,29 +459,11 @@ int esta_en_tlb(uint32_t nro_pagina){
 	log_info(logger_cpu, "TLB MISS: Página %d no encontrada en TLB", nro_pagina);
 	return -1;
 }
+
 uint32_t tlb_miss(t_pre_direccion_fisica pre_direccion_fisica) {
 	// TLB Miss: “PID: <PID> - TLB MISS - Pagina: <NUMERO_PAGINA>”
-	uint32_t marco_correspondiente;
-	t_paquete* paquete_solicitud_marco;
-	void* a_enviar_peticion_marco;
-	uint32_t bytes = 0;
- 			paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
-            agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
-            agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
-            //agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.desplazamiento, sizeof(uint32_t));
-            for (int i = 0; i < mmu->cantidad_niveles; i++)
-                agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
-            bytes = paquete_solicitud_marco->buffer->size + 2*sizeof(int);
-            a_enviar_peticion_marco = serializar_paquete(paquete_solicitud_marco, bytes);
-            send(fd_conexion_memoria, a_enviar_peticion_marco, bytes, 0);
-
-            free(a_enviar_peticion_marco);
-            eliminar_paquete(paquete_solicitud_marco);
-
-            recv(fd_conexion_memoria, &marco_correspondiente, sizeof(uint32_t), MSG_WAITALL);
-
-			agregar_a_tlb(pre_direccion_fisica.nro_pagina, marco_correspondiente, algoritmo);
-
+	uint32_t marco_correspondiente = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
+	agregar_a_tlb(pre_direccion_fisica.nro_pagina, marco_correspondiente, algoritmo);
 	return marco_correspondiente;
 }
 
@@ -381,9 +500,22 @@ algoritmo_tlb_t algoritmo_from_string(const char* str) {
 }
 
 // FUNCIONES DE CACHE
+
+t_algoritmo_cache algoritmo_cache_from_string(char* str) {
+    if (strcmp(str, "CLOCK") == 0)
+        return CLOCK;
+    if (strcmp(str, "CLOCK-M") == 0)
+        return CLOCK_M;
+    // Valor por defecto o error
+    return CLOCK;
+}
+
 //Inicializo cache
-t_memoria_cache* inicializar_cache(uint32_t cant_paginas, uint32_t tam_pagina) {
+t_memoria_cache* inicializar_cache(char* algoritmo, uint32_t cant_paginas, uint32_t tam_pagina, uint32_t retardo) {
     t_memoria_cache* cache = malloc(sizeof(t_memoria_cache));
+    cache->algoritmo_reemplazo = algoritmo_cache_from_string(algoritmo);
+    cache->puntero_reemplazo = 0;
+    cache->retardo = retardo;
     cache->cantidad_paginas = cant_paginas;
     cache->paginas = malloc(sizeof(t_pagina_de_cache) * cant_paginas);
 
@@ -393,7 +525,7 @@ t_memoria_cache* inicializar_cache(uint32_t cant_paginas, uint32_t tam_pagina) {
         cache->paginas[i].bit_uso = false;
         cache->paginas[i].bit_modificado = false;
     }
-
+    log_info(logger_cpu, "CACHE inicializada, Algoritmo: %s | Cant. Paginas: %d", algoritmo, cant_paginas);
     return cache;
 }
 
@@ -406,6 +538,27 @@ void destruir_cache(t_memoria_cache* cache, uint32_t tam_pagina) {
 
     free(cache->paginas);  // liberar array de páginas
     free(cache);           // liberar la estructura completa
+}
+
+bool cache_esta_activada() {
+    // Verifica si la cache está activada
+    if (memoria_cache->cantidad_paginas == 0) {
+        log_error(logger_cpu, "La cache no está habilitada");
+        return false;
+    }
+    return true;
+}
+
+int buscar_espacio_libre_en_cache(t_memoria_cache* cache) {
+    // Busca una página libre en la cache
+    for (int i = 0; i < cache->cantidad_paginas; i++) {
+        if (cache->paginas[i].nro_pagina == -1) {
+            log_debug(logger_cpu,"Espacio libre en cache encontrado en índice: %d", i);
+            return i; // devuelve el índice de la primera página libre
+        }
+    }
+    log_debug(logger_cpu,"No hay espacio libre en cache");
+    return -1; // no hay espacio libre
 }
 
 int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado) {
@@ -422,44 +575,205 @@ int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado) {
     return -1; // no se encontró
 }
 
-//ACA SE HACE EL WRITE DE TODAS LAS PAGINAS DEL CACHE EN LA MEMORIA PRINCIPAL
-// void actualizar_memoria_principal(){
+char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer) {
+     // Validaciones básicas
+    if (indice < 0 || indice >= memoria_cache->cantidad_paginas){
+        log_error(logger_cpu, "Índice de página fuera de rango: %d", indice);
+        return NULL;
+    }
+    if (desplazamiento + tamanio_a_leer > mmu->tamanio_pagina) {
+        // No se puede leer más allá del final de la página
+        log_error(logger_cpu, "Desplazamiento y tamaño a leer exceden el tamaño de la página: %d + %d > %d", 
+                  desplazamiento, tamanio_a_leer, mmu->tamanio_pagina);
+        return NULL;
+    }
+
+    // Marcar bit de uso
+    memoria_cache->paginas[indice].bit_uso = true;
+
+    // Copiar los datos a un nuevo buffer y devolver
+    char* datos_leidos = malloc(tamanio_a_leer);
+    memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
+
+    return datos_leidos;
+}
+
+void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir){
+    // Validaciones básicas
+    uint32_t tamanio_a_escribir = strlen(datos_a_escribir) + 1; // +1 para incluir el terminador nulo
+    if (indice < 0 || indice >= memoria_cache->cantidad_paginas){
+        log_error(logger_cpu, "Índice de página fuera de rango: %d", indice);
+        return;
+    }
+
+    if (desplazamiento + tamanio_a_escribir > mmu->tamanio_pagina) {
+        // No se puede escribir más allá del final de la página
+        log_error(logger_cpu, "Desplazamiento y tamaño a escribir exceden el tamaño de la página: %d + %d > %d", desplazamiento, tamanio_a_escribir, mmu->tamanio_pagina);
+        return;
+    }
+
+    // Escribir datos
+    memcpy(memoria_cache->paginas[indice].contenido + desplazamiento, datos_a_escribir, tamanio_a_escribir);
+
+    // Marcar uso y modificación
+    memoria_cache->paginas[indice].bit_uso = true;
+    memoria_cache->paginas[indice].bit_modificado = true;
+    return;
+}
+
+void agregar_pagina_a_cache(int nro_pagina, int indice_libre, char* contenido) {
+
+    // Agregar la página a la cache
+    memoria_cache->paginas[indice_libre].nro_pagina = nro_pagina;
+    memcpy(memoria_cache->paginas[indice_libre].contenido, contenido, mmu->tamanio_pagina);
+    //LOG OBLIGATORIO
+    log_info(logger_cpu, "PID: %d - Cache Add - Pagina: %d", pcb_actual->pid, nro_pagina);
+}
+
+int reemplazo_clock(t_memoria_cache* cache){
+    while (1) {
+        t_pagina_de_cache* pagina = &cache->paginas[cache->puntero_reemplazo];
+        if (!pagina->bit_uso) {
+            // Si está modificada, escribir en memoria antes de reemplazar
+            if (pagina->bit_modificado) {
+                // Debés calcular la dirección física de la página reemplazada
+                t_pre_direccion_fisica pre_dir;
+                pre_dir.nro_pagina = pagina->nro_pagina;
+                pre_dir.desplazamiento = 0;
+                pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+                uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
+                uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+                free(pre_dir.entrada_nivel);
+                pagina->bit_modificado = false;
+            }
+            int victima = cache->puntero_reemplazo;
+            cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+            return victima;
+        }
+        pagina->bit_uso = false;
+        cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+    }
+}
+
+int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tam_pagina) {
+    // Primera vuelta: buscar uso=0 y modificado=0
+    for (int vueltas = 0; vueltas < 2; vueltas++) {
+        for (int i = 0; i < cache->cantidad_paginas; i++) {
+            t_pagina_de_cache* pagina = &cache->paginas[cache->puntero_reemplazo];
+            if (!pagina->bit_uso && !pagina->bit_modificado) {
+                int victima = cache->puntero_reemplazo;
+                cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+                return victima;
+            }
+            cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+        }
+        // Segunda vuelta: buscar uso=0 y modificado=1
+        for (int i = 0; i < cache->cantidad_paginas; i++) {
+            t_pagina_de_cache* pagina = &cache->paginas[cache->puntero_reemplazo];
+            if (!pagina->bit_uso && pagina->bit_modificado) {
+                // Escribir en memoria antes de reemplazar
+                t_pre_direccion_fisica pre_dir;
+                pre_dir.nro_pagina = pagina->nro_pagina;
+                pre_dir.desplazamiento = 0;
+                pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+                uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
+                uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+                free(pre_dir.entrada_nivel);
+                pagina->bit_modificado = false;
+                int victima = cache->puntero_reemplazo;
+                cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+                return victima;
+            }
+            pagina->bit_uso = false;
+            cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+        }
+    }
+    // Si no encontró, reemplaza la actual
+    int victima = cache->puntero_reemplazo;
+    cache->puntero_reemplazo = (cache->puntero_reemplazo + 1) % cache->cantidad_paginas;
+    return victima;
+}
 
 
-// 	direccion_logica = atoi(instruccion->parametros.write.direccion);
-//             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
+int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
+    //Verificaciones básicas
 
-//             //CACHE
+    //Busco espacio libre para la nueva pagina
+    int marco_cache = buscar_espacio_libre_en_cache(memoria_cache);
+    if (marco_cache == -1) {
+        log_warning(logger_cpu, "iniciando algoritmo de reemplazo");
+        //ACA APLICA EL ALGORITMO DE REEMPLAZO DE CACHE
+        if (memoria_cache->algoritmo_reemplazo == CLOCK) {
+            marco_cache = reemplazo_clock(memoria_cache);
+        } else if (memoria_cache->algoritmo_reemplazo == CLOCK_M) {
+            marco_cache = reemplazo_clock_m(memoria_cache, mmu->tamanio_pagina);
+        }
+    }
 
-//             //TLB
-//             aux_tlb = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+    //Verifico TLB
+    int marco = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+    
+    //Si la pagina NO está en TLB, es necesario acceder a la tabla de paginas
+    if (marco == -1) {
+        log_warning(logger_cpu, "Página %d NO encontrada en TLB,es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+        // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
+        marco = tlb_miss(pre_direccion_fisica);
+     }
+     //Si la pagina ya esta en la TLB, no necesito acceder a la tabla de paginas para obtener el marco
+     else{
+        log_debug(logger_cpu, "Página %d encontrada en TLB, no es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+    }
+    //Una vez que sabemos el marco de la página, podemos calcular la direccion física
+    uint32_t direccion_fisica_final = pre_direccion_fisica.nro_pagina * mmu->tamanio_pagina;
+    //Con la dirección física, buscamos la página en memoria y la cargamos en cache
+    char* pagina = obtener_pagina_de_memoria(pcb_actual->pid, direccion_fisica_final);
+    if (pagina == NULL) {
+        log_error(logger_cpu, "Error al obtener la página de memoria para PID: %d, Página: %d", pcb_actual->pid, pre_direccion_fisica.nro_pagina);
+        return -1; // Error al obtener la página
+    }
+    //agrego la pag a cache
+    agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, pagina);
+    log_debug(logger_cpu, "Se agrego la página %d del proceso  PID: %d a CACHE", pre_direccion_fisica.nro_pagina, pcb_actual->pid);
+    return marco_cache;
+}
 
-//             if (aux_tlb != -1)
-//                 marco_correspondiente = aux_tlb;
-//             else
-//                 marco_correspondiente = tlb_miss(pre_direccion_fisica);
-         
-//             direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
-//             // Mandamos la ejecución con la dirección física final
-//             t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
-//             agregar_a_paquete(paquete_write, &(pcb_actual->pid), sizeof(uint32_t));
-//             agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
-//             agregar_a_paquete(paquete_write, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos) + 1);
-//             bytes = paquete_write->buffer->size + 2*sizeof(int);
+void actualizar_memoria_principal_completa() {
+    char* respuesta;   
+    for (uint32_t i = 0; i < memoria_cache->cantidad_paginas; i++) {
+        t_pagina_de_cache* pagina = &memoria_cache->paginas[i];
+        if (pagina->nro_pagina != -1 && pagina->bit_modificado) {
+            // Calcular dirección física
+            t_pre_direccion_fisica pre_dir;
+            pre_dir.nro_pagina = pagina->nro_pagina;
+            pre_dir.desplazamiento = 0;
+            pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+            uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
+            uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
 
-//             void* a_enviar_write = serializar_paquete(paquete_write, bytes);
-//             mmu->ultima_direccion_fisica_calculada = direccion_fisica_final; 
-//             if (ultima_escritura) 
-//                 free(ultima_escritura);
-//             ultima_escritura = strdup(instruccion->parametros.write.datos);
-//             send(fd_conexion_memoria, a_enviar_write, bytes, 0);
+            // Escribir en memoria principal
+            enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+            respuesta = recibir_read_o_write_de_memoria();
+            if( strcmp(respuesta, "WRITE completado con éxito") == 0){
+            log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+            } else {
+                log_error(logger_cpu, "Error al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
+            }
+            // Liberar memoria de las entradas de nivel
+            free(respuesta);
+            free(pre_dir.entrada_nivel);
+            pagina->bit_modificado = false;
+        }
+        // Limpiar la entrada de la caché
+        pagina->nro_pagina = -1;
+        pagina->bit_uso = false;
+        pagina->bit_modificado = false;
+        memset(pagina->contenido, 0, mmu->tamanio_pagina);
+    }
+    memoria_cache->puntero_reemplazo = 0;
+}
+    
 
-//             free(pre_direccion_fisica.entrada_nivel);
-//             free(a_enviar_write);
-//             eliminar_paquete(paquete_write);
-            
-//             log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
-
-//             sem_post(&sem_write);
-
-// }

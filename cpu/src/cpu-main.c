@@ -14,6 +14,7 @@ int main(int argc, char* argv[]){
     char* ip_memoria = config_get_string_value(config_cpu, "IP_MEMORIA");
 	uint32_t entradas_cache = atoi(config_get_string_value(config_cpu,"ENTRADAS_CACHE"));
 	uint32_t retardo_cache = atoi(config_get_string_value(config_cpu, "RETARDO_CACHE"));
+	char* algoritmo_reemplazo_cache = config_get_string_value(config_cpu, "REEMPLAZO_CACHE");
     uint32_t maximas_entradas_tlb = atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
 	char* algoritmo_reemplazo_tlb = config_get_string_value(config_cpu, "REEMPLAZO_TLB");
 	algoritmo = algoritmo_from_string(algoritmo_reemplazo_tlb);
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]){
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
 	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
 	mmu = inicializar_mmu();	
-	memoria_cache = inicializar_cache(entradas_cache, mmu->tamanio_pagina);
+	memoria_cache = inicializar_cache(algoritmo_reemplazo_cache,entradas_cache, mmu->tamanio_pagina, retardo_cache);
 	tlb = inicializar_tlb(maximas_entradas_tlb);
 
 	//	IP_MEMORIA=127.0.0.4
@@ -56,6 +57,7 @@ int main(int argc, char* argv[]){
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	sem_init(&sem_cpu,0,0);
 	sem_init(&sem_cpu_kernel,0,1);
+	sem_init(&sem_memoria, 0, 0); // Inicializa el semáforo en 0 para bloquear el acceso
 	sem_init(&sem_read,0,0);
 	sem_init(&sem_write,0,0);
 	pthread_mutex_init(&mutex_cpu, NULL);

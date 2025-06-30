@@ -4,6 +4,7 @@
 #include "./cpu-gestor.h"
 #include "./instrucciones.h"
 
+
 void pedir_instruccion_a_memoria(t_peticion_instruccion*);
 
 void manejar_respuesta_de_instruccion(t_paquete* paquete);
@@ -19,14 +20,14 @@ void _handshake_kernel_con_cpu_id(int, char*);
 void check_interrupt();
 void enviar_proceso_desalojado(int , int , int );
 
+void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32_t tamanio);
+void enviar_write_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, char* datos);
 
 
 
-
-
+char* deserializar_read_o_write_de_memoria(t_paquete* paquete);
 
 //FUNCIONES Y DEFINICIONES DE MMU
-
 typedef struct{
     uint32_t tamanio_pagina;
     uint32_t cantidad_entradas_tabla;
@@ -38,7 +39,9 @@ extern mmu_t* mmu;
 
 mmu_t* inicializar_mmu();
 void destruir_mmu(mmu_t* mmu);
-void recibir_datos_de_memoria(mmu_t*);
+void pedir_datos_a_memoria(char* , int );
+void recibir_datos_de_memoria(t_paquete* paquete, mmu_t*);
+
 
 //FUNCIONES Y DEFINICIONES DE DIRECCIONES
 typedef struct {
@@ -48,8 +51,11 @@ typedef struct {
 } t_pre_direccion_fisica;
 
 t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica);
+uint32_t* calcular_entradas_por_nivel(int nro_pagina, int cantidad_niveles, int cant_entradas_tabla);
 uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica);
 
+int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint32_t pid);
+int32_t recibir_marco_solicitado(t_paquete* paquete);
 
 //FUNCIONES Y DEFINICIONES DE TLB
 
@@ -88,24 +94,43 @@ void limpiar_tlb();
 
 
 //FUNCIONES Y DEFINICIONES DE CACHE
+typedef enum {
+    CLOCK,
+    CLOCK_M
+} t_algoritmo_cache;
+
 typedef struct{
     int nro_pagina;
-    void* contenido;
+    char* contenido;
     bool bit_uso;        // CLOCK y CLOCK-M
     bool bit_modificado; // solo CLOCK-M
 } t_pagina_de_cache;
 
 typedef struct{
+    int puntero_reemplazo;
+    t_algoritmo_cache algoritmo_reemplazo;
     uint32_t cantidad_paginas;
     t_pagina_de_cache* paginas;
+    uint32_t retardo;
 } t_memoria_cache;
 
 extern t_memoria_cache* memoria_cache;
 
-t_memoria_cache* inicializar_cache(uint32_t cant_paginas, uint32_t tam_pagina);
+t_algoritmo_cache algoritmo_cache_from_string(char* str);
+t_memoria_cache* inicializar_cache(char* algoritmo, uint32_t cant_paginas, uint32_t tam_pagina, uint32_t retardo);
 void destruir_cache(t_memoria_cache* cache, uint32_t tam_pagina);
+bool cache_esta_activada();
+
 int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado); 
-//void actualizar_memoria_principal();
+char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer);
+void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir);
+
+int buscar_espacio_libre_en_cache(t_memoria_cache* cache);
+void agregar_pagina_a_cache(int nro_pagina, int indice_libre, char* contenido);
+int reemplazo_clock(t_memoria_cache* cache);
+
+int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica);
+void actualizar_memoria_principal_completa();
 
 
 #endif // CPU_UTILS_H

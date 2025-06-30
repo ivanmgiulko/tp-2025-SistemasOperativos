@@ -20,32 +20,32 @@ void* serializar_peticion_instruccion(t_peticion_instruccion* peticion, int* byt
 
 }
 
-void* serializar_respuesta_instruccion(t_respuesta_instruccion* respuesta, int* bytes) {
+// void* serializar_respuesta_instruccion(t_respuesta_instruccion* respuesta, int* bytes) {
 
-    t_paquete* paquete = crear_paquete_instruccion();
+//     t_paquete* paquete = crear_paquete_instruccion();
 
-    int longitud = strlen(respuesta->instruccion) + 1;
-    agregar_a_paquete(paquete, respuesta->instruccion, longitud);
+//     int longitud = strlen(respuesta->instruccion) + 1;
+//     agregar_a_paquete(paquete, respuesta->instruccion, longitud);
     
-    if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
-        return NULL;
-    }
+//     if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
+//         return NULL;
+//     }
 
-    *bytes = sizeof(op_code) + sizeof(uint32_t) + paquete->buffer->size;
+//     *bytes = sizeof(op_code) + sizeof(uint32_t) + paquete->buffer->size;
 
-    void* respuesta_serializada = serializar_paquete(paquete, *bytes);
-    if(respuesta_serializada == NULL) {
-        return NULL;
-    }
+//     void* respuesta_serializada = serializar_paquete(paquete, *bytes);
+//     if(respuesta_serializada == NULL) {
+//         return NULL;
+//     }
     
-    // Liberar memoria del paquete
-    free(paquete->buffer->stream);
-    free(paquete->buffer);
-    free(paquete);
+//     // Liberar memoria del paquete
+//     free(paquete->buffer->stream);
+//     free(paquete->buffer);
+//     free(paquete);
 
-    return respuesta_serializada;
+//     return respuesta_serializada;
 
-}
+// }
 
 // t_peticion_instruccion* deserializar_peticion_instruccion(void* stream) {
 //     t_peticion_instruccion* peticion = malloc(sizeof(t_peticion_instruccion));
@@ -79,30 +79,30 @@ t_peticion_instruccion* deserializar_peticion_instruccion(void* buffer) {
     return peticion;
 }
 
-t_respuesta_instruccion* deserializar_respuesta_instruccion(void* stream) {
-    t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
+// t_respuesta_instruccion* deserializar_respuesta_instruccion(void* stream) {
+//     t_respuesta_instruccion* respuesta = malloc(sizeof(t_respuesta_instruccion));
 
-    // Leer la longitud de la instrucción (el primer "int" del stream)
-    int longitud;
-    memcpy(&longitud, stream, sizeof(int));
-    //log_info(logger_cpu, "Longitud de instrucción recibida: %d", longitud);
+//     // Leer la longitud de la instrucción (el primer "int" del stream)
+//     int longitud;
+//     memcpy(&longitud, stream, sizeof(int));
+//     //log_info(logger_cpu, "Longitud de instrucción recibida: %d", longitud);
 
-    // Validación de la longitud, por si es inválida
-    if (longitud <= 0 || longitud > 1024) {
-        //log_error(logger_cpu, "Longitud de instrucción inválida: %d", longitud);
-        free(respuesta);
-        return NULL;
-    }
+//     // Validación de la longitud, por si es inválida
+//     if (longitud <= 0 || longitud > 1024) {
+//         //log_error(logger_cpu, "Longitud de instrucción inválida: %d", longitud);
+//         free(respuesta);
+//         return NULL;
+//     }
 
-    // Asignar memoria para la instrucción recibida
-    respuesta->instruccion = malloc(longitud);
+//     // Asignar memoria para la instrucción recibida
+//     respuesta->instruccion = malloc(longitud);
 
-    // Copiar la instrucción desde el stream (saltando los primeros 4 bytes que son la longitud)
-    memcpy(respuesta->instruccion, stream + sizeof(int), longitud);
+//     // Copiar la instrucción desde el stream (saltando los primeros 4 bytes que son la longitud)
+//     memcpy(respuesta->instruccion, stream + sizeof(int), longitud);
 
-    // Retornar el struct de respuesta con la instrucción deserializada
-    return respuesta;
-}
+//     // Retornar el struct de respuesta con la instrucción deserializada
+//     return respuesta;
+// }
 
 // char* obtener_instruccion(int pid, int pc, char* path_pseudocodigos, t_log* logger_memoria) {
 //     char path_archivo[256];

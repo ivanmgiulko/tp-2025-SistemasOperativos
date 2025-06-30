@@ -17,7 +17,7 @@ typedef enum {
 
 typedef struct {
     bool presente;
-    uint32_t marco;
+    int32_t marco;
     uint32_t num_pagina;
     bool uso;
     bool modificado;
@@ -66,6 +66,7 @@ typedef struct {
 
 extern t_memoria_del_sistema* memoria_del_sistema; // variable global para almacenar la memoria del sistema
 
+
 //Funciones de serializacion
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 uint32_t  leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
@@ -90,8 +91,33 @@ void liberar_tabla(t_tabla_pagina* tabla);
 void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria, int paginas_necesarias, int* paginas_asignadas);
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
-uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
+int32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
 void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera,t_memoria_del_sistema* memoria_del_sistema);
 void  inicializar_swap();
+
+//FUNCIONES DE CONEXION
+void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete);
+
+void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete);
+
+void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
+
+void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete);
+
+void enviar_respuesta_kernel(char* mensaje, int socket_cliente);
+
+void enviar_proceso_terminado(uint8_t pid, int socket_cliente);
+
+t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer);
+
+void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente);
+
+bool realizar_dump_memory(int pid);
+
+void avisar_kernel_mande_otro_proceso(int socket_cliente);
+
+void enviar_datos_a_cpu(int );
+                
+uint32_t* calcular_entradas_por_nivel(uint32_t nro_pagina, int cantidad_niveles, int entradas_por_tabla);
 
 #endif // MEMORIA_UTILS_H_

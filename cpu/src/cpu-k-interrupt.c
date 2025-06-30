@@ -5,7 +5,7 @@ int manejar_conexion_kernel_interrupt(){
    while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(fd_conexion_kernel_interrupt);
+		paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_kernel_interrupt);
 
 		switch (paquete->codigo_operacion) {
 			case MENSAJE:
@@ -20,7 +20,7 @@ int manejar_conexion_kernel_interrupt(){
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
 
-				//actualizar_memoria_principal();
+				actualizar_memoria_principal_completa();
 				limpiar_tlb();
 				
 				free(paquete);

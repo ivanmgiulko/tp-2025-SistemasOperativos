@@ -85,4 +85,5 @@ void saludar(char* quien);
 t_config* iniciar_config(char*);
 void log_obligatorio(t_log* log, int pid, char* texto);
 
+char* convertir_cod_op_a_string(op_code codigo_operacion);
 #endif

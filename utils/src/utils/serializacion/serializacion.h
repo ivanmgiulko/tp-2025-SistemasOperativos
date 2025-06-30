@@ -4,6 +4,7 @@
 #include <./utils/utils.h>
 
 extern t_log* logger_servidor; 
+
 // Funciones de serializacion junto su respectiva deserializacion
 void enviar_nombreInterfaz(char* mensaje, int socket_cliente);
 char* recibir_tamProceso(int socket_cliente);
@@ -11,21 +12,32 @@ char* recibir_tamProceso(int socket_cliente);
 void enviar_mensaje(char*, int);
 void recibir_mensaje(int, t_log* );
 
-// Funciones que complementan a la serializacion
+// Funciones basicas de serializacion
+void crear_buffer(t_paquete*);
 t_paquete* crear_paquete(void);
 t_paquete* crear_paquete_instruccion(void);
 t_paquete* crear_paquete_con_codigo(op_code codigo);
-void agregar_a_paquete(t_paquete*, void*, int);
+
+void agregar_a_paquete(t_paquete*, void*, uint32_t);
 void enviar_paquete(t_paquete*, int);
+
+void recibir_paquete(int , t_paquete* );
+//t_paquete* recibir_paquete_sin_codigo(int);
+
 void liberar_conexion(int);
+
 void eliminar_paquete(t_paquete*);
 void* serializar_paquete(t_paquete*, int);
-void crear_buffer(t_paquete*);
+
 // Funciones que complementan a la deserializacion
 void* recibir_buffer(int*, int);
-void recibir_paquete(int , t_paquete* );
-t_paquete* recibir_paquete_instruccion(int);
-int recibir_operacion(int);
-void pedir_datos(char* , int );
+
+void recibir_buffer_en_paquete(int socket_cliente, t_paquete* paquete);
+int32_t recibir_cod_operacion(int);
+
+char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
+uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
+
+void loggear_mensaje_desde_buffer(t_buffer* buffer, t_log* logger);
 
 #endif // SERIALIZACION_H_

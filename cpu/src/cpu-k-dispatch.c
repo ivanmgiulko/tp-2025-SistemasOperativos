@@ -4,7 +4,7 @@ int manejar_conexion_kernel_dispatch(){
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(fd_conexion_kernel_dispatch);
+		paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_kernel_dispatch);
 
 		switch (paquete->codigo_operacion) {
 

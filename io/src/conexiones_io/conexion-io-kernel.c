@@ -95,7 +95,7 @@ int manejar_conexion_io(int socket_cliente){
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente, logger_io);

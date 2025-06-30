@@ -57,16 +57,26 @@ void inicializar_swap() {
     log_info(logger_memoria, "SWAP inicializado en: %s", path_swap);
 }
 
-//hecho por nosotros
-
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-   // pathArchivoPseudocodigo = "/home/utnso/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
+    pathArchivoPseudocodigo = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
-    //esto lo use para probar algo ignorar /borrar cuando este todo ok (lean)
-   
-    FILE* archivo = fopen(pathArchivoPseudocodigo, "r");
+    
+    // Construir la ruta correcta. Si es una ruta relativa, agregarle "../" para salir del directorio memoria
+    char* ruta_corregida;
+    if (pathArchivoPseudocodigo[0] == '/') {
+        // Es una ruta absoluta, usarla tal como está
+        ruta_corregida = strdup(pathArchivoPseudocodigo);
+    } else {
+        // Es una ruta relativa, construir la ruta desde el directorio memoria hacia kernel
+        ruta_corregida = malloc(strlen(pathArchivoPseudocodigo) + 4); // +4 para "../"
+        sprintf(ruta_corregida, "../%s", pathArchivoPseudocodigo);
+    }
+    
+    log_debug(logger_memoria, "Intentando abrir archivo en: %s", ruta_corregida);
+    FILE* archivo = fopen(ruta_corregida, "r");
     if (!archivo) {
         perror("Error abriendo archivo de pseudocodigo");
+        free(ruta_corregida);
         return NULL;
     }
 
@@ -74,6 +84,7 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
     char** instrucciones = malloc(capacidad * sizeof(char*));
     if (!instrucciones) {
         fclose(archivo);
+        free(ruta_corregida);
         return NULL;
     }
 
@@ -94,6 +105,7 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
     }
 
     fclose(archivo);
+    free(ruta_corregida);
     *cantidad = count;
     return instrucciones;
 }
@@ -238,34 +250,9 @@ char* obtener_instruccion(int pid, int pc) {
     return "NULL"; // PID no encontrado
 }
 
-char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
 
-    char* string = malloc(tamanio);
-    memcpy(string, buffer->stream + *desplazamiento, tamanio);
-    *desplazamiento += tamanio;
 
-    return string;
-}
 
-uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
-
-    if (tamanio != sizeof(uint32_t)) {
-        log_error(logger_memoria, "Tamaño inesperado al deserializar un uint32_t: %d", tamanio);
-        return 0;
-    }
-
-    uint32_t valor;
-    memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint32_t));
-    *desplazamiento += sizeof(uint32_t);
-
-    return valor;
-}
 
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales){
     t_tabla_pagina* tabla = malloc(sizeof(t_tabla_pagina));
@@ -376,7 +363,7 @@ int buscar_marco_libre(t_memoria_del_sistema* memoria) {
     return -1;
 }
 
-uint32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
+int32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles) {
     t_tabla_pagina* actual = tabla_primera;
 
     // Recorremos los niveles intermedios
@@ -424,4 +411,340 @@ void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera, t_memoria_d
             }
         }
     }
+}
+
+//FUNCIONES DE CONEXION:
+
+void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete) {
+    if (paquete->buffer->size < sizeof(int) * 2) {
+        log_error(logger_memoria, "El tamaño del buffer es insuficiente para deserializar la instrucción");
+        return;
+    }
+
+    t_peticion_instruccion* peticion = deserializar_peticion_instruccion(paquete->buffer->stream);
+
+    log_info(logger_memoria, "PID recibido: %d", peticion->pid);
+    log_info(logger_memoria, "PC recibido: %d", peticion->pc);
+
+	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
+	char* respuesta_instruccion = string_duplicate(obtener_instruccion(peticion->pid, peticion->pc));
+
+	//Entra a este if cuando el pc es mayor a cant de instrucciones
+	if(strcmp(respuesta_instruccion, "PC FINALIZADO")== 0){
+	
+		log_info(logger_memoria, "No hay más instrucciones a ejecutar para este proceso");
+		log_debug(logger_memoria, "Serializando paquete:");
+		log_debug(logger_memoria, "Código de operación: %d", FIN_PID);
+
+		t_paquete* paquete_fin = crear_paquete_con_codigo(FIN_PID);
+        enviar_paquete(paquete_fin, socket_cliente);
+
+        //Libero memoria
+		eliminar_paquete(paquete_fin);
+        free(respuesta_instruccion);
+        free(peticion);
+		return;
+	}
+
+	//Entra aca si Memoria del sistema no incializada o pid no encontrado
+	else if(strcmp(respuesta_instruccion, "NULL")== 0){
+	 	log_error(logger_memoria, "pid no encontrado o memoria_del_sistema/procesos no están inicializados");
+		free(respuesta_instruccion);
+        free(peticion);
+        return;
+	} 
+
+	//Entra acá si encontro el proceso y la instrucción
+	else{
+		log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s",peticion->pid, peticion->pc, respuesta_instruccion);
+		
+        //Serializo la respuesta
+		t_paquete* paquete_instruccion = crear_paquete_con_codigo(INSTRUCCION);
+        agregar_a_paquete(paquete_instruccion, respuesta_instruccion, strlen(respuesta_instruccion)+1);
+        
+		log_debug(logger_memoria, "Serializando paquete:");
+		log_debug(logger_memoria, "Código de operación: %d", paquete_instruccion->codigo_operacion);
+		log_debug(logger_memoria, "Tamaño del buffer: %d", paquete_instruccion->buffer->size);
+		log_debug(logger_memoria, "Instrucción: %s", respuesta_instruccion);
+
+		//Envio la instruccion serializada envio a CPU 
+		
+		log_info(logger_memoria, "Enviando Instrucción a CPU");
+		enviar_paquete(paquete_instruccion, socket_cliente);
+        log_debug(logger_memoria, "[SEND] Instrucción ENVIADA al socket: %d, suerte cpu!!", socket_cliente);
+	    //Libero memoria
+        eliminar_paquete(paquete_instruccion);
+	    free(respuesta_instruccion);
+        free(peticion);
+    }
+}
+
+void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
+
+	
+	//Deserializo el paquete:
+    int offset = 0;
+	uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	char* datos = leer_string_desde_buffer(paquete->buffer, &offset);
+
+    //ESCRIBE EN MEMORIA
+	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
+
+	// Log obligatorio
+	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d ", pid, direccion_fisica);
+
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
+
+    // Enviar confirmación de éxito al cpu
+	t_paquete* paquete_confirmacion_write = crear_paquete_con_codigo(WRITE_MEMORIA);
+    char* mensaje_confirmacion_write = "WRITE completado con éxito";
+    agregar_a_paquete(paquete, mensaje_confirmacion_write, strlen(mensaje_confirmacion_write)+1);
+
+    log_info(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
+    enviar_paquete(paquete_confirmacion_write, socket_cliente);
+
+	free(datos);
+	eliminar_paquete(paquete_confirmacion_write);
+}
+
+void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
+
+    //Deserializo el paquete:
+    int offset = 0;
+	uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint32_t tamanio_a_leer = leer_uint32_desde_buffer(paquete->buffer, &offset);
+
+    log_info(logger_memoria, "[MEMORIA] READ recibido - Dirección: %d | Tamaño: %d", direccion_fisica, tamanio_a_leer);
+
+	void* datos_leidos = malloc(tamanio_a_leer);
+	memcpy(datos_leidos, memoria_del_sistema->memoria_principal + direccion_fisica, tamanio_a_leer);
+	char* datos_leidos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
+	memcpy(datos_leidos_como_string, datos_leidos, tamanio_a_leer);
+
+	// Log obligatorio
+	log_trace(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
+	log_trace(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
+
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
+
+    // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
+	t_paquete* paquete_confirmacion_read = crear_paquete_con_codigo(READ_MEMORIA);
+	
+    agregar_a_paquete(paquete_confirmacion_read, datos_leidos_como_string, strlen(datos_leidos_como_string)+1);
+
+	log_debug(logger_memoria, "[SEND] Enviando código de operación: %d (READ_MEMORIA)", READ_MEMORIA);
+	log_debug(logger_memoria, "[SEND] Enviando tamaño: %d", tamanio_a_leer);
+	log_debug(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
+	
+    enviar_paquete(paquete_confirmacion_read, socket_cliente);
+
+	free(datos_leidos);
+	free(datos_leidos_como_string);
+	eliminar_paquete(paquete_confirmacion_read);
+}
+
+void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
+	
+	//deserializo el paquete pid, nro pagina, entradas por nivel
+	int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+    int desplazamiento = 0;
+
+    uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+
+	t_pre_direccion_fisica direccion;
+    direccion.nro_pagina= leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+    direccion.entrada_nivel = malloc(sizeof(uint32_t) * cantidad_niveles);
+
+    for (int i = 0; i < cantidad_niveles; i++){
+        direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+	}
+
+	log_debug(logger_memoria, "Iniciando busqueda de marco de pagina %d para proceso PID: %d", direccion.nro_pagina, pid);
+
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "PID %d no encontrado en memoria", pid);
+        free(direccion.entrada_nivel);
+        return;
+    }
+
+    int32_t marco = buscar_marco_en_tabla(proceso->tabla_primera, direccion.entrada_nivel, cantidad_niveles);
+    if (marco == -1) {
+        log_error(logger_memoria, "No se pudo encontrar el marco solicitado de la pagina %d para PID %d",direccion.nro_pagina, pid);
+        free(direccion.entrada_nivel);
+        return;
+    }
+	
+    log_trace(logger_memoria, "PID: %d - Página: %d - Marco: %d", pid, direccion.nro_pagina, marco);
+
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesTP += atoi(config_memoria->CANTIDAD_NIVELES);
+
+    // Enviar el marco
+    t_paquete* paquete_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+
+    agregar_a_paquete(paquete_marco, &marco, sizeof(int32_t));
+    
+	// LOG DEL TAMAÑO DEL BUFFER Y CONTENIDO
+    log_debug(logger_memoria, "[SEND] Enviando código de operación: %d (OBTENER_MARCO_CORRESPONDIENTE)", OBTENER_MARCO_CORRESPONDIENTE);
+    log_debug(logger_memoria, "[SEND] Enviando tamaño: %d", paquete_marco->buffer->size);
+    log_debug(logger_memoria, "[SEND] Enviando marco: %d", marco);
+   
+    enviar_paquete(paquete_marco, socket_cliente);
+    log_debug(logger_memoria, "[SEND] MARCO ENVIADO al socket: %d, suerte cpu!!", socket_cliente);
+    eliminar_paquete(paquete_marco);
+    free(direccion.entrada_nivel);
+}
+
+void enviar_respuesta_kernel(char* mensaje, int socket_cliente)
+{
+	t_paquete* paquete = crear_paquete_con_codigo(PROCESO_MEMORIA);
+    
+    agregar_a_paquete(paquete, mensaje, strlen(mensaje)+1);
+
+    enviar_paquete(paquete,socket_cliente);
+
+	eliminar_paquete(paquete);
+}
+
+void enviar_proceso_terminado(uint8_t pid, int socket_cliente) {
+
+    t_paquete* paquete_proceso_eliminado = crear_paquete_con_codigo(PROCESO_FINALIZADO);
+    
+    agregar_a_paquete(paquete_proceso_eliminado, &pid, sizeof(uint8_t));
+
+    enviar_paquete(paquete_proceso_eliminado, socket_cliente);
+
+    eliminar_paquete(paquete_proceso_eliminado);
+}
+
+t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer) 
+{
+	t_pcb* proceso_a_dumpear = malloc(sizeof(t_pcb));
+
+    memcpy(&(proceso_a_dumpear->pid), buffer->stream, sizeof(uint8_t));
+
+    return proceso_a_dumpear;
+}
+
+void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente) {
+
+    t_paquete* paquete = crear_paquete_con_codigo(RESPUESTA_DUMPEO);
+
+    agregar_a_paquete(paquete, &pid, sizeof(uint8_t));
+    agregar_a_paquete(paquete, &respuesta, sizeof(bool));
+
+    enviar_paquete(paquete, socket_cliente);
+    
+    eliminar_paquete(paquete);
+}
+
+bool realizar_dump_memory(int pid) {
+	// Buscamos proceso a dumpear
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "DUMP_MEMORY: proceso %d no registrado en memoria", pid);
+        return false;
+    }
+
+	int tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+
+    // Creo directorio
+    char* dump_path = config_memoria->DUMP_PATH;
+    int resultado = mkdir(dump_path, 0755);
+	if (resultado == 0) {
+        log_trace(logger_memoria, "DUMP_MEMORY: directorio creado con éxito");
+    } else {
+        log_trace(logger_memoria, "DUMP_MEMORY: el directorio ha sido creado anteriormente");
+    }
+
+    // Creo el timestamp para el nombre del archivo a dumpear
+    time_t now = time(NULL);
+    struct tm tm = *localtime(&now);
+    char timestamp[32];
+    strftime(timestamp, sizeof(timestamp), "%Y%m%d%H%M%S", &tm);
+
+    // Armamos nombre completo del timestamp anashei
+    char filename[512];
+    snprintf(filename, sizeof(filename), "%s/%d-%s.dmp", dump_path, pid, timestamp);
+
+    // Abrimos puerta al nether
+    FILE* file = fopen(filename, "w+b");
+    if (!file) {
+        log_error(logger_memoria, "DUMP_MEMORY: no pudo abrirse el archivo del dump %s", filename);
+        return false;
+    }
+
+	// Recorrer páginas y volcar su contenido
+    int paginas_totales = proceso->tamanioMemoria / tam_pagina;
+
+    for (int nro_pagina = 0; nro_pagina < paginas_totales; nro_pagina++) {
+		uint32_t* entradas_por_nivel = calcular_entradas_por_nivel(nro_pagina, cantidad_niveles, entradas_por_tabla);
+		if (!entradas_por_nivel) {
+			log_error(logger_memoria, "Error al calcular las entradas por nivel");
+			break;
+		}
+
+        int marco = buscar_marco_en_tabla(proceso->tabla_primera, entradas_por_nivel, cantidad_niveles);
+		free(entradas_por_nivel);
+
+        if (marco == -1) {
+            log_warning(logger_memoria, "Página %d no asignada (se saltea)", nro_pagina);
+            char vacio[tam_pagina];
+            memset(vacio, 0, tam_pagina);
+            fwrite(vacio, 1, tam_pagina, file);  // rellena con ceros si no está asignada
+        } else {
+            void* origen = memoria_del_sistema->memoria_principal + (marco * tam_pagina);
+            fwrite(origen, 1, tam_pagina, file);
+        }
+    }
+
+    fclose(file);
+    log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
+    return true;
+}
+
+void avisar_kernel_mande_otro_proceso(int socket_cliente) {
+
+	t_paquete* paquete = crear_paquete_con_codigo(SUSPENSION_HECHA);
+    
+	enviar_paquete(paquete,socket_cliente);
+
+	eliminar_paquete(paquete);
+}
+
+void enviar_datos_a_cpu(int socket_cliente){
+	// Serializar los datos de memoria en el buffer del paquete
+	uint32_t tam_pagina = atoi(config_memoria->TAM_PAGINA);
+	uint32_t cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+	uint32_t entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+
+	t_paquete* paquete = crear_paquete_con_codigo(DATOS_DE_MEMORIA);
+    agregar_a_paquete(paquete, &tam_pagina, sizeof(uint32_t));
+    agregar_a_paquete(paquete, &cantidad_niveles, sizeof(uint32_t));
+    agregar_a_paquete(paquete, &entradas_por_tabla, sizeof(uint32_t));
+
+    enviar_paquete(paquete, socket_cliente);
+	eliminar_paquete(paquete);
+}
+
+uint32_t* calcular_entradas_por_nivel(uint32_t nro_pagina, int cantidad_niveles, int entradas_por_tabla) {
+    uint32_t* entradas = malloc(sizeof(uint32_t) * cantidad_niveles);
+    if (!entradas) return NULL;
+
+    for (int nivel = cantidad_niveles - 1; nivel >= 0; nivel--) {
+        entradas[nivel] = nro_pagina % entradas_por_tabla;
+        nro_pagina /= entradas_por_tabla;
+    }
+
+    return entradas;
 }

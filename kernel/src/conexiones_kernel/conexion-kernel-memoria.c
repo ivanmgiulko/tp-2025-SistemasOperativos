@@ -17,7 +17,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 		
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_cliente);
+		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
 
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:

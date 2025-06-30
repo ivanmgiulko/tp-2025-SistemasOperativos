@@ -17,7 +17,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
         
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_interrupt);
+		paquete->codigo_operacion = recibir_cod_operacion(socket_interrupt);
         
         int* offset = malloc(sizeof(int)); 
         *offset = 0;
@@ -217,7 +217,7 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
 
         t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_dispatch);
+		paquete->codigo_operacion = recibir_cod_operacion(socket_dispatch);
 
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:

@@ -49,7 +49,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 	while (1) {
 		t_paquete* paquete = malloc(sizeof(t_paquete));
 		crear_buffer(paquete);
-		paquete->codigo_operacion = recibir_operacion(socket_cliente_io);
+		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente_io);
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente_io, logger_kernel);

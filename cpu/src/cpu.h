@@ -10,6 +10,7 @@
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
 sem_t sem_cpu;
+sem_t sem_memoria;
 sem_t sem_read;
 sem_t sem_write;
 t_memoria_cache* memoria_cache;
@@ -25,5 +26,7 @@ int fd_conexion_memoria;
 int valor_sem_cpu;
 uint32_t  proxima_a_reemplazar= 0;
 uint32_t contador_accesos_tlb = 0;
+int32_t ultimo_marco_obtenido = 0;
 char* ultima_escritura = NULL;
+char* ultima_lectura = NULL;
 #endif // CPU_H_
