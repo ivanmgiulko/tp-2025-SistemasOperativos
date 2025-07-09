@@ -92,10 +92,11 @@ void iniciar_planificador_mediano_plazo() {
                 instancia_disponible->pid = _proceso_bloqueado->pid;
                 _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
             
-                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
-            
                 pthread_mutex_lock(&(lista_de_io->mutex_lista));
+                
+                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io, PROCESO_BLOQUEADO);
                 eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
+                
                 pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 
             } else { 

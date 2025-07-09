@@ -41,10 +41,12 @@
     t_info_proceso* recibir_proceso_bloqueado(t_buffer* buffer);
 
     /**
-	* @brief envia al Kernel un PID de un proceso que termino su bloqueo
+    * @brief envia al Kernel un PID de un proceso que termino su bloqueo
     * @param socket_cliente: socket de Kernel
     * @param pid: pid de proceso desbloqueado
-	*/
-    void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid);
+    * @param codigo_operacion: codigo de operacion que indica en que estado se encuentra el proceso en kernel
+    * 
+    */
+    void enviar_pid_desbloqueado(int socket_cliente, uint8_t pid, int codigo_operacion);
 
 #endif // IO_COMUNICACION_H_

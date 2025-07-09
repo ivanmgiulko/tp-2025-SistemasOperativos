@@ -2,6 +2,7 @@
 #define PROCESS_H_
 
     #include <./utils/utils.h>
+    #include <./utils/serializacion/serializacion.h>
     
 typedef enum {
     NEW, 
@@ -107,22 +108,20 @@ typedef struct  {
     pthread_mutex_t mutex;
 } t_contador;
 
-metricas_estado* iniciarMetricasEstado();
-metricas_tiempo* iniciarMetricasTiempo();
-metricas_proceso iniciarMetricasProceso();
+    metricas_estado* iniciarMetricasEstado();
+    metricas_tiempo* iniciarMetricasTiempo();
+    metricas_proceso iniciarMetricasProceso();
 
-t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial);
+    t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial);
 
-void enviarProceso_A_Memoria(t_pcb , int );
+    void enviar_proceso_a_memoria(t_pcb , int , int);
 
-void enviar_proceso_a_finalizar_Memoria(t_pcb , int );
+    t_pcbMemoria* deserializar_proceso(t_buffer* );
 
-t_pcbMemoria* deserializarProceso(t_buffer* );
+    t_contador* inicializar_contador();
 
-t_contador* inicializar_contador();
+    int _deserializar_pid(int* offset, t_paquete* paquete);
 
-int _deserializar_pid(int* offset, t_paquete* paquete);
-
-int _deserializar_pc(int* offset, t_paquete* paquete);
+    int _deserializar_pc(int* offset, t_paquete* paquete);
 
 #endif // PROCESS_H_

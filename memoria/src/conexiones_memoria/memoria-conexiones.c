@@ -51,7 +51,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				usleep( retardo_memoria * 1000);
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
 			
-				t_pcbMemoria* proceso_a_inicializar = deserializarProceso(paquete->buffer);
+				t_pcbMemoria* proceso_a_inicializar = deserializar_proceso(paquete->buffer);
 				log_trace(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
 
 				//log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
@@ -85,7 +85,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				//RETARDO DE MEMORIA
 				usleep( atoi(config_memoria->RETARDO_SWAP) * 1000);
 			
-				t_pcbMemoria* proceso_suspendido = deserializarProceso(paquete->buffer);
+				t_pcbMemoria* proceso_suspendido = deserializar_proceso(paquete->buffer);
 
 				cantMemoria += proceso_suspendido->tamanioMemoria;
 
@@ -102,7 +102,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
 
-				t_pcbMemoria* proceso_a_finalizar = deserializarProceso(paquete->buffer);
+				t_pcbMemoria* proceso_a_finalizar = deserializar_proceso(paquete->buffer);
  
 				int pidParaEliminar = proceso_a_finalizar->pid;
 				log_warning(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);

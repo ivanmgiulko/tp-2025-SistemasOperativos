@@ -13,7 +13,9 @@ t_kernel_config* inicializar_config_kernel(t_config* config_kernel_estructurada)
     config_kernel->ALFA                      = strdup(config_get_string_value(config_kernel_estructurada, "ALFA"));
     config_kernel->ESTIMACION_INICIAL        = strdup(config_get_string_value(config_kernel_estructurada, "ESTIMACION_INICIAL"));
     config_kernel->TIEMPO_SUSPENSION         = strdup(config_get_string_value(config_kernel_estructurada, "TIEMPO_SUSPENSION"));
-    config_kernel->LOG_LEVEL                 = strdup(config_get_string_value(config_kernel_estructurada, "LOG_LEVEL"));    return config_kernel;
+    config_kernel->LOG_LEVEL                 = strdup(config_get_string_value(config_kernel_estructurada, "LOG_LEVEL"));    
+    
+    return config_kernel;
 }
 
 t_kernel_config* crear_config_kernel(char* path_a_config, t_log* logger){

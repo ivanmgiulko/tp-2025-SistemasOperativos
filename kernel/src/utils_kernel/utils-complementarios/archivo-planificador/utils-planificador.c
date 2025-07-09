@@ -90,7 +90,6 @@ void crear_proceso_cero(char* path, int tamanio)
     uint64_t estimacion_inical = atoi(configuracion_kernel->ESTIMACION_INICIAL);
 
   	t_pcb* proceso_cero = iniciarPCB(path ,tamanio, asignar_pid(), estimacion_inical);
-
     pasar_pcb_a_new(proceso_cero);
 	log_info(logger_kernel,"%d Se crea el proceso - Estado: NEW", proceso_cero->pid);
 }
@@ -112,10 +111,15 @@ void inicializar_estructuras()
 
 	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
 
+    // INICIAMOS LISTA DE CPU E IOs
     lista_cpus = malloc(sizeof(t_lista_cpus));
     lista_cpus->lista_cpus = list_create();
     pthread_mutex_init(&lista_cpus->mutex_lista, NULL);
 
+    lista_de_io = malloc(sizeof(t_lista_io));
+    lista_de_io->lista_ios = list_create();
+	pthread_mutex_init(&lista_de_io->mutex_lista, NULL);
+   
     // INICIAMOS SEMAFOROS
     sem_init(&sem_cantidad_pcbs_en_new, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
@@ -124,6 +128,7 @@ void inicializar_estructuras()
     sem_init(&bin_eliminar_procesos_en_interfaces, 0, 0);
     sem_init(&bin_proceso_eliminar, 0, 1);
     sem_init(&bin_cpu_disponible, 0, 0);
+
     // INICIAMOS LOS ESTADOS DE LOS PROCESOS
     estado_new          = inicializar_estado();
     estado_ready        = inicializar_estado();
@@ -149,7 +154,7 @@ bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new)
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-    enviarProceso_A_Memoria(*pcb_en_new, fd_conexion_memoria);
+    enviar_proceso_a_memoria(*pcb_en_new, fd_conexion_memoria, PROCESO_MEMORIA);
 
     return manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }
@@ -201,18 +206,6 @@ t_pcb* peek_cola_mutex(t_estado* cola_mutex)
     return pcb;
 }
 
-t_pcb* peek_pcb_en_new() 
-{
-    t_pcb* pcb = peek_cola_mutex(estado_new);
-    return pcb;
-}
-
-t_pcb* peek_pcb_en_susp_ready() 
-{
-    t_pcb* pcb = peek_cola_mutex(estado_susp_ready);
-    return pcb;
-}
-
 bool _tiene_menos_tamanio(void* a, void* b) 
 { 
     t_pcb* proceso_a = (t_pcb*) a;
@@ -221,7 +214,7 @@ bool _tiene_menos_tamanio(void* a, void* b)
 } 
 
 void _enviar_proceso_new_a_cola_ready() {
-    t_pcb* pcb_en_new = peek_pcb_en_new();
+    t_pcb* pcb_en_new = peek_cola_mutex(estado_new);
 
     bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
             
@@ -237,7 +230,7 @@ void _enviar_proceso_new_a_cola_ready() {
 
 void _enviar_proceso_susp_ready_a_cola_ready() 
 {
-    t_pcb* pcb_en_susp_ready = peek_pcb_en_susp_ready();
+    t_pcb* pcb_en_susp_ready = peek_cola_mutex(estado_susp_ready);
 
     bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_susp_ready);
             
@@ -389,10 +382,10 @@ void administrar_proceso_bloqueado(void* pcb)
 
                     t_pcb* _proceso_suspendido = pop_cola_mutex(estado_susp_blocked);
 
-                    enviar_proceso_suspendido_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io);
+                    enviar_proceso_a_io_para_bloqueo(_proceso_suspendido->pid, _proceso_suspendido->datos_io->tiempo, instancia_disponible->socket_io, PROCESO_SUSPENDIDO_BLOQUEADO);
                 
                 } else {
-                    enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io);
+                    enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io, PROCESO_BLOQUEADO);
                 
                     pthread_mutex_lock(&(lista_de_io->mutex_lista));
                     eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);

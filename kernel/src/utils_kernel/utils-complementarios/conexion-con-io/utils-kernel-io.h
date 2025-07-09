@@ -5,11 +5,6 @@
 
     extern t_lista_io* lista_de_io;
 
-    /**
-	 * @brief inicia la lista que va a contener a las interfaces
-	 */
-	void inicializar_lista_io();
-
 	/**
 	 * @brief inicia un modulo de IO y lo mete en la lista de IOs
 	 * @param char nombre del interfaz agregada en la lista

@@ -115,13 +115,6 @@
 	*/
     t_pcb* pop_cola_mutex(t_estado*);
 
-    
-    /**
-	* @brief agarra el primer proceso en la cola del estado NEW
-    * @return devuelve el primer proceso en la cola NEW
-	*/
-    t_pcb* peek_pcb_en_new();
-
     /**
 	* @brief agarra el primer proceso en la cola del estado que le pasemos
     * @return devuelve el primer proceso en la cola que le pasamos por parametro

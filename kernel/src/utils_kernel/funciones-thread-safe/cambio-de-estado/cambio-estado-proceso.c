@@ -182,7 +182,7 @@ void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
     // Falta realizar prueba
-    enviar_proceso_a_finalizar_Memoria(*proceso_a_finalizar, fd_conexion_memoria);
+    enviar_proceso_a_memoria(*proceso_a_finalizar, fd_conexion_memoria, PROCESO_FINALIZAR);
 
     manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }

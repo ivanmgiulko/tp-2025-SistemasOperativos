@@ -55,13 +55,15 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                 _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
                 
-                if(lista_de_io == NULL) {
+                if(lista_de_io_vacia()) {
                     
                     pasar_de_exec_a_exit(_proceso_a_bloquear);
 
                 } else {
                     
+                    pthread_mutex_lock(&(lista_de_io->mutex_lista));
                     t_io* interfaz_io_existente = buscar_io(lista_de_io->lista_ios, _syscall_io_recibida.dispositivo); 
+                    pthread_mutex_unlock(&(lista_de_io->mutex_lista));
                 
                     if(interfaz_io_existente != NULL) { 
                     
@@ -107,7 +109,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", nuevo_proceso->pid);
 
+                pthread_mutex_lock(&estado_new->mutex);
                 pasar_pcb_a_new(nuevo_proceso);
+                pthread_mutex_unlock(&estado_new->mutex);
 
                 eliminar_paquete(paquete);
                 break;

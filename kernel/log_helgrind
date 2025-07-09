@@ -1,0 +1,370 @@
+==27986== Helgrind, a thread error detector
+==27986== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
+==27986== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==27986== Command: ./bin/kernel
+==27986== Parent PID: 27817
+==27986== 
+==27986== ---Thread-Announcement------------------------------------------
+==27986== 
+==27986== Thread #2 was created
+==27986==    at 0x49F5BA3: clone (clone.S:76)
+==27986==    by 0x49F6A9E: __clone_internal (clone-internal.c:83)
+==27986==    by 0x4964758: create_thread (pthread_create.c:295)
+==27986==    by 0x496527F: pthread_create@@GLIBC_2.34 (pthread_create.c:828)
+==27986==    by 0x4853767: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10DEEF: _iniciar_server_para_cpu_interrupt (manejar-conexion-cpu.c:15)
+==27986==    by 0x10E677: main (kernel-main.c:19)
+==27986== 
+==27986== ---Thread-Announcement------------------------------------------
+==27986== 
+==27986== Thread #1 is the program's root thread
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during read of size 1 at 0x4B30278 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x4855B06: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AA8D3: __tzstring (tzset.c:121)
+==27986==    by 0x49ACB21: __tzfile_compute (tzfile.c:606)
+==27986==    by 0x49AB63E: __tz_convert (tzset.c:580)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986==  Address 0x4b30278 is 8 bytes inside a block of size 17 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49ABB32: __tzfile_read (tzfile.c:275)
+==27986==    by 0x49AAC93: tzset_internal (tzset.c:405)
+==27986==    by 0x49AB616: __tz_convert (tzset.c:577)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during read of size 1 at 0x4B30279 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x4855B14: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AA8D3: __tzstring (tzset.c:121)
+==27986==    by 0x49ACB21: __tzfile_compute (tzfile.c:606)
+==27986==    by 0x49AB63E: __tz_convert (tzset.c:580)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986==  Address 0x4b30279 is 9 bytes inside a block of size 17 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49ABB32: __tzfile_read (tzfile.c:275)
+==27986==    by 0x49AAC93: tzset_internal (tzset.c:405)
+==27986==    by 0x49AB616: __tz_convert (tzset.c:577)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during read of size 1 at 0x4B303E0 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x485881D: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AA918: __tzstring_len (tzset.c:93)
+==27986==    by 0x49AA918: __tzstring (tzset.c:121)
+==27986==    by 0x49ACB21: __tzfile_compute (tzfile.c:606)
+==27986==    by 0x49AB63E: __tz_convert (tzset.c:580)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986==  Address 0x4b303e0 is 16 bytes inside a block of size 20 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AA987: __tzstring_len (tzset.c:98)
+==27986==    by 0x49AA987: __tzstring (tzset.c:121)
+==27986==    by 0x49AC2D4: __tzfile_read (tzfile.c:408)
+==27986==    by 0x49AAC93: tzset_internal (tzset.c:405)
+==27986==    by 0x49AB616: __tz_convert (tzset.c:577)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during read of size 1 at 0x4B303E3 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x4856640: strcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AC964: __tzfile_compute (tzfile.c:748)
+==27986==    by 0x49AB63E: __tz_convert (tzset.c:580)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986==  Address 0x4b303e3 is 19 bytes inside a block of size 20 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x49AA987: __tzstring_len (tzset.c:98)
+==27986==    by 0x49AA987: __tzstring (tzset.c:121)
+==27986==    by 0x49AC2D4: __tzfile_read (tzfile.c:408)
+==27986==    by 0x49AAC93: tzset_internal (tzset.c:405)
+==27986==    by 0x49AB616: __tz_convert (tzset.c:577)
+==27986==    by 0x4874B83: temporal_get_string_time (temporal.c:44)
+==27986==    by 0x4875720: _log_write_in_level (log.c:146)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during write of size 1 at 0x4B305F0 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x48597B4: mempcpy (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x495B6E4: _IO_new_file_xsputn (fileops.c:1235)
+==27986==    by 0x495B6E4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494FB1C: fputs (iofputs.c:38)
+==27986==    by 0x48749FA: txt_write_in_file (txt.c:27)
+==27986==    by 0x48757A1: _log_write_in_level (log.c:158)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986== 
+==27986== This conflicts with a previous write of size 1 by thread #1
+==27986== Locks held: none
+==27986==    at 0x48597B4: mempcpy (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x495B6E4: _IO_new_file_xsputn (fileops.c:1235)
+==27986==    by 0x495B6E4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494FB1C: fputs (iofputs.c:38)
+==27986==    by 0x48749FA: txt_write_in_file (txt.c:27)
+==27986==    by 0x48757A1: _log_write_in_level (log.c:158)
+==27986==    by 0x4875456: log_info (log.c:102)
+==27986==    by 0x10B6F3: crear_proceso_cero (utils-planificador.c:94)
+==27986==    by 0x10E70A: main (kernel-main.c:28)
+==27986==  Address 0x4b305f0 is 0 bytes inside a block of size 4,096 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x494EC23: _IO_file_doallocate (filedoalloc.c:101)
+==27986==    by 0x495DD5F: _IO_doallocbuf (genops.c:347)
+==27986==    by 0x495CFDF: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:744)
+==27986==    by 0x495B754: _IO_new_file_xsputn (fileops.c:1243)
+==27986==    by 0x495B754: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494FB1C: fputs (iofputs.c:38)
+==27986==    by 0x48749FA: txt_write_in_file (txt.c:27)
+==27986==    by 0x48757A1: _log_write_in_level (log.c:158)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ---Thread-Announcement------------------------------------------
+==27986== 
+==27986== Thread #5 was created
+==27986==    at 0x49F5BA3: clone (clone.S:76)
+==27986==    by 0x49F6A9E: __clone_internal (clone-internal.c:83)
+==27986==    by 0x4964758: create_thread (pthread_create.c:295)
+==27986==    by 0x496527F: pthread_create@@GLIBC_2.34 (pthread_create.c:828)
+==27986==    by 0x4853767: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10E727: main (kernel-main.c:31)
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F4F8 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7E9: inicializar_estructuras (utils-planificador.c:117)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f4f8 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7BB: inicializar_estructuras (utils-planificador.c:115)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during write of size 1 at 0x4B319A0 by thread #2
+==27986== Locks held: 1, at address 0x4B2F4F8
+==27986==    at 0x48597B4: mempcpy (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x495B6E4: _IO_new_file_xsputn (fileops.c:1235)
+==27986==    by 0x495B6E4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494708B: outstring_func (vfprintf-internal.c:239)
+==27986==    by 0x494708B: __vfprintf_internal (vfprintf-internal.c:1517)
+==27986==    by 0x493081E: printf (printf.c:33)
+==27986==    by 0x4874A34: txt_write_in_stdout (txt.c:32)
+==27986==    by 0x48757EF: _log_write_in_level (log.c:166)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E1F5: _recibir_handshake_de_cpu (manejar-conexion-cpu.c:85)
+==27986==    by 0x10E045: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:42)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986== 
+==27986== This conflicts with a previous write of size 1 by thread #5
+==27986== Locks held: none
+==27986==    at 0x495CE88: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:780)
+==27986==    by 0x4957F49: putc (putc.c:31)
+==27986==    by 0x48A45B2: ??? (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x48A6853: ??? (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x48A7CE1: rl_redisplay (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x4893458: readline_internal_setup (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x489DCF8: readline (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x10B5AB: _iniciar_cuando_apreta_enter (utils-planificador.c:66)
+==27986==  Address 0x4b319a0 is 0 bytes inside a block of size 1,024 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x494EC23: _IO_file_doallocate (filedoalloc.c:101)
+==27986==    by 0x495DD5F: _IO_doallocbuf (genops.c:347)
+==27986==    by 0x495CFDF: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:744)
+==27986==    by 0x495B754: _IO_new_file_xsputn (fileops.c:1243)
+==27986==    by 0x495B754: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494708B: outstring_func (vfprintf-internal.c:239)
+==27986==    by 0x494708B: __vfprintf_internal (vfprintf-internal.c:1517)
+==27986==    by 0x493081E: printf (printf.c:33)
+==27986==    by 0x4874A34: txt_write_in_stdout (txt.c:32)
+==27986==    by 0x48757EF: _log_write_in_level (log.c:166)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== ---Thread-Announcement------------------------------------------
+==27986== 
+==27986== Thread #8 was created
+==27986==    at 0x49F5BA3: clone (clone.S:76)
+==27986==    by 0x49F6A9E: __clone_internal (clone-internal.c:83)
+==27986==    by 0x4964758: create_thread (pthread_create.c:295)
+==27986==    by 0x496527F: pthread_create@@GLIBC_2.34 (pthread_create.c:828)
+==27986==    by 0x4853767: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10DE50: manejar_conexion_kernel_io (manejar-conexion-io.c:29)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986== 
+==27986== ----------------------------------------------------------------
+==27986== 
+==27986==  Lock at 0x4B2F568 was first observed
+==27986==    at 0x4854BFE: pthread_mutex_init (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B821: inicializar_estructuras (utils-planificador.c:121)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Address 0x4b2f568 is 8 bytes inside a block of size 48 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10B7F3: inicializar_estructuras (utils-planificador.c:119)
+==27986==    by 0x10E66D: main (kernel-main.c:16)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== Possible data race during write of size 1 at 0x4B319A8 by thread #5
+==27986== Locks held: none
+==27986==    at 0x4859796: mempcpy (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x495B6E4: _IO_new_file_xsputn (fileops.c:1235)
+==27986==    by 0x495B6E4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x4950056: fwrite (iofwrite.c:39)
+==27986==    by 0x489A899: rl_deprep_terminal (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x489DD3E: readline (in /usr/lib/x86_64-linux-gnu/libreadline.so.8.1)
+==27986==    by 0x10B5AB: _iniciar_cuando_apreta_enter (utils-planificador.c:66)
+==27986==    by 0x10E261: iniciar_planificacion_largo_plazo (kernel-planificador.c:36)
+==27986==    by 0x485396A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x4964B42: start_thread (pthread_create.c:442)
+==27986==    by 0x49F5BB3: clone (clone.S:100)
+==27986== 
+==27986== This conflicts with a previous write of size 1 by thread #8
+==27986== Locks held: 1, at address 0x4B2F568
+==27986==    at 0x48597B4: mempcpy (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x495B6E4: _IO_new_file_xsputn (fileops.c:1235)
+==27986==    by 0x495B6E4: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494708B: outstring_func (vfprintf-internal.c:239)
+==27986==    by 0x494708B: __vfprintf_internal (vfprintf-internal.c:1517)
+==27986==    by 0x493081E: printf (printf.c:33)
+==27986==    by 0x4874A34: txt_write_in_stdout (txt.c:32)
+==27986==    by 0x48757EF: _log_write_in_level (log.c:166)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10C710: inicializar_io (utils-kernel-io.c:12)
+==27986==  Address 0x4b319a8 is 8 bytes inside a block of size 1,024 alloc'd
+==27986==    at 0x484A919: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x494EC23: _IO_file_doallocate (filedoalloc.c:101)
+==27986==    by 0x495DD5F: _IO_doallocbuf (genops.c:347)
+==27986==    by 0x495CFDF: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:744)
+==27986==    by 0x495B754: _IO_new_file_xsputn (fileops.c:1243)
+==27986==    by 0x495B754: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1196)
+==27986==    by 0x494708B: outstring_func (vfprintf-internal.c:239)
+==27986==    by 0x494708B: __vfprintf_internal (vfprintf-internal.c:1517)
+==27986==    by 0x493081E: printf (printf.c:33)
+==27986==    by 0x4874A34: txt_write_in_stdout (txt.c:32)
+==27986==    by 0x48757EF: _log_write_in_level (log.c:166)
+==27986==    by 0x487537E: log_debug (log.c:95)
+==27986==    by 0x10E6E0: main (kernel-main.c:27)
+==27986==  Block was alloc'd by thread #1
+==27986== 
+==27986== 
+==27986== Process terminating with default action of signal 1 (SIGHUP)
+==27986==    at 0x4961197: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==27986==    by 0x4961197: __futex_abstimed_wait_common (futex-internal.c:87)
+==27986==    by 0x4961197: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==27986==    by 0x49666A3: __pthread_clockjoin_ex (pthread_join_common.c:105)
+==27986==    by 0x48508F5: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==27986==    by 0x10E738: main (kernel-main.c:32)
+==27986== 
+==27986== Use --history-level=approx or =none to gain increased speed, at
+==27986== the cost of reduced accuracy of conflicting-access information
+==27986== For lists of detected and suppressed errors, rerun with: -s
+==27986== ERROR SUMMARY: 5424 errors from 7 contexts (suppressed: 1798 from 236)

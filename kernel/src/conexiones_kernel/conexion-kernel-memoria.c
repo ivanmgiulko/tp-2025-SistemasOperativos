@@ -40,18 +40,21 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case RESPUESTA_DUMPEO:
+			
 			recibir_paquete(socket_cliente, paquete);
+			
 			t_respuesta_dump* resp_dump = recibir_respuesta_dump(paquete->buffer);
 
 			t_pcb* proceso_desbloqueado = _sacar_pcb_de_cola(resp_dump->pid, estado_blocked);
+			
+			proceso_desbloqueado = list_get(estado_blocked->cola, 0);
 
 			if(resp_dump->respuesta == false){
 
 				free(resp_dump);
 				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
 				log_debug(logger_kernel, "Fallo en el DUMP");	
-				
-
+			
 			} else {
 
 				free(resp_dump);

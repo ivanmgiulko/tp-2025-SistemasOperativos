@@ -11,4 +11,6 @@
 
 	void liberar_cpu_de_proceso(uint8_t pid);
 
+	bool lista_de_io_vacia();
+
 #endif // UTILS_KERNEL_CPU_H_

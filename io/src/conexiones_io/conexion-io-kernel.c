@@ -45,7 +45,7 @@ t_info_proceso* recibir_proceso_bloqueado(t_buffer* buffer) {
     return pruebaProceso;
 }
  
-void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid) { 
+void enviar_pid_desbloqueado(int socket_cliente, uint8_t pid, int codigo_operacion) { 
 
     t_buffer* buffer = malloc(sizeof(t_buffer));
     buffer->size = sizeof(uint8_t); 
@@ -54,7 +54,7 @@ void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid) {
     memcpy(buffer->stream, &pid, sizeof(uint8_t));
 
     t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = PROCESO_DESBLOQUEADO; 
+    paquete->codigo_operacion = codigo_operacion; 
     paquete->buffer = buffer;
 
     size_t tamanio_total = sizeof(int) + sizeof(uint8_t) + buffer->size;
@@ -62,41 +62,8 @@ void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid) {
 
     uint32_t offset = 0;
 
-	memcpy(mensaje_serializado + offset, &(paquete->codigo_operacion), sizeof(int));
-	offset += sizeof(int);
-
-    memcpy(mensaje_serializado + offset, &(paquete->buffer->size), sizeof(uint8_t)); 
-    offset += sizeof(uint8_t);
-
-    memcpy(mensaje_serializado + offset, paquete->buffer->stream, buffer->size); 
-    offset += buffer->size;
-
-
-    send(socket_cliente, mensaje_serializado, tamanio_total, 0);
-
-    free(mensaje_serializado);
-    eliminar_paquete(paquete);
-}
-
-void enviar_respuesta_kernel_IO_suspendido(int socket_cliente, uint8_t pid) { 
-
-    t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(uint8_t); 
-    buffer->stream = malloc(buffer->size);
-
-    memcpy(buffer->stream, &pid, sizeof(uint8_t));
-
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = PROCESO_DESBLOQUEADO; 
-    paquete->buffer = buffer;
-
-    size_t tamanio_total = sizeof(int) + sizeof(uint8_t) + buffer->size;
-    void* mensaje_serializado = malloc(tamanio_total);
-
-    uint32_t offset = 0;
-
-	memcpy(mensaje_serializado + offset, &(paquete->codigo_operacion), sizeof(int));
-	offset += sizeof(int);
+    memcpy(mensaje_serializado + offset, &(paquete->codigo_operacion), sizeof(int));
+    offset += sizeof(int);
 
     memcpy(mensaje_serializado + offset, &(paquete->buffer->size), sizeof(uint8_t)); 
     offset += sizeof(uint8_t);
@@ -131,7 +98,7 @@ int manejar_conexion_io(int socket_cliente){
 			usleep(proceso_bloqueado->tiempo);
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
-			enviar_respuesta_kernel_IO(socket_cliente, proceso_bloqueado->pid);
+			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado->pid, PROCESO_DESBLOQUEADO);
 		
 			break;
 
@@ -145,7 +112,7 @@ int manejar_conexion_io(int socket_cliente){
 			usleep(proceso_bloqueado_suspendido->tiempo);
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado_suspendido->pid);
 			
-			enviar_respuesta_kernel_IO_suspendido(socket_cliente, proceso_bloqueado_suspendido->pid);
+			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado_suspendido->pid, PROCESO_SUSPENDIDO_DESBLOQUEADO);
 
 			break;	
 		case -1:

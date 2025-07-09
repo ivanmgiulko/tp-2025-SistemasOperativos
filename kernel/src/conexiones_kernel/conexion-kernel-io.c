@@ -30,12 +30,9 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 	memcpy(nombre_io, stream, tamanio_interfaz);
 	nombre_io[tamanio_interfaz] = '\0';  // Asegurarse de que termine en \0
 
-	// Si la lista de interfaces ya fue iniciada, no se crea de nuevo
-	if(lista_de_io == NULL){
-		inicializar_lista_io();
-	}
-
 	// Busco si existe IO del mismo tipo en la lista de IOs
+	pthread_mutex_lock(&lista_de_io->mutex_lista);
+	
 	t_io* io_a_encolar_instancia = buscar_io(lista_de_io->lista_ios, nombre_io);
 
 	if(io_a_encolar_instancia == NULL) {
@@ -43,6 +40,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 	}
 
 	insertar_nueva_instancia_io(io_a_encolar_instancia->instancias, socket_cliente_io);
+
+	pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
 	while (1) {
 		t_paquete* paquete = crear_paquete();
