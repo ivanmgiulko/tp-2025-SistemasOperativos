@@ -22,6 +22,7 @@ void agregar_a_paquete(t_paquete*, void*, uint32_t);
 void enviar_paquete(t_paquete*, int);
 
 void recibir_paquete(int , t_paquete* );
+void recibir_pid(int , t_paquete* );
 //t_paquete* recibir_paquete_sin_codigo(int);
 
 void liberar_conexion(int);

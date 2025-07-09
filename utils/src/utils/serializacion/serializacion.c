@@ -144,9 +144,16 @@ void recibir_mensaje(int socket_cliente, t_log* logger)
 
 void recibir_paquete(int socket_cliente, t_paquete* paquete)
 {
-	recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), 0);
+	recv(socket_cliente, &(paquete->buffer->size), sizeof(uint32_t), MSG_WAITALL);
     paquete->buffer->stream = malloc(paquete->buffer->size);
-    recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, 0);
+    recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
+}
+
+void recibir_pid(int socket_cliente, t_paquete* paquete)
+{
+	recv(socket_cliente, &(paquete->buffer->size), sizeof(uint8_t), MSG_WAITALL);
+    paquete->buffer->stream = malloc(paquete->buffer->size);
+    recv(socket_cliente, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL);
 }
 
 //funcion temporal, queda pendiente unificarla con la de arriba (recibir_paqute)

@@ -51,7 +51,9 @@ void enviar_proceso_suspendido_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, in
 uint8_t _recibir_proceso_bloqueado(t_buffer* buffer) { 
 	uint8_t pid;
     
-    memcpy(&pid, buffer->stream, sizeof(uint8_t)); buffer->stream += sizeof(uint8_t);
-    
+    memcpy(&pid, buffer->stream, sizeof(uint8_t)); 
+
     return pid;
+    
+    
 }

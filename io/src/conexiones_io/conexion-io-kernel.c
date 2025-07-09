@@ -46,50 +46,70 @@ t_info_proceso* recibir_proceso_bloqueado(t_buffer* buffer) {
 }
  
 void enviar_respuesta_kernel_IO(int socket_cliente, uint8_t pid) { 
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(uint8_t) + sizeof(int64_t);
+
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t); 
     buffer->stream = malloc(buffer->size);
+
+    memcpy(buffer->stream, &pid, sizeof(uint8_t));
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_DESBLOQUEADO; 
+    paquete->buffer = buffer;
+
+    size_t tamanio_total = sizeof(int) + sizeof(uint8_t) + buffer->size;
+    void* mensaje_serializado = malloc(tamanio_total);
+
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
-    
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = PROCESO_DESBLOQUEADO;
-    paquete->buffer = buffer;
-    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
-    offset = 0;
+	memcpy(mensaje_serializado + offset, &(paquete->codigo_operacion), sizeof(int));
+	offset += sizeof(int);
 
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
-    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
-    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+    memcpy(mensaje_serializado + offset, &(paquete->buffer->size), sizeof(uint8_t)); 
+    offset += sizeof(uint8_t);
 
-    free(a_enviar);
+    memcpy(mensaje_serializado + offset, paquete->buffer->stream, buffer->size); 
+    offset += buffer->size;
+
+
+    send(socket_cliente, mensaje_serializado, tamanio_total, 0);
+
+    free(mensaje_serializado);
     eliminar_paquete(paquete);
 }
 
 void enviar_respuesta_kernel_IO_suspendido(int socket_cliente, uint8_t pid) { 
-	t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(uint8_t) + sizeof(int64_t);
+
+    t_buffer* buffer = malloc(sizeof(t_buffer));
+    buffer->size = sizeof(uint8_t); 
     buffer->stream = malloc(buffer->size);
+
+    memcpy(buffer->stream, &pid, sizeof(uint8_t));
+
+    t_paquete* paquete = malloc(sizeof(t_paquete));
+    paquete->codigo_operacion = PROCESO_DESBLOQUEADO; 
+    paquete->buffer = buffer;
+
+    size_t tamanio_total = sizeof(int) + sizeof(uint8_t) + buffer->size;
+    void* mensaje_serializado = malloc(tamanio_total);
+
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
-    
-    t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = PROCESO_SUSPENDIDO_DESBLOQUEADO;
-    paquete->buffer = buffer;
-    void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
-    offset = 0;
+	memcpy(mensaje_serializado + offset, &(paquete->codigo_operacion), sizeof(int));
+	offset += sizeof(int);
 
-    memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int)); offset += sizeof(int);
-    memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
-    memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-    send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
+    memcpy(mensaje_serializado + offset, &(paquete->buffer->size), sizeof(uint8_t)); 
+    offset += sizeof(uint8_t);
 
-    free(a_enviar);
+    memcpy(mensaje_serializado + offset, paquete->buffer->stream, buffer->size); 
+    offset += buffer->size;
+
+
+    send(socket_cliente, mensaje_serializado, tamanio_total, 0);
+
+    free(mensaje_serializado);
     eliminar_paquete(paquete);
- }
+}
 
 int manejar_conexion_io(int socket_cliente){
 	while (1) {

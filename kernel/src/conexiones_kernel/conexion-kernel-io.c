@@ -44,11 +44,8 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 	insertar_nueva_instancia_io(io_a_encolar_instancia->instancias, socket_cliente_io);
 
-	free(stream);
-
 	while (1) {
-		t_paquete* paquete = malloc(sizeof(t_paquete));
-		crear_buffer(paquete);
+		t_paquete* paquete = crear_paquete();
 		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente_io);
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
@@ -58,7 +55,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 		case PROCESO_DESBLOQUEADO:
 
-			recibir_paquete(socket_cliente_io, paquete);
+			recibir_pid(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado);
@@ -70,13 +67,13 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
 			pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
-
+			eliminar_paquete(paquete);
 			break;
 
 		case PROCESO_SUSPENDIDO_DESBLOQUEADO:
 
-			recibir_paquete(socket_cliente_io, paquete);
-
+			
+			recibir_pid(socket_cliente_io, paquete);
 			uint8_t pid_desbloqueado_susp = _recibir_proceso_bloqueado(paquete->buffer);
 			log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado_susp);
 
@@ -87,7 +84,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			pthread_mutex_unlock(&lista_de_io->mutex_lista);
 
 			pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado_suspendido);
-
+			eliminar_paquete(paquete);
 			break;
 	
 		case -1:
@@ -160,9 +157,12 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			eliminar_paquete(paquete);
 			break;
 		}
+		
 	}
 
 	pthread_exit(NULL);
+	free(nombre_io);
+	free(stream);
 	close(socket_cliente_io);
 	return EXIT_SUCCESS;
 }
