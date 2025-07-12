@@ -57,6 +57,120 @@ void inicializar_swap() {
     log_info(logger_memoria, "SWAP inicializado en: %s", path_swap);
 }
 
+void suspender_proceso_swap(int pid) {
+    // Buscamos proceso e inicializamos configuraciones
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "PID %d no encontrado en memoria para suspender", pid);
+        return;
+    }
+    int tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+
+    // Instanciamos proceso del swap
+    t_proceso_swap* proceso_swap = malloc(sizeof(t_proceso_swap));
+    proceso_swap->pid = pid;
+    proceso_swap->cantidad_paginas = proceso->tamanioMemoria / tam_pagina;
+    proceso_swap->posiciones_swap = malloc(sizeof(uint32_t) * proceso_swap->cantidad_paginas);
+
+    // Abrimos archivo de swap
+    FILE* swapfile = fopen(config_memoria->PATH_SWAPFILE, "r+b");
+    if (!swapfile) {
+        log_error(logger_memoria, "No se pudo abrir el archivo SWAP para escritura.");
+        return;
+    }
+
+    // Copiamos el contenido de las paginas del proceso en el SWAP según los marcos asignados a c/u 
+    for (uint32_t i = 0; i < proceso_swap->cantidad_paginas; i++) {
+        fseek(swapfile, 0, SEEK_END);
+        uint32_t offset = ftell(swapfile);
+        proceso_swap->posiciones_swap[i] = offset;
+
+        int marco = buscar_marco_en_tabla_full(proceso->tabla_primera, i, cantidad_niveles, entradas_por_tabla);
+        void* origen = memoria_del_sistema->memoria_principal + marco * tam_pagina;
+        fwrite(origen, 1, tam_pagina, swapfile);
+
+        log_trace(logger_memoria, "PID %d: Página %d escrita en offset %d de SWAP", pid, i, offset);
+    }
+
+    // el pepe
+    fclose(swapfile);
+    list_add(procesos_en_swap, proceso_swap);
+}
+
+void desuspender_proceso_swap(int pid) {
+    // Buscamos proceso SWAP
+    t_proceso_swap* proceso_swap = buscar_proceso_en_swap(pid);
+    if (!proceso_swap) {
+        log_error(logger_memoria, "PID %d no encontrado en SWAP para desuspender", pid);
+        return;
+    }
+
+    // Busco proceso en memoria a desuspender
+    t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
+    if (!proceso) {
+        log_error(logger_memoria, "PID %d no encontrado en memoria para desuspender", pid);
+        return;
+    }
+
+    // Abro archivo SWAP
+    FILE* swapfile = fopen(config_memoria->PATH_SWAPFILE, "r+b");
+    if (!swapfile) {
+        log_error(logger_memoria, "No se pudo abrir el archivo SWAP para lectura.");
+        return;
+    }
+
+    // Configuración de parámetros
+    int tam_pagina = atoi(config_memoria->TAM_PAGINA);
+    int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
+    int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+
+    // Asigno marcos en memoria para todas las páginas a restaurar
+    int paginas_asignadas = 0;
+    asignar_marcos_tabla(proceso->tabla_primera, memoria_del_sistema, proceso_swap->cantidad_paginas, &paginas_asignadas);
+
+    // Restaurar página por página desde SWAP a la memoria
+    for (uint32_t i = 0; i < proceso_swap->cantidad_paginas; i++) {
+        long offset = proceso_swap->posiciones_swap[i];
+        fseek(swapfile, offset, SEEK_SET);
+
+        // Obtengo el marco donde fue asignada esta página
+        int marco = buscar_marco_en_tabla_full(proceso->tabla_primera, i, cantidad_niveles, entradas_por_tabla);
+        if (marco == -1) {
+            log_error(logger_memoria, "No se pudo obtener el marco de la página %d del PID %d", i, pid);
+        }
+        void* destino = memoria_del_sistema->memoria_principal + marco * tam_pagina;
+
+        fread(destino, 1, tam_pagina, swapfile);
+        log_trace(logger_memoria, "PID %d: Página %d restaurada desde SWAP (offset %ld) al marco %d", pid, i, offset, marco);
+    }
+
+    fclose(swapfile);
+}
+
+void liberar_swap_proceso(int pid) {
+    t_proceso_swap* proceso_swap = buscar_proceso_en_swap(pid);
+    if (!proceso_swap){
+        log_error(logger_memoria, "PID %d no encontrado para liberar en SWAP", pid);
+        return;
+    }
+
+    list_remove_element(procesos_en_swap, proceso_swap);
+
+    free(proceso_swap->posiciones_swap);
+    free(proceso_swap);
+    log_info(logger_memoria, "Liberado espacio SWAP del proceso PID %d", pid);
+}
+
+t_proceso_swap* buscar_proceso_en_swap(int pid) {
+    for (int i = 0; i < list_size(procesos_en_swap); i++) {
+        t_proceso_swap* proceso_swap = list_get(procesos_en_swap, i);
+        if (proceso_swap->pid == pid) return proceso_swap;
+    }
+    return NULL;
+}
+
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
     pathArchivoPseudocodigo = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
@@ -207,6 +321,9 @@ int finalizar_proceso(int pid) {
         free(memoria_del_sistema->procesos);
         memoria_del_sistema->procesos = NULL;
     }
+
+    // liberar proceso en lista de procesos en swap
+    liberar_swap_proceso(pid);
 
     pthread_mutex_unlock(&memoria_del_sistema->mutex); 
     //printf("Proceso con PID %d liberado correctamente.\n", pid);
@@ -378,6 +495,40 @@ int32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_
 
     // En el nivel final, buscamos la entrada correspondiente
     int entrada_final = entradas_por_nivel[cantidad_niveles - 1];
+    if (entrada_final >= actual->cant_entradas) {
+        log_error(logger_memoria, "Entrada de nivel final inválida: %d", entrada_final);
+        return -1;
+    }
+
+    t_entrada_pagina entrada = actual->entradas[entrada_final];
+    if (!entrada.presente) {
+        log_error(logger_memoria, "Página no presente en memoria: %d", entrada.num_pagina);
+        return -1;
+    }
+
+    return entrada.marco;
+}
+
+// Recorre todas las entradas de la tabla - TEMPORAL
+int buscar_marco_en_tabla_full(t_tabla_pagina* tabla_primera, int nro_pagina, int cantidad_niveles, int entradas_por_tabla) {
+    t_tabla_pagina* actual = tabla_primera;
+    int pagina_restante = nro_pagina;
+
+    // Recorremos hasta el nivel final
+    for (int nivel = 0; nivel < cantidad_niveles - 1; nivel++) {
+        int indice = pagina_restante / (int)pow(entradas_por_tabla, cantidad_niveles - 1 - nivel);
+        pagina_restante %= (int)pow(entradas_por_tabla, cantidad_niveles - 1 - nivel);
+
+        if (indice >= actual->cant_entradas || actual->subtablas[indice] == NULL) {
+            log_error(logger_memoria, "Entrada de tabla de nivel intermedio inválida (nivel %d, índice %d)", nivel, indice);
+            return -1;
+        }
+
+        actual = actual->subtablas[indice];
+    }
+
+    // En nivel final, buscamos la entrada que representa la página lógica
+    int entrada_final = pagina_restante;
     if (entrada_final >= actual->cant_entradas) {
         log_error(logger_memoria, "Entrada de nivel final inválida: %d", entrada_final);
         return -1;

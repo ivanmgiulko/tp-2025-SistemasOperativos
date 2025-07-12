@@ -90,6 +90,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				cantMemoria += proceso_suspendido->tamanioMemoria;
 
 				// Mover proceso de RAM a SWAP
+				suspender_proceso_swap(proceso_suspendido->pid);
 
 				avisar_kernel_mande_otro_proceso(socket_cliente);
 
@@ -106,7 +107,7 @@ int manejar_conexion_cliente(int socket_cliente){
  
 				int pidParaEliminar = proceso_a_finalizar->pid;
 				log_warning(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);
-				int pidEliminado = finalizar_proceso(pidParaEliminar);
+				int pidEliminado = finalizar_proceso(pidParaEliminar);				
 
 				cantMemoria += proceso_a_finalizar->tamanioMemoria;
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);

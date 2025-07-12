@@ -92,8 +92,14 @@ void asignar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria,
 void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria);
 int buscar_marco_libre(t_memoria_del_sistema* memoria);
 int32_t buscar_marco_en_tabla(t_tabla_pagina* tabla_primera, uint32_t* entradas_por_nivel, int cantidad_niveles);
+int buscar_marco_en_tabla_full(t_tabla_pagina* tabla_primera, int nro_pagina, int cantidad_niveles, int entradas_por_tabla);
 void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera,t_memoria_del_sistema* memoria_del_sistema);
-void  inicializar_swap();
+
+// Funciones de SWAP
+void inicializar_swap();
+void suspender_proceso(int pid);
+void desuspender_proceso_swap(int pid);
+t_proceso_swap* buscar_proceso_en_swap(int pid);
 
 //FUNCIONES DE CONEXION
 void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete);
