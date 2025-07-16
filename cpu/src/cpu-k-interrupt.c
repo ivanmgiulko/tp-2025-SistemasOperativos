@@ -21,8 +21,15 @@ int manejar_conexion_kernel_interrupt(){
 				flag_interrupt = true;
 
 				actualizar_memoria_principal_completa();
+				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+					log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
+
+				}
 				limpiar_tlb();
-				
+				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+					log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
+
+				}
 				free(paquete);
 			
 				break;

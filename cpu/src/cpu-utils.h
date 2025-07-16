@@ -67,7 +67,7 @@ typedef enum {
 typedef struct{
     uint32_t nro_pagina;
     uint32_t marco_asociado;
-    int bit_en_uso;
+    uint32_t bit_en_uso;
     uint32_t instante_referencia;
 }entradas_tlb_t;
 
