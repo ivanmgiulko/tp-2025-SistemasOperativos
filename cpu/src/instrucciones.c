@@ -309,18 +309,18 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             pcb_actual->pc++;
             paquete->codigo_operacion = SYSCALL_IO;
             
-            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(uint8_t));
 
-            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
             int len_dispositivo = strlen(dispositivo) + 1; 
             agregar_a_paquete(paquete, dispositivo, len_dispositivo);
 
             // Agregar tiempo (serializa el int)
-            agregar_a_paquete(paquete, &tiempo, sizeof(int));
+            agregar_a_paquete(paquete, &tiempo, sizeof(int32_t));
 
             // Serializar y enviar
-            bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+            bytes = sizeof(int) + sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_io = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_io, bytes, 0);

@@ -26,7 +26,9 @@ int manejar_conexion_kernel_dispatch(){
 				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
 					log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
 
-				}				actualizar_memoria_principal_completa();
+				}				
+
+				actualizar_memoria_principal_completa();
 				pthread_mutex_lock(&mutex_cpu);
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;
@@ -60,10 +62,10 @@ t_peticion_instruccion* deserializar_info_pcb(t_buffer* buffer) {
 	t_peticion_instruccion* infoPCB = malloc(sizeof(t_peticion_instruccion));
     void* stream = buffer->stream;
 
-	memcpy(&(infoPCB->pc), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
-    memcpy(&(infoPCB->pid), stream, sizeof(uint16_t)); stream += sizeof(uint16_t);
+	memcpy(&(infoPCB->pc), stream, sizeof(uint16_t)); stream += sizeof(uint16_t);
+
+    memcpy(&(infoPCB->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
    
-    
     return infoPCB;
 
 }

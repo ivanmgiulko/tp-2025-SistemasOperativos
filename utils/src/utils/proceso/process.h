@@ -67,7 +67,7 @@ typedef struct { // Elemento en 't_list* instancias'
 typedef struct {
         char* dispositivo;
         t_instancia_io* instancia_utilizada; 
-        int64_t tiempo;
+        int32_t tiempo;
 } t_datos_io;
 
 typedef struct 
@@ -120,8 +120,8 @@ typedef struct  {
 
     t_contador* inicializar_contador();
 
-    int _deserializar_pid(int* offset, t_paquete* paquete);
+    uint8_t _deserializar_pid(int* offset, t_paquete* paquete);
 
-    int _deserializar_pc(int* offset, t_paquete* paquete);
+    uint16_t _deserializar_pc(int* offset, t_paquete* paquete);
 
 #endif // PROCESS_H_

@@ -30,17 +30,6 @@ t_cpu_conectada* buscar_cpu_que_usa_proceso(t_list* cpus, uint8_t pid)
     return list_find(cpus, _es_el_proceso);
 }
 
-t_info_proceso_en_io* buscar_proceso_en_io(t_list* lista_procesos, uint8_t pid) 
-{
-    bool _esta_el_proceso(void* ptr) {
-        t_info_proceso_en_io* info_proceso = (t_info_proceso_en_io*) ptr;
-        return info_proceso->pid == pid;
-    }
-
-    return list_find(lista_procesos, _esta_el_proceso);
-}
-
-
 t_cpu_conectada* _buscar_proceso_en_lista_cpu(uint8_t pid)
 {
     bool _cpu_tiene_pid(void* ptr) {

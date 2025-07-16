@@ -7,8 +7,9 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(uint8_t)); offset += sizeof(uint8_t);
-    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(uint16_t)); offset += sizeof(uint16_t);
+    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(uint16_t)); offset += sizeof(uint16_t);
+
+    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = INFO_PROC_EXEC;
@@ -25,25 +26,23 @@ void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) {
     eliminar_paquete(paquete);
 }
 
-
-
 t_datos_io _deserializar_syscall_io(int* offset, t_paquete* paquete) 
 { 
     t_datos_io _syscall_io_recibida;
 
-    int len_dispositivo = 0;
-    memcpy(&len_dispositivo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    uint32_t len_dispositivo = 0;
+    memcpy(&len_dispositivo, paquete->buffer->stream + *offset, sizeof(uint32_t)); *offset += sizeof(uint32_t);
 
     char* dispositivo = malloc(len_dispositivo);
     memcpy(dispositivo, paquete->buffer->stream + *offset, len_dispositivo); *offset += len_dispositivo;
+
     _syscall_io_recibida.dispositivo = dispositivo;
 
     // Leer tiempo
-    int tamanio_tiempo;
-    memcpy(&tamanio_tiempo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
-
-    int tiempo;
-    memcpy(&tiempo, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+    uint32_t tamanio_tiempo; int32_t tiempo;
+    memcpy(&tamanio_tiempo, paquete->buffer->stream + *offset, sizeof(uint32_t)); *offset += sizeof(uint32_t);
+    memcpy(&tiempo, paquete->buffer->stream + *offset, sizeof(int32_t)); *offset += sizeof(int32_t);
+    
     _syscall_io_recibida.tiempo = tiempo;
 
     return _syscall_io_recibida;
@@ -108,26 +107,3 @@ void enviar_pid_a_desalojar(int socket_cliente) {
     free(a_enviar);
     free(paquete);
 }
-
-// void enviar_pid_a_desalojar(int socket_cliente) {
-//     t_buffer* buffer = malloc(sizeof(t_buffer));
-//     buffer->size = sizeof(uint8_t); 
-//     buffer->stream = malloc(buffer->size);
-//     uint32_t offset = 0;
-
-//     t_paquete* paquete = malloc(sizeof(t_paquete));
-//     paquete->codigo_operacion = PROCESO_DESALOJAR;
-//     paquete->buffer = buffer;
-//     void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
-//     offset = 0;
-
-//     memcpy(a_enviar + offset, &(paquete->codigo_operacion), sizeof(int));   offset += sizeof(int);
-//     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t));  offset += sizeof(uint32_t);
-//     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
-//     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
-
-//     free(a_enviar);
-//     eliminar_paquete(paquete);
-    
-    
-// }
