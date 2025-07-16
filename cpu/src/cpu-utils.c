@@ -565,7 +565,10 @@ int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado) {
     for (int i = 0; i < cache->cantidad_paginas; i++) {
         if (cache->paginas[i].nro_pagina == nro_pagina_buscado) {
             cache->paginas[i].bit_uso = true;
+            for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+					log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
 
+				}
             log_info(logger_cpu, "PID: %d - Cache Hit - Pagina: %d", pcb_actual->pid, nro_pagina_buscado);
             return i; // devuelve el índice de esa página dentro del array
         }
@@ -743,7 +746,10 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
 
 void actualizar_memoria_principal_completa() {
     char* respuesta;   
+    log_warning(logger_cpu, "Estoy dentro de actualizar_memoria_principal_completa");
     for (uint32_t i = 0; i < memoria_cache->cantidad_paginas; i++) {
+            log_warning(logger_cpu, "Estoy dentro del for de actualizar_memoria_principal_completa");
+
         t_pagina_de_cache* pagina = &memoria_cache->paginas[i];
         if (pagina->nro_pagina != -1 && pagina->bit_modificado) {
             // Calcular dirección física

@@ -5,8 +5,9 @@ int main(int argc, char* argv[]){
 		return EXIT_FAILURE;
 	}
 	char* cpu_id = argv[1];
-
-	t_config* config_cpu = iniciar_config("./cpu.config");
+	char path_config[64];
+	sprintf(path_config, "./cpu%s.config", cpu_id);
+	t_config* config_cpu = iniciar_config(path_config);
 	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
 	char* puerto_kernel_dispatch = config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH");
     char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]){
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
 	log_info(logger_cpu, "ID CPU: %s", cpu_id);
 	log_info(logger_cpu, "IP Kernel: %s", ip_kernel);
+	log_trace(logger_cpu , "Entradas TLB: %d", maximas_entradas_tlb);
 	log_info(logger_cpu, "Puerto Kernel Interrupt: %s",puerto_kernel_interrupt);
 	log_info(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
 	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);

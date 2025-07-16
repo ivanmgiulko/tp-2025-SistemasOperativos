@@ -97,7 +97,7 @@ void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera,t_memoria_de
 
 // Funciones de SWAP
 void inicializar_swap();
-void suspender_proceso(int pid);
+void suspender_proceso_swap(int pid);
 void desuspender_proceso_swap(int pid);
 t_proceso_swap* buscar_proceso_en_swap(int pid);
 

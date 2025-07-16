@@ -18,7 +18,15 @@ int manejar_conexion_kernel_dispatch(){
 				recibir_paquete(fd_conexion_kernel_dispatch, paquete);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
-				
+				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+					log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
+
+				}
+				limpiar_tlb();
+				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+					log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
+
+				}				actualizar_memoria_principal_completa();
 				pthread_mutex_lock(&mutex_cpu);
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;
