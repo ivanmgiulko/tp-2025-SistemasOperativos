@@ -52,8 +52,9 @@ t_peticion_instruccion* deserializar_info_pcb(t_buffer* buffer) {
 	t_peticion_instruccion* infoPCB = malloc(sizeof(t_peticion_instruccion));
     void* stream = buffer->stream;
 
-    memcpy(&(infoPCB->pid), stream, sizeof(int)); stream += sizeof(int);
-    memcpy(&(infoPCB->pc), stream, sizeof(int)); stream += sizeof(int);
+	memcpy(&(infoPCB->pc), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
+    memcpy(&(infoPCB->pid), stream, sizeof(uint16_t)); stream += sizeof(uint16_t);
+   
     
     return infoPCB;
 

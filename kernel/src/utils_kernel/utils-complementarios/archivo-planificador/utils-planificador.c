@@ -98,9 +98,9 @@ void inicializar_pid(){
    pid_contador = inicializar_contador();
 }
 
-int asignar_pid(){
+uint8_t asignar_pid(){
     pthread_mutex_lock(&pid_contador->mutex);
-    int valor_pid = pid_contador->valor++;
+    uint8_t valor_pid = pid_contador->valor++;
     pthread_mutex_unlock(&pid_contador->mutex);
     return valor_pid;
 }

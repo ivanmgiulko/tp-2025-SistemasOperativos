@@ -11,7 +11,8 @@
 
 int manejar_cliente_interrupt(void* socket_cliente_ptr){
 	int socket_interrupt = *(int*)socket_cliente_ptr;
-    int pid, pc;
+    uint8_t pid; 
+    uint16_t pc;
 
     while (1) {
         

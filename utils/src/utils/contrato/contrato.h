@@ -8,8 +8,8 @@
 
 // STRUCT DE PETICION DE INSTRUCCION A MEMORIA
 typedef struct {
-    int pid;
-    int pc;
+    uint8_t pid;
+    uint16_t pc;
 } t_peticion_instruccion;
 
 void* serializar_peticion_instruccion(t_peticion_instruccion*, int*);

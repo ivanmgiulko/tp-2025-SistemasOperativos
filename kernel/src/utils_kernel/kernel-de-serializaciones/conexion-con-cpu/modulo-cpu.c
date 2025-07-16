@@ -3,12 +3,12 @@
 
 void enviar_proc_cpu(t_peticion_instruccion pcbInfo, int socket_cliente) { 
     t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(int) * 2;
+    buffer->size = sizeof(uint8_t) + sizeof(uint16_t);
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(int)); offset += sizeof(int);
-    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pcbInfo.pc, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &pcbInfo.pid, sizeof(uint16_t)); offset += sizeof(uint16_t);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = INFO_PROC_EXEC;

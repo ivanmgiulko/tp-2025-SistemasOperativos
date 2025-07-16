@@ -62,7 +62,7 @@
 	* @brief le asigna al proceso que le invoca un PID
     * @return devuelve el valor del PID de manera thread-safe
 	*/
-    int asignar_pid();
+    uint8_t asignar_pid();
 
     /**
 	* @brief Inicializa todas las colas que se piden la consigna del TP (2025 - 1er Cuatri)
