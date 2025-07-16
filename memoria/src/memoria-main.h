@@ -19,9 +19,9 @@
     // VARIABLES
     int cantMemoria;
     t_memoria_del_sistema* memoria_del_sistema;
+    procesos_en_swap_t* procesos_en_swap; 
     int retardo_memoria;
 
     // LISTA DE PROCESOS EN SWAP
-    t_list* procesos_en_swap;
-
+    
 #endif // MEMORIA_H_

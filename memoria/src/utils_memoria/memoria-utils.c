@@ -1,5 +1,6 @@
 #include "memoria-utils.h"
 // Aca desarrollamos el cuerpo de las funciones que tenemos en el Header
+
 t_memoria_del_sistema crear_memoria_del_sistema() {
     t_memoria_del_sistema memoria;
     pthread_mutex_init(&memoria.mutex, NULL); 
@@ -25,8 +26,13 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
 
     return memoria;
 }
-
-int buscar_indice_de_proceso_en_memoria(int pid){
+procesos_en_swap_t crear_lista_procesos_en_swap() {
+    procesos_en_swap_t procesos_en_swap;
+    procesos_en_swap.procesos_swap = list_create();
+    pthread_mutex_init(&(procesos_en_swap.mutex_procesos_swap), NULL);
+    return procesos_en_swap;
+}
+int buscar_indice_de_proceso_en_memoria(uint8_t pid){
     int encontrado = -1;
     // Buscar el indice de proceso por PID
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
@@ -57,7 +63,7 @@ void inicializar_swap() {
     log_info(logger_memoria, "SWAP inicializado en: %s", path_swap);
 }
 
-void suspender_proceso_swap(int pid) {
+void suspender_proceso_swap(uint8_t pid) {
     // Buscamos proceso e inicializamos configuraciones
     t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
     if (!proceso) {
@@ -96,12 +102,18 @@ void suspender_proceso_swap(int pid) {
 
     // el pepe
     fclose(swapfile);
-    list_add(procesos_en_swap, proceso_swap);
+    pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
+    list_add(procesos_en_swap->procesos_swap, proceso_swap);
+    pthread_mutex_unlock(&(procesos_en_swap->mutex_procesos_swap));
+
 }
 
-void desuspender_proceso_swap(int pid) {
+void desuspender_proceso_swap(uint8_t pid) {
     // Buscamos proceso SWAP
+    pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
     t_proceso_swap* proceso_swap = buscar_proceso_en_swap(pid);
+    pthread_mutex_unlock(&(procesos_en_swap->mutex_procesos_swap));
+
     if (!proceso_swap) {
         log_error(logger_memoria, "PID %d no encontrado en SWAP para desuspender", pid);
         return;
@@ -150,22 +162,26 @@ void desuspender_proceso_swap(int pid) {
 }
 
 void liberar_swap_proceso(int pid) {
+    pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
     t_proceso_swap* proceso_swap = buscar_proceso_en_swap(pid);
+    pthread_mutex_unlock(&(procesos_en_swap->mutex_procesos_swap));
+
     if (!proceso_swap){
         log_error(logger_memoria, "PID %d no encontrado para liberar en SWAP", pid);
         return;
     }
-
-    list_remove_element(procesos_en_swap, proceso_swap);
+    pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
+    list_remove_element(procesos_en_swap->procesos_swap, proceso_swap);
+    pthread_mutex_unlock(&(procesos_en_swap->mutex_procesos_swap));
 
     free(proceso_swap->posiciones_swap);
     free(proceso_swap);
     log_info(logger_memoria, "Liberado espacio SWAP del proceso PID %d", pid);
 }
 
-t_proceso_swap* buscar_proceso_en_swap(int pid) {
-    for (int i = 0; i < list_size(procesos_en_swap); i++) {
-        t_proceso_swap* proceso_swap = list_get(procesos_en_swap, i);
+t_proceso_swap* buscar_proceso_en_swap(uint8_t pid) {
+    for (int i = 0; i < list_size(procesos_en_swap->procesos_swap); i++) {
+        t_proceso_swap* proceso_swap = list_get(procesos_en_swap->procesos_swap, i);
         if (proceso_swap->pid == pid) return proceso_swap;
     }
     return NULL;
@@ -260,7 +276,7 @@ void agregar_proceso(t_pcbMemoria* pcb) {
     memoria_del_sistema->cant_procesos++;
 }
 
-void informar_metricas_memoria(int pid){
+void informar_metricas_memoria(uint8_t pid){
     
     // Buscar el proceso por PID
     int encontrado = -1;
@@ -285,7 +301,7 @@ void informar_metricas_memoria(int pid){
     m.cantVecesMP, m.cantVecesRead, m.cantVecesWrite);
 }
 
-int finalizar_proceso(int pid) {
+uint8_t finalizar_proceso(uint8_t pid) {
     int encontrado = buscar_indice_de_proceso_en_memoria(pid);
 
     // Liberar instrucciones del proceso
@@ -330,7 +346,7 @@ int finalizar_proceso(int pid) {
     return pid;
 }
 
-char* obtener_instruccion(int pid, int pc) {
+char* obtener_instruccion(uint8_t pid, uint16_t pc) {
 
     log_debug(logger_memoria, "ENTRA A OBTENER INSTRUCCION PID %d PC %d", pid, pc);
 
@@ -414,7 +430,7 @@ void liberar_tabla(t_tabla_pagina* tabla) {
     free(tabla);
 }
 
-t_proceso_en_memoria* buscar_proceso_en_memoria(int pid) {
+t_proceso_en_memoria* buscar_proceso_en_memoria(uint8_t pid) {
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
         if (memoria_del_sistema->procesos[i].pid == pid)
             return &memoria_del_sistema->procesos[i];
@@ -797,7 +813,7 @@ void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_client
     eliminar_paquete(paquete);
 }
 
-bool realizar_dump_memory(int pid) {
+bool realizar_dump_memory(uint8_t pid) {
 	// Buscamos proceso a dumpear
     t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
     if (!proceso) {

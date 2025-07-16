@@ -4,7 +4,6 @@
 #include <math.h>
 #include "memoria-gestor.h"
 #include "config_memoria/memoria-config.h"
-
     /**
 	 * @file
      * @brief #include "utils_memoria/memoria-utils.h"
@@ -39,7 +38,7 @@ typedef struct {
 } t_pre_direccion_fisica;
 
 typedef struct {
-    int pid;
+    uint8_t pid;
     char** instrucciones;           // array dinámico de instrucciones
     int cant_instrucciones;
     metricas_proceso metricas_proceso;
@@ -48,11 +47,16 @@ typedef struct {
 } t_proceso_en_memoria;
 
 typedef struct {
-    uint32_t pid;
+    uint8_t pid;
     uint32_t* posiciones_swap; // índice de cada página del proceso en SWAP
     uint32_t cantidad_paginas;
 } t_proceso_swap;
 
+typedef struct {
+        t_list* procesos_swap;
+        pthread_mutex_t mutex_procesos_swap;;
+    } procesos_en_swap_t;
+extern procesos_en_swap_t* procesos_en_swap; // lista de procesos en SWAP
 typedef struct {
     t_proceso_en_memoria* procesos;              // array dinámico de procesos
     int cant_procesos;
@@ -73,18 +77,18 @@ uint32_t  leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
 
 //funciones de buscar instrucciones
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad);
-char* obtener_instruccion(int pid, int pc);
+char* obtener_instruccion(uint8_t pid, uint16_t pc);
 
 //funciones de Inicio/fin/susp procesos
 void agregar_proceso(t_pcbMemoria* pcb);
-void informar_metricas_memoria(int pid);
-int finalizar_proceso(int pid);
+void informar_metricas_memoria(uint8_t pid);
+uint8_t finalizar_proceso(uint8_t pid);
 
 //Funciones de memoria
 t_memoria_del_sistema crear_memoria_del_sistema();
 t_tabla_pagina* crear_tabla_paginacion(int nivel_actual, int cantidad_niveles, int entradas_por_tabla, int* pagina_actual, int paginas_totales);
-t_proceso_en_memoria* buscar_proceso_en_memoria(int pid);
-int buscar_indice_de_proceso_en_memoria(int pid);
+t_proceso_en_memoria* buscar_proceso_en_memoria(uint8_t pid);
+int buscar_indice_de_proceso_en_memoria(uint8_t pid);
 
 //Funciones de tablas
 void liberar_tabla(t_tabla_pagina* tabla);
@@ -97,9 +101,10 @@ void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera,t_memoria_de
 
 // Funciones de SWAP
 void inicializar_swap();
-void suspender_proceso_swap(int pid);
-void desuspender_proceso_swap(int pid);
-t_proceso_swap* buscar_proceso_en_swap(int pid);
+procesos_en_swap_t crear_lista_procesos_en_swap();
+void suspender_proceso_swap(uint8_t pid);
+void desuspender_proceso_swap(uint8_t pid);
+t_proceso_swap* buscar_proceso_en_swap(uint8_t pid);
 
 //FUNCIONES DE CONEXION
 void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete);
@@ -118,7 +123,7 @@ t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer);
 
 void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente);
 
-bool realizar_dump_memory(int pid);
+bool realizar_dump_memory(uint8_t pid);
 
 void avisar_kernel_mande_otro_proceso(int socket_cliente);
 

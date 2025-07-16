@@ -404,13 +404,13 @@ void administrar_proceso_bloqueado(void* pcb)
 
                 encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
 
-                // char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-                // char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-                // int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+                char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+                char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+                int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 
-                // enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
+                enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
 
-                // manejar_conexion_kernel_memoria(fd_conexion_memoria);
+                manejar_conexion_kernel_memoria(fd_conexion_memoria);
 
                 // avisar a memo para que aumente el tamanio
                 

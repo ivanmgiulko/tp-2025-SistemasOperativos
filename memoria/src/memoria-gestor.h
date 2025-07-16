@@ -28,7 +28,5 @@
     // VARIABLES
     extern int cantMemoria;
     extern int retardo_memoria;
-    // LISTA DE PROCESOS EN SWAP
-    extern t_list* procesos_en_swap;
 
 #endif // MEMORIA_GESTOR_H_

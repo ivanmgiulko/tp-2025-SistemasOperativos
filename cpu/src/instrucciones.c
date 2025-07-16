@@ -66,7 +66,6 @@ t_instruccion* parse_read(char* linea) {
 
     return instr;  
 }
-// SUPUESTAMENTE ESTA FUNCION ES MEJOR. TODAVIA NO LA PROBAMOS. COPAILOT CREE EN LEAN, YO (IVAN) NO CREO EN EL.
 
 
 t_instruccion* parse_write(char* linea) {

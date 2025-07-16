@@ -11,7 +11,9 @@ int main(int argc, char* argv[]) {
     memoria_del_sistema = malloc(sizeof(t_memoria_del_sistema));
     *memoria_del_sistema = crear_memoria_del_sistema();
     retardo_memoria = atoi(config_memoria->RETARDO_MEMORIA);
-    procesos_en_swap = list_create();
+    procesos_en_swap = malloc(sizeof(procesos_en_swap_t));
+    *procesos_en_swap = crear_lista_procesos_en_swap(); 
+   
     inicializar_swap();
 
     puerto_servidor_memoria = config_memoria->PUERTO_ESCUCHA;
