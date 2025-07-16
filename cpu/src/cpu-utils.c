@@ -57,8 +57,8 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
     log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
 
     t_paquete* paquete = crear_paquete_instruccion();
-    agregar_a_paquete(paquete, &(infoPCB->pid), sizeof(int));
-    agregar_a_paquete(paquete, &(infoPCB->pc), sizeof(int));
+    agregar_a_paquete(paquete, &(infoPCB->pid), sizeof(uint8_t));
+    agregar_a_paquete(paquete, &(infoPCB->pc), sizeof(uint16_t));
 
     if(paquete == NULL || paquete->buffer == NULL || paquete->buffer->stream == NULL) {
         return;
@@ -177,14 +177,14 @@ void check_interrupt(){
 	
 }
 
-void enviar_proceso_desalojado(int socket_servidor, int pid, int pc) {
+void enviar_proceso_desalojado(int socket_servidor, uint8_t pid, uint16_t pc) {
 	t_buffer* buffer = malloc(sizeof(t_buffer));
 	buffer->size = sizeof(int) + sizeof(int);
 	buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 
-    memcpy(buffer->stream + offset, &pid, sizeof(int)); offset += sizeof(int);
-    memcpy(buffer->stream + offset, &pc, sizeof(int)); offset += sizeof(int);
+    memcpy(buffer->stream + offset, &pid, sizeof(uint8_t)); offset += sizeof(uint8_t);
+    memcpy(buffer->stream + offset, &pc, sizeof(uint16_t)); offset += sizeof(uint16_t);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
     paquete->codigo_operacion = PROCESO_DESALOJADO;
@@ -220,7 +220,7 @@ void destruir_mmu(mmu_t* mmu) {
 
 
 
-void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32_t tamanio){
+void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_t tamanio){
     //Envia el read a memoria
     t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
     agregar_a_paquete(paquete_read, &pid, sizeof(uint32_t));
@@ -234,7 +234,7 @@ void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32
 void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos){
     // Mandamos la ejecución con la dirección física final
     t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
-    agregar_a_paquete(paquete_write, &pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_write, &pid, sizeof(uint8_t));
     agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
     agregar_a_paquete(paquete_write, datos, strlen(datos) + 1);
     enviar_paquete(paquete_write, fd_conexion_memoria);
@@ -242,7 +242,7 @@ void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* 
     eliminar_paquete(paquete_write);
 }
 
-char* obtener_pagina_de_memoria(uint32_t pid, uint32_t direccion_fisica) {
+char* obtener_pagina_de_memoria(uint8_t pid, uint32_t direccion_fisica) {
     // Enviar solicitud a memoria para obtener la página correspondiente
     enviar_read_a_memoria(pid, direccion_fisica, mmu->tamanio_pagina);
 

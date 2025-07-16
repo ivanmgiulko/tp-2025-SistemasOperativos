@@ -344,7 +344,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
           
             paquete->codigo_operacion = SYSCALL_INIT_PROC;
             
-            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(uint8_t));
 
             int len_archivo = strlen(archivo) + 1; 
             agregar_a_paquete(paquete, archivo, len_archivo);
@@ -353,7 +353,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             agregar_a_paquete(paquete, &tamanio, sizeof(int));
 
             // Serializar y enviar
-            bytes = sizeof(int) + sizeof(int) + paquete->buffer->size;
+            bytes = sizeof(int) + sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_init_proc = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_init_proc, bytes, 0);
@@ -375,9 +375,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             paquete->codigo_operacion = SYSCALL_DUMP_MEMORY;
 
-            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(uint8_t));
 
-            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
             bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
             void* paquete_dump_memory = serializar_paquete(paquete, bytes);
@@ -401,9 +401,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             paquete->codigo_operacion = SYSCALL_EXIT;
 
-            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(uint8_t));
 
-            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(int));
+            agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
             bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
             void* paquete_exit = serializar_paquete(paquete, bytes);
