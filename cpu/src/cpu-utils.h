@@ -21,7 +21,7 @@ void check_interrupt();
 void enviar_proceso_desalojado(int , int , int );
 
 void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32_t tamanio);
-void enviar_write_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, char* datos);
+void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos);
 
 
 
@@ -54,7 +54,7 @@ t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica);
 uint32_t* calcular_entradas_por_nivel(int nro_pagina, int cantidad_niveles, int cant_entradas_tabla);
 uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica);
 
-int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint32_t pid);
+int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint8_t pid);
 int32_t recibir_marco_solicitado(t_paquete* paquete);
 
 //FUNCIONES Y DEFINICIONES DE TLB

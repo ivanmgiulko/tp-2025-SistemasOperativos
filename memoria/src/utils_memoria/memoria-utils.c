@@ -635,7 +635,7 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	
 	//Deserializo el paquete:
     int offset = 0;
-	uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &offset);
 	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
 	char* datos = leer_string_desde_buffer(paquete->buffer, &offset);
 
@@ -652,7 +652,7 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
     // Enviar confirmación de éxito al cpu
 	t_paquete* paquete_confirmacion_write = crear_paquete_con_codigo(WRITE_MEMORIA);
     char* mensaje_confirmacion_write = "WRITE completado con éxito";
-    agregar_a_paquete(paquete, mensaje_confirmacion_write, strlen(mensaje_confirmacion_write)+1);
+    agregar_a_paquete(paquete_confirmacion_write, mensaje_confirmacion_write, strlen(mensaje_confirmacion_write)+1);
 
     log_info(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
     enviar_paquete(paquete_confirmacion_write, socket_cliente);
@@ -706,7 +706,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 	int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
     int desplazamiento = 0;
 
-    uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
+    uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &desplazamiento);
 
 	t_pre_direccion_fisica direccion;
     direccion.nro_pagina= leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);

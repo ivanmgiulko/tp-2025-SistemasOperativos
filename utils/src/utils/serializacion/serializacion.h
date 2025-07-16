@@ -38,6 +38,7 @@ int32_t recibir_cod_operacion(int);
 
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento);
 uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento);
+uint8_t leer_uint8_desde_buffer(t_buffer* buffer, int* desplazamiento);
 
 void loggear_mensaje_desde_buffer(t_buffer* buffer, t_log* logger);
 

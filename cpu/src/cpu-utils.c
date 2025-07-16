@@ -231,7 +231,7 @@ void enviar_read_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, uint32
     eliminar_paquete(paquete_read);
 }
 
-void enviar_write_a_memoria(uint32_t pid, uint32_t direccion_fisica_final, char* datos){
+void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos){
     // Mandamos la ejecución con la dirección física final
     t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
     agregar_a_paquete(paquete_write, &pid, sizeof(uint32_t));
@@ -348,13 +348,14 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 }
 
 // Solicita a memoria el marco correspondiente a una pagina y devuelve la direccion fisica
-int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint32_t pid) {
+int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint8_t pid) {
     int32_t marco_solicitado;
     // Serializar la petición
+
     log_debug(logger_cpu, "Solicitando marco a memoria para PID: %d, Página: %d", pid, pre_direccion_fisica.nro_pagina);
     // Se crea un paquete de solicitud de marco
     t_paquete* paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
-    agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint32_t));
+    agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint8_t));
     agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
     for (int i = 0; i < mmu->cantidad_niveles; i++)
         agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 

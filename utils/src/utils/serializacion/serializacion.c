@@ -69,7 +69,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
-	int bytes = paquete->buffer->size + sizeof(uint32_t)*2; //tam_buffer + tam_tam_buffer(32) + tam_opcode(32)
+	int bytes = paquete->buffer->size + sizeof(int) + sizeof(uint32_t); //tam_buffer + tam_tam_buffer(32) + tam_opcode(32)
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
 	send(socket_cliente, a_enviar, bytes, 0);
@@ -174,6 +174,18 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
     *desplazamiento += tamanio;
 
     return string;
+}
+
+uint8_t leer_uint8_desde_buffer(t_buffer* buffer, int* desplazamiento){
+    int tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
+    *desplazamiento += sizeof(int);
+
+    uint8_t valor;
+    memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint8_t));
+    *desplazamiento += sizeof(uint8_t);
+
+    return valor;
 }
 
 uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
