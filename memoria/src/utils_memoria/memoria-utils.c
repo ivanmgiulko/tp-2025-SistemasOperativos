@@ -681,7 +681,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 
     //Deserializo el paquete:
     int offset = 0;
-	uint32_t pid = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &offset);
 	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
 	uint32_t tamanio_a_leer = leer_uint32_desde_buffer(paquete->buffer, &offset);
 

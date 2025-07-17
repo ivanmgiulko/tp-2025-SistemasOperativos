@@ -205,6 +205,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); // Libera el semáforo de CPU
+                eliminar_paquete(paquete);
+
             }
             //Si la cache no esta activada
             else{
@@ -225,7 +227,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //Envia el WRITE a memoria
                 enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos);
                 log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
-                free(pre_direccion_fisica.entrada_nivel);
                 eliminar_paquete(paquete);
                 
                 if (ultima_escritura) 
@@ -234,6 +235,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
                sem_post(&sem_memoria); // Espera a que la memoria confirme el read
             }
+            free(pre_direccion_fisica.entrada_nivel);
 			break;
 
 		case INSTR_READ:
@@ -255,6 +257,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 free(datos_leidos);
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); // Libera el semáforo de CPU
+                eliminar_paquete(paquete);
+
             }
             //Si la cache no esta activada
             else{
@@ -275,12 +279,12 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //Envia el read a memoria
                 enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio);
                 log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
-                free(pre_direccion_fisica.entrada_nivel);
                 eliminar_paquete(paquete);
                 
                 sem_post(&sem_memoria); // Espera a que la memoria confirme el read
                
             }
+            free(pre_direccion_fisica.entrada_nivel);
 			break;
         
 		case INSTR_GOTO:

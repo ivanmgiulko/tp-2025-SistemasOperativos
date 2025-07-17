@@ -24,6 +24,8 @@ int manejar_conexion_memoria(){
             case DATOS_DE_MEMORIA:
                 log_info(logger_cpu, "Recibí los datos de memoria");
                 recibir_datos_de_memoria(paquete, mmu);
+                memoria_cache = inicializar_cache(algoritmo_reemplazo_cache,entradas_cache, mmu->tamanio_pagina, retardo_cache);
+
                 break;
 
             case INSTRUCCION: {

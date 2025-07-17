@@ -29,4 +29,8 @@ uint32_t contador_accesos_tlb = 0;
 int32_t ultimo_marco_obtenido = 0;
 char* ultima_escritura = NULL;
 char* ultima_lectura = NULL;
+
+uint32_t entradas_cache;
+uint32_t retardo_cache;
+char* algoritmo_reemplazo_cache;
 #endif // CPU_H_

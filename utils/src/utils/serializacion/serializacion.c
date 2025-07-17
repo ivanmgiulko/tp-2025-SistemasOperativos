@@ -37,11 +37,13 @@ void agregar_a_paquete(t_paquete* paquete, void* valor_a_agregar, uint32_t taman
 	 // Se realoca (redimensiona) el buffer del paquete para poder agregar:
     // - el tamaño del nuevo dato (uint32_t)
     // - el dato en sí (tamanio_del_valor bytes)
-	paquete->buffer->stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio_del_valor + sizeof(uint32_t));
-	// Si la realocación falla, se retorna sin hacer nada (para evitar fallos).
-	if (paquete->buffer->stream == NULL){
-		return;
-	}
+	 void* nuevo_stream = realloc(paquete->buffer->stream, paquete->buffer->size + tamanio_del_valor + sizeof(uint32_t));
+    if (nuevo_stream == NULL) {
+        // Si la realocación falla, no cambies el puntero original
+        return;
+    }
+    paquete->buffer->stream = nuevo_stream;
+
 	//agrega el tamaño del nuevo valor al final del buffer
 	memcpy(paquete->buffer->stream + paquete->buffer->size, &tamanio_del_valor, sizeof(uint32_t));
 	//agrega el nuevo valor al final del buffer
@@ -57,6 +59,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
         // Manejar error de memoria
         return NULL;
     }
+    memset(magic, 0, bytes); 
 
 	int desplazamiento = 0;
 	memcpy(magic + desplazamiento, &(paquete->codigo_operacion), sizeof(uint32_t)); 		desplazamiento+= sizeof(uint32_t);
@@ -69,7 +72,7 @@ void* serializar_paquete(t_paquete* paquete, int bytes)
 
 void enviar_paquete(t_paquete* paquete, int socket_cliente)
 {
-	int bytes = paquete->buffer->size + sizeof(int) + sizeof(uint32_t); //tam_buffer + tam_tam_buffer(32) + tam_opcode(32)
+	int bytes = paquete->buffer->size + sizeof(int) + sizeof(uint32_t); 
 	void* a_enviar = serializar_paquete(paquete, bytes);
 
 	send(socket_cliente, a_enviar, bytes, 0);
@@ -177,24 +180,24 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
 }
 
 uint8_t leer_uint8_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
+    uint32_t tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
 
     uint8_t valor;
-    memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint8_t));
+    memcpy(&valor, buffer->stream + *desplazamiento, tamanio);
     *desplazamiento += sizeof(uint8_t);
 
     return valor;
 }
 
 uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
+    uint32_t tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
 
     uint32_t valor;
-    memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    memcpy(&valor, buffer->stream + *desplazamiento, tamanio);
     *desplazamiento += sizeof(uint32_t);
 
     return valor;

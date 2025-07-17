@@ -8,7 +8,11 @@
     #include <utils/contrato/contrato.h>
     #include <utils/utils.h>
     #include "config_memoria/memoria-config.h"
-
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <stdbool.h>
+    #include <stdint.h>
+    #include <string.h>
     /**
 	 * @file
 	 * @brief #include "memoria-gestor.h"
@@ -23,7 +27,6 @@
     extern t_log* logger_memoria;
 
     // CONFIG
-    extern t_memoria_config* config_memoria;
 
     // VARIABLES
     extern int cantMemoria;

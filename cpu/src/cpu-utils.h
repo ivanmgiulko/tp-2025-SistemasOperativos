@@ -126,7 +126,7 @@ char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer
 void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir);
 
 int buscar_espacio_libre_en_cache(t_memoria_cache* cache);
-void agregar_pagina_a_cache(int nro_pagina, int indice_libre, char* contenido);
+void agregar_pagina_a_cache(uint32_t nro_pagina, int indice_libre, char* contenido);
 int reemplazo_clock(t_memoria_cache* cache);
 
 int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica);

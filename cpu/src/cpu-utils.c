@@ -66,6 +66,7 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
     //Envía la peticion serializada a MEMORIA
     enviar_paquete(paquete, fd_conexion_memoria);
 	log_debug(logger_cpu, "Petición envíada, aguardo respuesta");
+    eliminar_paquete(paquete); 
 }	
 	
 void manejar_respuesta_de_instruccion(t_paquete* paquete){
@@ -144,13 +145,12 @@ void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) {
 }
 
 void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
-	size_t bytes;
 
 	uint8_t handshake = atoi(cpu_id);
 	uint8_t result;
 
-	bytes = send(fd_conexion, &handshake, sizeof(uint8_t), 0);
-	bytes = recv(fd_conexion, &result, sizeof(uint8_t), MSG_WAITALL);
+	send(fd_conexion, &handshake, sizeof(uint8_t), 0);
+	recv(fd_conexion, &result, sizeof(uint8_t), MSG_WAITALL);
 
 	if (result == 0) {
     	log_debug(logger_cpu, "Handshake con [KERNEL] exitoso!");
@@ -223,7 +223,7 @@ void destruir_mmu(mmu_t* mmu) {
 void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_t tamanio){
     //Envia el read a memoria
     t_paquete* paquete_read = crear_paquete_con_codigo(READ_MEMORIA);
-    agregar_a_paquete(paquete_read, &pid, sizeof(uint32_t));
+    agregar_a_paquete(paquete_read, &pid, sizeof(uint8_t));
     agregar_a_paquete(paquete_read, &direccion_fisica_final, sizeof(uint32_t));
     agregar_a_paquete(paquete_read, &tamanio, sizeof(uint32_t));
     enviar_paquete(paquete_read, fd_conexion_memoria);
@@ -298,8 +298,8 @@ char* recibir_read_o_write_de_memoria() {
 }
 
 char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
-    char* contenido = malloc(paquete->buffer->size);
-    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
+    char* contenido = malloc(mmu->tamanio_pagina);
+    memcpy(contenido, paquete->buffer->stream, mmu->tamanio_pagina);
     return contenido;
 }
 
@@ -389,7 +389,6 @@ int32_t recibir_marco_solicitado(t_paquete* paquete){
         return -1;//VALOR DE ERROR PARA INDICAR MARCO INVALIDO
     }
 }
-
 //FUNCIONES DE TLB
 
 tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
@@ -397,7 +396,10 @@ tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
 	tlb->cantidad_entradas = maximas_entradas_tlb;
 	tlb->entradas = malloc(sizeof(entradas_tlb_t) * tlb->cantidad_entradas);
 	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-		tlb->entradas[i].bit_en_uso = 0;
+        tlb->entradas[i].bit_en_uso = 0;
+        tlb->entradas[i].nro_pagina = UINT32_MAX;
+        tlb->entradas[i].marco_asociado = UINT32_MAX;
+        tlb->entradas[i].instante_referencia = 0;
 	}
 	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
 	return tlb;
@@ -625,7 +627,7 @@ void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escrib
     return;
 }
 
-void agregar_pagina_a_cache(int nro_pagina, int indice_libre, char* contenido) {
+void agregar_pagina_a_cache(uint32_t nro_pagina, int indice_libre, char* contenido) {
 
     // Agregar la página a la cache
     memoria_cache->paginas[indice_libre].nro_pagina = nro_pagina;
@@ -741,6 +743,7 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     }
     //agrego la pag a cache
     agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, pagina);
+    free(pagina);
     log_debug(logger_cpu, "Se agrego la página %d del proceso  PID: %d a CACHE", pre_direccion_fisica.nro_pagina, pcb_actual->pid);
     return marco_cache;
 }
@@ -764,10 +767,12 @@ void actualizar_memoria_principal_completa() {
             // Escribir en memoria principal
             enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
             respuesta = recibir_read_o_write_de_memoria();
-            if( strcmp(respuesta, "WRITE completado con éxito") == 0){
-            log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
-            } else {
+            if (respuesta && strcmp(respuesta, "WRITE completado con éxito") == 0) {
+                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+            } else if (respuesta) {
                 log_error(logger_cpu, "Error al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
+            } else {
+                log_error(logger_cpu, "Error: respuesta NULL al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
             }
             // Liberar memoria de las entradas de nivel
             free(respuesta);

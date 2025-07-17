@@ -14,7 +14,8 @@
     t_log* logger_memoria;
     
     // CONFIG
-    t_memoria_config* config_memoria;
+    t_config* config;
+    t_memoria_config* config_memoria; 
 
     // VARIABLES
     int cantMemoria;

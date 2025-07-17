@@ -1,7 +1,7 @@
 #ifndef CONFIG_KERNEL_H
 #define CONFIG_KERNEL_H
 
-    // #include "memoria-gestor.h"
+     #include "memoria-gestor.h"
     #include <./utils/utils.h>
 
     /**
@@ -34,7 +34,10 @@
     * @param t_log*: Logger de la memoria
 	* @returns el config creado para ser usado
 	*/
-    t_memoria_config* crear_config_memoria(char*, t_log*);
-
+    t_memoria_config* crear_config_memoria(char*);
+    t_memoria_config* inicializar_config_memo(t_config* );
+    void destruir_config_memoria(t_memoria_config* config);
+    extern t_memoria_config* config_memoria;
+    extern t_config* config;
 #endif
 

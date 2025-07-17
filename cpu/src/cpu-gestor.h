@@ -7,6 +7,8 @@
 #include <utils/serializacion/serializacion.h>
 #include <utils/contrato/contrato.h>
 #include <cpu-utils.h>
+#include <stdint.h>
+#include <limits.h>
 
 extern t_log* logger_cpu;
 extern sem_t sem_cpu;
@@ -16,7 +18,9 @@ extern sem_t sem_read;
 extern sem_t sem_write;
 extern pthread_mutex_t mutex_cpu;
 
-
+extern uint32_t entradas_cache;
+extern uint32_t retardo_cache;
+extern char* algoritmo_reemplazo_cache;
 extern t_peticion_instruccion* pcb_actual;
 extern int valor_sem_cpu;
 extern int32_t ultimo_marco_obtenido;

@@ -1,12 +1,12 @@
 #include "memoria-main.h"
 
-t_memoria_config* config_memoria = NULL; // Inicializo el config de forma global
 
 int main(int argc, char* argv[]) {
     char* puerto_servidor_memoria;
     
     logger_memoria = log_create("./memoria.log", "log", true, LOG_LEVEL_TRACE);
-    config_memoria = crear_config_memoria("./memoria.config", logger_memoria); // Creo el config instanciado globalmente
+    config_memoria = crear_config_memoria("./memoria.config"); // Creo el config instanciado globalmente
+    config_destroy(config);  
     cantMemoria = atoi(config_memoria->TAM_MEMORIA);
     memoria_del_sistema = malloc(sizeof(t_memoria_del_sistema));
     *memoria_del_sistema = crear_memoria_del_sistema();
