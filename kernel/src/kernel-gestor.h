@@ -41,4 +41,6 @@
     extern int socket_dispatch;
     extern int socket_io;
 
+    extern char* relative_path;
+
 #endif // KERNEL_GESTOR_H_

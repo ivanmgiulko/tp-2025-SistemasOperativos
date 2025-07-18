@@ -85,7 +85,9 @@ t_pcb* buscar_proceso_en_cola_exit(t_list* cola_exit, uint8_t pid)
 		t_pcb* proceso = (t_pcb*) ptr;
 		return proceso->pid == pid;
 	}
-	return list_find(cola_exit, _tiene_el_pid);
+	
+    return list_find(cola_exit, _tiene_el_pid);
+    
 }
 
 // funcion que busca la io donde se encuentra el pid

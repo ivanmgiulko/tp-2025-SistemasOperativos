@@ -109,7 +109,11 @@ void inicializar_estructuras()
 {
     logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); 
 
-	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
+    char* relative_path = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba");
+    string_append(&relative_path, "/kernel.config");
+    printf("El directorio actual es %s\n", relative_path);
+	configuracion_kernel = crear_config_kernel(relative_path, logger_kernel);
+   
 
     // INICIAMOS LISTA DE CPU E IOs
     lista_cpus = malloc(sizeof(t_lista_cpus));
