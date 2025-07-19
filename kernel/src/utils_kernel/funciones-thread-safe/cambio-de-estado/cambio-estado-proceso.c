@@ -4,13 +4,14 @@
 void pasar_pcb_a_new(t_pcb* pcb) 
 {
     encolar_pcb_en_estado(estado_new, pcb);
-
+    
     pcb->metricas_estado->cantVecesNew++;
     temporal_resume(pcb->metricas_tiempo->tiempoEnNew);
 
     pcb->estadoProceso = NEW;
     log_info(logger_kernel, "%d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
+ 
 }
 
 void pasar_pcb_new_a_ready(t_pcb* pcb)
@@ -82,10 +83,12 @@ uint64_t calcular_estimacion_actual(int64_t rafagas_hechas, uint64_t estimacion_
     return estimacion;
 }
 
-void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb) 
-{
-    encolar_pcb_en_estado(estado_susp_blocked, pcb);
+void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb) {
 
+   
+    _sacar_pcb_de_cola(pcb->pid,estado_blocked); 
+    encolar_pcb_en_estado(estado_susp_blocked, pcb);
+   
     pcb->metricas_estado->cantVecesSuspBlocked++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
     temporal_resume(pcb->metricas_tiempo->tiempoEnSuspBlocked);
@@ -169,7 +172,6 @@ t_pcb* _sacar_pcb_de_cola(uint8_t pid, t_estado* estado)
             break; // Salir del bucle una vez encontrado
         }
     }
-
     pthread_mutex_unlock(&(estado->mutex));
     return proceso_a_devolver;
 }

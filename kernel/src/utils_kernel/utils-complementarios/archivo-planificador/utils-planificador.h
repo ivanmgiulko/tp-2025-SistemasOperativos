@@ -21,7 +21,6 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
-
     extern sem_t bin_eliminar_procesos_en_interfaces;
     extern sem_t bin_proceso_eliminar;
     extern sem_t bin_cpu_disponible;
@@ -119,7 +118,7 @@
 	* @brief agarra el primer proceso en la cola del estado que le pasemos
     * @return devuelve el primer proceso en la cola que le pasamos por parametro
 	*/
-    t_pcb* peek_cola_mutex(t_estado* cola_mutex);
+    t_pcb* peek_cola_mutex(t_estado* cola_mutex, uint8_t indice);
     
     /**
 	* @brief pasa el proceso que le pasemos por parametro al estado NEW
@@ -162,5 +161,7 @@
     void planificar_con_srt();
 
     void enviar_a_ejecutar_proceso(t_cpu_conectada* , t_pcb*);
+
+    void iniciar_temporizador_suspblocked(void* pcb);
 
 #endif // UTILS_PLANIFICADOR_H_

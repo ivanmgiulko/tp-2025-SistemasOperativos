@@ -5,10 +5,10 @@
       "name": "run",
       "type": "cppdbg",
       "request": "launch",
-      "program": "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/bin/kernel",
+      "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba",
+      "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
       "linux": {

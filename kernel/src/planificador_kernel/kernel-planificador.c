@@ -22,7 +22,6 @@ sem_t sem_cantidad_pcbs_en_new;
 sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
-
 sem_t bin_eliminar_procesos_en_interfaces;
 sem_t bin_proceso_eliminar;
 sem_t bin_cpu_disponible;
@@ -45,72 +44,35 @@ void iniciar_planificacion_largo_plazo(){
     
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){
-        if(!list_is_empty(estado_new->cola) || !list_is_empty(estado_susp_ready->cola)){
-            
-            sem_wait(&sem_cantidad_pcbs_en_new);
+    
+        sem_wait(&sem_cantidad_pcbs_en_new);
 
-            bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
-        
-            bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
+        bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
+    
+        bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
 
-            if(_cola_susp_ready_esta_vacia) { 
+        _cola_susp_ready_esta_vacia ?  _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready) :  _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
 
-                _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
-
-            } else { 
-
-                _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
-
-            }
-        } 
     }
 
     pthread_exit(NULL);
 }
 
 void iniciar_planificador_mediano_plazo() {
-
     while(1){
-        // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
         sem_wait(&sem_cantidad_pcbs_en_blocked);
 
-        t_pcb* _proceso_bloqueado = pop_cola_mutex(estado_blocked);
-        encolar_pcb_en_estado(estado_blocked_aux, _proceso_bloqueado);
+        pthread_mutex_lock(&(estado_blocked->mutex));
+        uint8_t cantidad_procesos_bloqueados = list_size(estado_blocked->cola);
+        pthread_mutex_unlock(&(estado_blocked->mutex));
 
-        pthread_mutex_lock(&(lista_de_io->mutex_lista));
-        t_io* io_que_usa_pcb_bloqueado = buscar_io(lista_de_io->lista_ios, _proceso_bloqueado->datos_io->dispositivo);
-        pthread_mutex_unlock(&(lista_de_io->mutex_lista));
+        t_pcb* _proceso_bloqueado = peek_cola_mutex(estado_blocked, cantidad_procesos_bloqueados - 1);
         
-        if(io_que_usa_pcb_bloqueado != NULL || io_que_usa_pcb_bloqueado->socket != -1) {
-            
-            pthread_mutex_lock(&(lista_de_io->mutex_lista));
-            t_instancia_io* instancia_disponible = devolver_instancia_disponible(io_que_usa_pcb_bloqueado->nombre);
-            pthread_mutex_unlock(&(lista_de_io->mutex_lista));
-
-            if(instancia_disponible != NULL) {
-
-                instancia_disponible->pid = _proceso_bloqueado->pid;
-                _proceso_bloqueado->datos_io->instancia_utilizada = instancia_disponible;
-            
-                pthread_mutex_lock(&(lista_de_io->mutex_lista));
-                
-                enviar_proceso_a_io_para_bloqueo(_proceso_bloqueado->pid, _proceso_bloqueado->datos_io->tiempo, instancia_disponible->socket_io, PROCESO_BLOQUEADO);
-                eliminar_proceso_de_io(io_que_usa_pcb_bloqueado->procesos, _proceso_bloqueado->pid);
-                
-                pthread_mutex_unlock(&(lista_de_io->mutex_lista));
-
-            } else { 
-
-                // La interfaz no esta disponible -> sigue en BLOCKED
-                pthread_t hilo_administrar_proceso_bloqueado;
- 	            pthread_create(&hilo_administrar_proceso_bloqueado, NULL, (void*)administrar_proceso_bloqueado, (void*)_proceso_bloqueado);
-	            pthread_detach(hilo_administrar_proceso_bloqueado);
-            }
-        } else {
-            pasar_pcb_blocked_a_exit(_proceso_bloqueado);
-        }
-    }
-
+        pthread_t hilo_temporizador;
+        pthread_create(&hilo_temporizador, NULL, (void*)iniciar_temporizador_suspblocked, (void*)_proceso_bloqueado);
+        pthread_detach(hilo_temporizador);
+    } 
+    
     pthread_exit(NULL);
 }
 

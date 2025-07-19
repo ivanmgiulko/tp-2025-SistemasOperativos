@@ -30,11 +30,13 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			if(strcmp(validacion_espacio, "No hay espacio en memoria") == 0) {
 				eliminar_paquete(paquete);
 				free(validacion_espacio);
+			
 				return 0;
 			} else {
 				// El proceso pasa a la cola de Ready
 				eliminar_paquete(paquete);
 				free(validacion_espacio);
+			
 				return 1;
 			}
 			break;
