@@ -4,9 +4,14 @@ int manejar_conexion_memoria(){
     while (1) {
         t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
         //log_debug(logger_cpu, "Esperando código de operación de Memoria...");
+        
+        pthread_mutex_lock(&mutex_conexion_memoria);
+        pthread_mutex_unlock(&mutex_conexion_memoria);
+        log_debug(logger_cpu, "lololo");
         paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
         log_warning(logger_cpu, "[RECV] Recibido código de operación: %s (nro: %d)", convertir_cod_op_a_string(paquete->codigo_operacion), paquete->codigo_operacion);
         recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
+
         log_debug(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);
         //Verifico que el contenido no sea nulo
         if(paquete->buffer->stream == NULL){

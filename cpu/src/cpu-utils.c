@@ -349,6 +349,7 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 
 // Solicita a memoria el marco correspondiente a una pagina y devuelve la direccion fisica
 int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint8_t pid) {
+
     int32_t marco_solicitado;
     // Serializar la petición
 
@@ -713,10 +714,15 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     if (marco_cache == -1) {
         log_warning(logger_cpu, "iniciando algoritmo de reemplazo");
         //ACA APLICA EL ALGORITMO DE REEMPLAZO DE CACHE
-        if (memoria_cache->algoritmo_reemplazo == CLOCK) {
-            marco_cache = reemplazo_clock(memoria_cache);
+        if (memoria_cache->algoritmo_reemplazo == CLOCK) {      
+            pthread_mutex_lock(&mutex_conexion_memoria);
+                marco_cache = reemplazo_clock(memoria_cache);
+            pthread_mutex_unlock(&mutex_conexion_memoria);
         } else if (memoria_cache->algoritmo_reemplazo == CLOCK_M) {
-            marco_cache = reemplazo_clock_m(memoria_cache, mmu->tamanio_pagina);
+            pthread_mutex_lock(&mutex_conexion_memoria);
+                marco_cache = reemplazo_clock_m(memoria_cache, mmu->tamanio_pagina);
+            pthread_mutex_unlock(&mutex_conexion_memoria);
+
         }
     }
 
@@ -727,7 +733,10 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     if (marco == -1) {
         log_warning(logger_cpu, "Página %d NO encontrada en TLB,es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
         // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
-        marco = tlb_miss(pre_direccion_fisica);
+        pthread_mutex_lock(&mutex_conexion_memoria);
+            marco = tlb_miss(pre_direccion_fisica);
+        pthread_mutex_unlock(&mutex_conexion_memoria);
+
      }
      //Si la pagina ya esta en la TLB, no necesito acceder a la tabla de paginas para obtener el marco
      else{

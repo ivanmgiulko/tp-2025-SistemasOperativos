@@ -17,6 +17,7 @@ extern sem_t sem_memoria;
 extern sem_t sem_read;
 extern sem_t sem_write;
 extern pthread_mutex_t mutex_cpu;
+extern pthread_mutex_t mutex_conexion_memoria;
 
 extern uint32_t entradas_cache;
 extern uint32_t retardo_cache;

@@ -365,7 +365,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_init_proc);
 
             log_info(logger_cpu, "Enviando SYSCALL_INIT_PROC a Kernel");
-
+            
             pcb_actual->pc++;
            
             sem_post(&sem_cpu); 
@@ -408,7 +408,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
-            bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
+            bytes = sizeof(int)+ sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_exit = serializar_paquete(paquete, bytes);
             
             send(fd_conexion_kernel_interrupt, paquete_exit, bytes, 0);
@@ -418,8 +418,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             
-            actualizar_memoria_principal_completa();
-            limpiar_tlb();
+            // actualizar_memoria_principal_completa();
+            // limpiar_tlb();
             
             sem_post(&sem_cpu_kernel);
 			break;

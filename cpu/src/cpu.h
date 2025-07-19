@@ -9,6 +9,7 @@
 
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
+pthread_mutex_t mutex_conexion_memoria;
 sem_t sem_cpu;
 sem_t sem_memoria;
 sem_t sem_read;

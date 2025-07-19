@@ -15,21 +15,23 @@ int manejar_conexion_kernel_interrupt(){
 				break;
 			
 			case PROCESO_DESALOJAR:
+				limpiar_tlb();
+				pthread_mutex_lock(&mutex_conexion_memoria);
+					actualizar_memoria_principal_completa();
+				pthread_mutex_unlock(&mutex_conexion_memoria);
 
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
+				
+				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+				// 	log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
 
-				actualizar_memoria_principal_completa();
-				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-					log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
+				// }
+				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
+				// 	log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
 
-				}
-				limpiar_tlb();
-				for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-					log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
-
-				}
+				// }
 				free(paquete);
 			
 				break;

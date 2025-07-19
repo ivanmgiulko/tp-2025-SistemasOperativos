@@ -22,11 +22,11 @@ int main(int argc, char* argv[]) {
 
 	_iniciar_server_para_io();
 
-	char* relative_path = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba");
-	string_append(&relative_path, argv[1]);
+	// char* relative_path = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba");
+	// string_append(&relative_path, argv[1]);
 
-	// argv[1] = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba/PATH_INSTRUCCIONES.txt";
-	// argv[2] = "200";
+	argv[1] = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/prueba/PATH_INSTRUCCIONES.txt";
+	argv[2] = "200";
 
 	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", argv[1], argv[2]);
 	crear_proceso_cero(argv[1], atoi(argv[2]));
@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 
 	free(configuracion_kernel);	
 
-	free(relative_path);
+	// free(relative_path);
 
 	eliminar_lista_cpu();
 	
