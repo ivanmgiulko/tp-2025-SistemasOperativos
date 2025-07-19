@@ -43,7 +43,7 @@ int buscar_indice_de_proceso_en_memoria(uint8_t pid){
     }
 
     if (encontrado == -1) {
-        log_error(logger_memoria, "No se encontró el proceso con PID %d\n", pid);
+        log_warning(logger_memoria, "No se encontró el proceso con PID %d\n", pid);
         return -1;
     }
     return encontrado;
@@ -99,7 +99,10 @@ void suspender_proceso_swap(uint8_t pid) {
 
         log_trace(logger_memoria, "PID %d: Página %d escrita en offset %d de SWAP", pid, i, offset);
     }
-
+    //METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesSWAP++;
+    
     // el pepe
     fclose(swapfile);
     pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
@@ -157,6 +160,9 @@ void desuspender_proceso_swap(uint8_t pid) {
         fread(destino, 1, tam_pagina, swapfile);
         log_trace(logger_memoria, "PID %d: Página %d restaurada desde SWAP (offset %ld) al marco %d", pid, i, offset, marco);
     }
+    //METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesMP++;
 
     fclose(swapfile);
 }

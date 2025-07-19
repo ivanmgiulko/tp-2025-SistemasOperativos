@@ -50,7 +50,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
-			
+
 				t_pcbMemoria* proceso_a_inicializar = deserializar_proceso(paquete->buffer);
 				log_trace(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
 
@@ -60,7 +60,7 @@ int manejar_conexion_cliente(int socket_cliente){
 				
 				if(cantMemoria < 0) {
 					
-					log_info(logger_memoria, "No se puedo crear el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
+					log_info(logger_memoria, "No se puedo agregar el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
 					cantMemoria += proceso_a_inicializar->tamanioMemoria;
 					enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
 				} else {
@@ -68,8 +68,12 @@ int manejar_conexion_cliente(int socket_cliente){
 					// le mandamos a Kernel el num de tabla de primer nivel
 
 					//Agrego el proceso (ver que pasa si hay error aca)
-					
-					agregar_proceso(proceso_a_inicializar);
+					if(buscar_indice_de_proceso_en_memoria(proceso_a_inicializar->pid) != -1){
+						log_trace(logger_memoria, "Solicita Desuspender el proceso con PID: %d", proceso_a_inicializar->pid);
+						desuspender_proceso_swap(proceso_a_inicializar->pid);
+					}else {
+						agregar_proceso(proceso_a_inicializar);
+					}
 					//falta agregar caso de error para el log
 					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
