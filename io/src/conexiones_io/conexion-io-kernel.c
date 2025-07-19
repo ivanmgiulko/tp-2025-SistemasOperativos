@@ -99,22 +99,8 @@ int manejar_conexion_io(int socket_cliente){
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
 			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado->pid, PROCESO_DESBLOQUEADO);
-		
 			break;
 
-		case PROCESO_SUSPENDIDO_BLOQUEADO:
-			recibir_paquete(socket_cliente, paquete);
-
-			t_info_proceso* proceso_bloqueado_suspendido = recibir_proceso_bloqueado(paquete->buffer);
-			log_debug(logger_io, "Llego el PID: %d | El tiempo: %ld", proceso_bloqueado_suspendido->pid, proceso_bloqueado_suspendido->tiempo);
-
-			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %ld", proceso_bloqueado_suspendido->pid, proceso_bloqueado_suspendido->tiempo);
-			usleep(proceso_bloqueado_suspendido->tiempo);
-			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado_suspendido->pid);
-			
-			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado_suspendido->pid, PROCESO_SUSPENDIDO_DESBLOQUEADO);
-
-			break;	
 		case -1:
 			log_error(logger_io, "el cliente se desconecto.");
 			return EXIT_FAILURE;

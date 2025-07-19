@@ -38,9 +38,9 @@ void manejar_conexion_kernel_interrupt() {
             log_error(logger_kernel, "Error al aceptar cliente en interrupt");
             continue;
         }
-        pthread_mutex_lock(&lista_cpus->mutex_lista);
+      
         uint8_t id_cpu = _recibir_handshake_de_cpu(socket_interrupt, SOCKET_INTERRUPT);
-        pthread_mutex_unlock(&lista_cpus->mutex_lista);
+  
 
         _agregar_socket_en_cpu(id_cpu, SOCKET_INTERRUPT, socket_interrupt);
 
@@ -58,9 +58,7 @@ void manejar_conexion_kernel_dispatch() {
             continue;
         }
 
-        pthread_mutex_lock(&lista_cpus->mutex_lista);
         uint8_t id_cpu = _recibir_handshake_de_cpu(socket_dispatch, SOCKET_DISPATCH);
-        pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
         _agregar_socket_en_cpu(id_cpu, SOCKET_DISPATCH, socket_dispatch);
 

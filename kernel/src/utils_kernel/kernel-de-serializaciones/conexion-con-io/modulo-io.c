@@ -1,6 +1,6 @@
 #include "modulo-io.h"
 
-void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente, int cod_op) { 
+void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente) { 
 	t_buffer* buffer = malloc(sizeof(t_buffer));
     buffer->size = sizeof(uint8_t) + sizeof(int64_t);
     buffer->stream = malloc(buffer->size);
@@ -10,7 +10,7 @@ void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cl
     memcpy(buffer->stream + offset, &tiempo, sizeof(int64_t)); offset += sizeof(int64_t);
     
     t_paquete* paquete = malloc(sizeof(t_paquete));
-    paquete->codigo_operacion = cod_op;
+    paquete->codigo_operacion = PROCESO_BLOQUEADO;
     paquete->buffer = buffer;
     void* a_enviar = malloc(buffer->size + sizeof(int) + sizeof(uint32_t));
     offset = 0;
@@ -19,7 +19,7 @@ void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cl
     memcpy(a_enviar + offset, &(paquete->buffer->size), sizeof(uint32_t)); offset += sizeof(uint32_t);
     memcpy(a_enviar + offset, paquete->buffer->stream, paquete->buffer->size);
     send(socket_cliente, a_enviar, buffer->size + sizeof(int) + sizeof(uint32_t), 0);
-
+    
     free(a_enviar);
     eliminar_paquete(paquete);
 }

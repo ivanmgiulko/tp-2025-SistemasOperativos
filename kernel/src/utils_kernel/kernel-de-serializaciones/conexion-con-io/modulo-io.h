@@ -9,7 +9,7 @@
 	* @param int64_t tiempo que el proceso va a estar bloqueado
 	* @param int socket de conexion IO con Kernel
 	*/
-	void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente, int cod_op);
+	void enviar_proceso_a_io_para_bloqueo(uint8_t pid, int64_t tiempo, int socket_cliente);
 
     /**
 	* @brief recibe un proceso que fue desbloqueado desde el modulo de IO

@@ -57,11 +57,13 @@ typedef struct { // Elemento en 't_list* lista_ios'
         bool enabled;
         t_list* instancias;
         t_list* procesos; // Solo PIDs (uint8_t)
+        pthread_mutex_t mutex_lista;
 } t_io;
    
 typedef struct { // Elemento en 't_list* instancias'
         int socket_io;
         int8_t pid;
+        pthread_mutex_t mutex_instancia;
 } t_instancia_io;
 
 typedef struct {
