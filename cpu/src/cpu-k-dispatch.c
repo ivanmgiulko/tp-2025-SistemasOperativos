@@ -28,9 +28,7 @@ int manejar_conexion_kernel_dispatch(){
 					// }				
 				if(pcb_actual->pid != infoPCB->pid){
 					limpiar_tlb();
-					pthread_mutex_lock(&mutex_conexion_memoria);
-						actualizar_memoria_principal_completa();
-					pthread_mutex_unlock(&mutex_conexion_memoria);
+					actualizar_memoria_principal_completa();
 
 				} 
 				

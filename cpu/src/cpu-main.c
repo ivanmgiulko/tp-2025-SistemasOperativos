@@ -64,6 +64,8 @@ int main(int argc, char* argv[]){
 	sem_init(&sem_write,0,0);
 	pthread_mutex_init(&mutex_cpu, NULL);
 	pthread_mutex_init(&mutex_conexion_memoria, NULL);
+	pthread_cond_init(&condicion_reactivacion_recepcion_memoria, NULL);
+	receptor_habilitado = true;
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
 	
 	pthread_t hilo_cliente_cpuInt_akernel;

@@ -6,10 +6,11 @@
 #include "./cpu-k-dispatch.h"
 #include "./cpu-memoria.h"
 #include "./instrucciones.h"
-
+bool receptor_habilitado;
 t_log* logger_cpu;
 pthread_mutex_t mutex_cpu;
 pthread_mutex_t mutex_conexion_memoria;
+pthread_cond_t condicion_reactivacion_recepcion_memoria;
 sem_t sem_cpu;
 sem_t sem_memoria;
 sem_t sem_read;

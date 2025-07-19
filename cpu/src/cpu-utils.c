@@ -267,28 +267,33 @@ char* obtener_pagina_de_memoria(uint8_t pid, uint32_t direccion_fisica) {
     eliminar_paquete(paquete_respuesta);
     return pagina;
 }
-
 char* recibir_read_o_write_de_memoria() {
     t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
-    // Espera recibir un paquete de memoria
+
+    // Recibir el código de operación desde la conexión
     paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
-    // Verifica que el paquete recibido sea de tipo READ_MEMORIA o WRITE_MEMORIA
+
+    // Validar tipo de operación recibida
     if (paquete->codigo_operacion != READ_MEMORIA && paquete->codigo_operacion != WRITE_MEMORIA) {
         log_error(logger_cpu, "Error: Código de operación inesperado: %d", paquete->codigo_operacion);
         eliminar_paquete(paquete);
         return NULL;
     }
+
+    // Recibir el buffer
     recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
     log_debug(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);
 
-    // Deserializa el contenido del paquete
-    char* contenido = deserializar_read_o_write_de_memoria(paquete);
+    // Deserializar el contenido
+    char* contenido = malloc(paquete->buffer->size + 1);  
+    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
+    contenido[paquete->buffer->size] = '\0'; 
+
     log_debug(logger_cpu, "Contenido recibido: %s", contenido);
 
-    // Procesa el contenido según el tipo de operación
+    // Log según el tipo de operación
     if (paquete->codigo_operacion == READ_MEMORIA) {
         log_info(logger_cpu, "READ_MEMORIA recibido. Contenido: %s", contenido);
-       
     } else if (paquete->codigo_operacion == WRITE_MEMORIA) {
         log_info(logger_cpu, "WRITE_MEMORIA recibido. Contenido: %s", contenido);
     }
@@ -298,8 +303,8 @@ char* recibir_read_o_write_de_memoria() {
 }
 
 char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
-    char* contenido = malloc(mmu->tamanio_pagina);
-    memcpy(contenido, paquete->buffer->stream, mmu->tamanio_pagina);
+    char* contenido = malloc(paquete->buffer->size);
+    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
     return contenido;
 }
 
@@ -350,32 +355,34 @@ uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica 
 // Solicita a memoria el marco correspondiente a una pagina y devuelve la direccion fisica
 int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint8_t pid) {
 
-    int32_t marco_solicitado;
-    // Serializar la petición
+  
 
     log_debug(logger_cpu, "Solicitando marco a memoria para PID: %d, Página: %d", pid, pre_direccion_fisica.nro_pagina);
-    // Se crea un paquete de solicitud de marco
-    t_paquete* paquete_solicitud_marco = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
-    agregar_a_paquete(paquete_solicitud_marco, &(pcb_actual->pid), sizeof(uint8_t));
-    agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
+    t_paquete* paquete = crear_paquete_con_codigo(OBTENER_MARCO_CORRESPONDIENTE);
+    agregar_a_paquete(paquete, &pid, sizeof(uint8_t));
+    agregar_a_paquete(paquete, &pre_direccion_fisica.nro_pagina, sizeof(uint32_t));
     for (int i = 0; i < mmu->cantidad_niveles; i++)
-        agregar_a_paquete(paquete_solicitud_marco, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t)); 
+        agregar_a_paquete(paquete, &pre_direccion_fisica.entrada_nivel[i], sizeof(uint32_t));
 
-    enviar_paquete(paquete_solicitud_marco, fd_conexion_memoria);
-    log_debug(logger_cpu, "[SEND] Solicitud de marco enviada a memoria por socket: %d", fd_conexion_memoria);
-    
-    // Esperar la respuesta del hilo de recepción
-    log_debug(logger_cpu, "WAIT:Esperando respuesta de memoria...");
-    paquete_solicitud_marco->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
-    if (paquete_solicitud_marco->codigo_operacion != OBTENER_MARCO_CORRESPONDIENTE) {
-        log_error(logger_cpu, "Error al recibir respuesta de memoria, código de operación: %d", paquete_solicitud_marco->codigo_operacion);
-        eliminar_paquete(paquete_solicitud_marco);
-        return -1; // Error al recibir respuesta
+    enviar_paquete(paquete, fd_conexion_memoria);
+    log_debug(logger_cpu, "[SEND] Solicitud de marco enviada");
+
+    paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
+    if (paquete->codigo_operacion != OBTENER_MARCO_CORRESPONDIENTE) {
+        log_error(logger_cpu, "Código inesperado: %d", paquete->codigo_operacion);
+        eliminar_paquete(paquete);
+
+
+        return -1;
     }
-    marco_solicitado = recibir_marco_solicitado(paquete_solicitud_marco);
-    eliminar_paquete(paquete_solicitud_marco);
-    log_debug(logger_cpu, "Marco obtenido de memoria: %d", marco_solicitado);
-    return marco_solicitado;
+
+    int32_t marco = recibir_marco_solicitado(paquete);
+    eliminar_paquete(paquete);
+
+
+    
+
+    return marco;
 }
 
 int32_t recibir_marco_solicitado(t_paquete* paquete){
@@ -715,13 +722,10 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
         log_warning(logger_cpu, "iniciando algoritmo de reemplazo");
         //ACA APLICA EL ALGORITMO DE REEMPLAZO DE CACHE
         if (memoria_cache->algoritmo_reemplazo == CLOCK) {      
-            pthread_mutex_lock(&mutex_conexion_memoria);
+            
                 marco_cache = reemplazo_clock(memoria_cache);
-            pthread_mutex_unlock(&mutex_conexion_memoria);
         } else if (memoria_cache->algoritmo_reemplazo == CLOCK_M) {
-            pthread_mutex_lock(&mutex_conexion_memoria);
                 marco_cache = reemplazo_clock_m(memoria_cache, mmu->tamanio_pagina);
-            pthread_mutex_unlock(&mutex_conexion_memoria);
 
         }
     }
@@ -733,9 +737,7 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     if (marco == -1) {
         log_warning(logger_cpu, "Página %d NO encontrada en TLB,es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
         // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
-        pthread_mutex_lock(&mutex_conexion_memoria);
             marco = tlb_miss(pre_direccion_fisica);
-        pthread_mutex_unlock(&mutex_conexion_memoria);
 
      }
      //Si la pagina ya esta en la TLB, no necesito acceder a la tabla de paginas para obtener el marco
@@ -756,12 +758,17 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     log_debug(logger_cpu, "Se agrego la página %d del proceso  PID: %d a CACHE", pre_direccion_fisica.nro_pagina, pcb_actual->pid);
     return marco_cache;
 }
-
 void actualizar_memoria_principal_completa() {
-    char* respuesta;   
+    char* respuesta;
     log_warning(logger_cpu, "Estoy dentro de actualizar_memoria_principal_completa");
+
+    // 🛑 Desactivar receptor para control total de recv
+    pthread_mutex_lock(&mutex_conexion_memoria);
+    receptor_habilitado = false;
+    pthread_mutex_unlock(&mutex_conexion_memoria);
+
     for (uint32_t i = 0; i < memoria_cache->cantidad_paginas; i++) {
-            log_warning(logger_cpu, "Estoy dentro del for de actualizar_memoria_principal_completa");
+        log_warning(logger_cpu, "Estoy dentro del for de actualizar_memoria_principal_completa");
 
         t_pagina_de_cache* pagina = &memoria_cache->paginas[i];
         if (pagina->nro_pagina != -1 && pagina->bit_modificado) {
@@ -770,31 +777,43 @@ void actualizar_memoria_principal_completa() {
             pre_dir.nro_pagina = pagina->nro_pagina;
             pre_dir.desplazamiento = 0;
             pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
+
             uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
             uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
 
             // Escribir en memoria principal
             enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
             respuesta = recibir_read_o_write_de_memoria();
+
             if (respuesta && strcmp(respuesta, "WRITE completado con éxito") == 0) {
                 log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
             } else if (respuesta) {
                 log_error(logger_cpu, "Error al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
+                log_error(logger_cpu, "Respuesta inesperada de memoria: %s", respuesta);
             } else {
                 log_error(logger_cpu, "Error: respuesta NULL al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
             }
-            // Liberar memoria de las entradas de nivel
+
             free(respuesta);
             free(pre_dir.entrada_nivel);
             pagina->bit_modificado = false;
         }
+
         // Limpiar la entrada de la caché
         pagina->nro_pagina = -1;
         pagina->bit_uso = false;
         pagina->bit_modificado = false;
         memset(pagina->contenido, 0, mmu->tamanio_pagina);
     }
+
     memoria_cache->puntero_reemplazo = 0;
+
+    // ✅ Reactivar receptor al final
+    pthread_mutex_lock(&mutex_conexion_memoria);
+    receptor_habilitado = true;
+    pthread_cond_signal(&condicion_reactivacion_recepcion_memoria);
+    pthread_mutex_unlock(&mutex_conexion_memoria);
 }
+
     
 

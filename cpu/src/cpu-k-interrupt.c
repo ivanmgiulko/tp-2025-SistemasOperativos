@@ -16,9 +16,7 @@ int manejar_conexion_kernel_interrupt(){
 			
 			case PROCESO_DESALOJAR:
 				limpiar_tlb();
-				pthread_mutex_lock(&mutex_conexion_memoria);
-					actualizar_memoria_principal_completa();
-				pthread_mutex_unlock(&mutex_conexion_memoria);
+				actualizar_memoria_principal_completa();
 
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
