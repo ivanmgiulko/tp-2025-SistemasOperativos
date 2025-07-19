@@ -659,8 +659,8 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 
 	// Log obligatorio
-	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d ", pid, direccion_fisica);
-
+	log_trace(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
+    log_error(logger_memoria, "DATOS <%s>", datos);
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;

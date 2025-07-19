@@ -28,7 +28,8 @@ int manejar_conexion_kernel_dispatch(){
 					// }				
 				if(pcb_actual->pid != infoPCB->pid){
 					limpiar_tlb();
-					actualizar_memoria_principal_completa();
+					if(cache_esta_activada())
+						actualizar_memoria_principal_completa();
 
 				} 
 				

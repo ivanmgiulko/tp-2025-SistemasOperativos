@@ -16,8 +16,8 @@ int manejar_conexion_kernel_interrupt(){
 			
 			case PROCESO_DESALOJAR:
 				limpiar_tlb();
-				actualizar_memoria_principal_completa();
-
+				if(cache_esta_activada())
+						actualizar_memoria_principal_completa();
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;

@@ -202,7 +202,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //RETARDO DE CACHE:
                 usleep(memoria_cache->retardo * 1000);
                 escribir_en_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.write.datos);
-                log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
+            //    log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
+                log_error(logger_cpu, "Contenido (parcial) de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
+
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); // Libera el semáforo de CPU
                 eliminar_paquete(paquete);
@@ -225,7 +227,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
                 
                 //Envia el WRITE a memoria
-                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos)+1);
                 log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
                 eliminar_paquete(paquete);
                 

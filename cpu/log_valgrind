@@ -1,72 +1,170 @@
-==25790== Memcheck, a memory error detector
-==25790== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==25790== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==25790== Command: ./bin/cpu 3
-==25790== Parent PID: 22175
-==25790== 
-==25790== 
-==25790== Process terminating with default action of signal 11 (SIGSEGV)
-==25790==  Bad permissions for mapped region at address 0x4A906A0
-==25790==    at 0x4A906A0: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
-==25790==    by 0x10B5B8: manejar_respuesta_de_instruccion (cpu-utils.c:32)
-==25790==    by 0x10A76E: manejar_conexion_memoria (cpu-memoria.c:20)
-==25790==    by 0x4909AC2: start_thread (pthread_create.c:442)
-==25790==    by 0x499AA03: clone (clone.S:100)
-==25790== 
-==25790== HEAP SUMMARY:
-==25790==     in use at exit: 7,484 bytes in 64 blocks
-==25790==   total heap usage: 529 allocs, 465 frees, 29,167 bytes allocated
-==25790== 
-==25790== 40 (16 direct, 24 indirect) bytes in 1 blocks are definitely lost in loss record 23 of 34
-==25790==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==25790==    by 0x10AD19: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:6)
-==25790==    by 0x4909AC2: start_thread (pthread_create.c:442)
-==25790==    by 0x499AA03: clone (clone.S:100)
-==25790== 
-==25790== 48 (16 direct, 32 indirect) bytes in 1 blocks are definitely lost in loss record 25 of 34
-==25790==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==25790==    by 0x10C260: crear_paquete_instruccion (serializacion.c:39)
-==25790==    by 0x10C9E0: serializar_peticion_instruccion (contrato.c:5)
-==25790==    by 0x10B496: pedir_instruccion_a_memoria (cpu-utils.c:11)
-==25790==    by 0x10AE72: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:27)
-==25790==    by 0x4909AC2: start_thread (pthread_create.c:442)
-==25790==    by 0x499AA03: clone (clone.S:100)
-==25790== 
-==25790== 272 bytes in 1 blocks are possibly lost in loss record 28 of 34
-==25790==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==25790==    by 0x40147D9: calloc (rtld-malloc.h:44)
-==25790==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
-==25790==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
-==25790==    by 0x490A7B4: allocate_stack (allocatestack.c:430)
-==25790==    by 0x490A7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
-==25790==    by 0x10AC69: main (cpu-main.c:80)
-==25790== 
-==25790== 272 bytes in 1 blocks are possibly lost in loss record 29 of 34
-==25790==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==25790==    by 0x40147D9: calloc (rtld-malloc.h:44)
-==25790==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
-==25790==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
-==25790==    by 0x490A7B4: allocate_stack (allocatestack.c:430)
-==25790==    by 0x490A7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
-==25790==    by 0x10AC92: main (cpu-main.c:84)
-==25790== 
-==25790== 272 bytes in 1 blocks are possibly lost in loss record 30 of 34
-==25790==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
-==25790==    by 0x40147D9: calloc (rtld-malloc.h:44)
-==25790==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
-==25790==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
-==25790==    by 0x490A7B4: allocate_stack (allocatestack.c:430)
-==25790==    by 0x490A7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
-==25790==    by 0x10ACBB: main (cpu-main.c:88)
-==25790== 
-==25790== LEAK SUMMARY:
-==25790==    definitely lost: 32 bytes in 2 blocks
-==25790==    indirectly lost: 56 bytes in 4 blocks
-==25790==      possibly lost: 816 bytes in 3 blocks
-==25790==    still reachable: 6,580 bytes in 55 blocks
-==25790==         suppressed: 0 bytes in 0 blocks
-==25790== Reachable blocks (those to which a pointer was found) are not shown.
-==25790== To see them, rerun with: --leak-check=full --show-leak-kinds=all
-==25790== 
-==25790== For lists of detected and suppressed errors, rerun with: -s
-==25790== ERROR SUMMARY: 5 errors from 5 contexts (suppressed: 0 from 0)
+==5482== Memcheck, a memory error detector
+==5482== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==5482== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==5482== Command: ./bin/cpu 3
+==5482== Parent PID: 2476
+==5482== 
+==5482== Thread 4:
+==5482== Invalid read of size 8
+==5482==    at 0x484FEBF: memcpy@GLIBC_2.2.5 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D2ED: agregar_pagina_a_cache (cpu-utils.c:653)
+==5482==    by 0x10D91C: manejar_cache_miss (cpu-utils.c:767)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bb4758 is 6 bytes after a block of size 2 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10C076: deserializar_read_o_write_de_memoria (cpu-utils.c:316)
+==5482==    by 0x10BE3A: obtener_pagina_de_memoria (cpu-utils.c:266)
+==5482==    by 0x10D8CC: manejar_cache_miss (cpu-utils.c:761)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Invalid read of size 8
+==5482==    at 0x484FEC7: memcpy@GLIBC_2.2.5 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D2ED: agregar_pagina_a_cache (cpu-utils.c:653)
+==5482==    by 0x10D91C: manejar_cache_miss (cpu-utils.c:767)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bb4760 is 14 bytes after a block of size 2 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10C076: deserializar_read_o_write_de_memoria (cpu-utils.c:316)
+==5482==    by 0x10BE3A: obtener_pagina_de_memoria (cpu-utils.c:266)
+==5482==    by 0x10D8CC: manejar_cache_miss (cpu-utils.c:761)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Invalid read of size 8
+==5482==    at 0x484FECF: memcpy@GLIBC_2.2.5 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D2ED: agregar_pagina_a_cache (cpu-utils.c:653)
+==5482==    by 0x10D91C: manejar_cache_miss (cpu-utils.c:767)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bb4768 is 22 bytes after a block of size 2 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10C076: deserializar_read_o_write_de_memoria (cpu-utils.c:316)
+==5482==    by 0x10BE3A: obtener_pagina_de_memoria (cpu-utils.c:266)
+==5482==    by 0x10D8CC: manejar_cache_miss (cpu-utils.c:761)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Invalid read of size 8
+==5482==    at 0x484FEB4: memcpy@GLIBC_2.2.5 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D2ED: agregar_pagina_a_cache (cpu-utils.c:653)
+==5482==    by 0x10D91C: manejar_cache_miss (cpu-utils.c:767)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bb4770 is 16 bytes after a block of size 16 in arena "client"
+==5482== 
+==5482== Invalid read of size 1
+==5482==    at 0x484ED84: __strlen_sse2 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x49D2D30: __vfprintf_internal (vfprintf-internal.c:1517)
+==5482==    by 0x49E4499: __vsnprintf_internal (vsnprintf.c:114)
+==5482==    by 0x486F6BF: _string_append_with_format_list (string.c:305)
+==5482==    by 0x486EB04: string_from_vformat (string.c:74)
+==5482==    by 0x486E70D: _log_write_in_level (log.c:145)
+==5482==    by 0x486E456: log_info (log.c:102)
+==5482==    by 0x10E66F: ejecutar_instruccion (instrucciones.c:258)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bbfd2a is 0 bytes after a block of size 10 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D0F4: leer_de_cache (cpu-utils.c:620)
+==5482==    by 0x10E63F: ejecutar_instruccion (instrucciones.c:257)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Invalid read of size 1
+==5482==    at 0x484ED84: __strlen_sse2 (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x49D2D30: __vfprintf_internal (vfprintf-internal.c:1517)
+==5482==    by 0x49E4499: __vsnprintf_internal (vsnprintf.c:114)
+==5482==    by 0x486F70E: _string_append_with_format_list (string.c:310)
+==5482==    by 0x486EB04: string_from_vformat (string.c:74)
+==5482==    by 0x486E70D: _log_write_in_level (log.c:145)
+==5482==    by 0x486E456: log_info (log.c:102)
+==5482==    by 0x10E66F: ejecutar_instruccion (instrucciones.c:258)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bbfd2a is 0 bytes after a block of size 10 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10D0F4: leer_de_cache (cpu-utils.c:620)
+==5482==    by 0x10E63F: ejecutar_instruccion (instrucciones.c:257)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Thread 3:
+==5482== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==5482==    at 0x4A838FE: __libc_send (send.c:28)
+==5482==    by 0x4A838FE: send (send.c:23)
+==5482==    by 0x10F1E0: enviar_paquete (serializacion.c:78)
+==5482==    by 0x10BD2A: enviar_write_a_memoria (cpu-utils.c:239)
+==5482==    by 0x10DAD6: actualizar_memoria_principal_completa (cpu-utils.c:796)
+==5482==    by 0x10B26A: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:31)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4bcd85a is 26 bytes inside a block of size 89 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10F0C1: serializar_paquete (serializacion.c:57)
+==5482==    by 0x10F1C3: enviar_paquete (serializacion.c:76)
+==5482==    by 0x10BD2A: enviar_write_a_memoria (cpu-utils.c:239)
+==5482==    by 0x10DAD6: actualizar_memoria_principal_completa (cpu-utils.c:796)
+==5482==    by 0x10B26A: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:31)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Uninitialised value was created by a heap allocation
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10C076: deserializar_read_o_write_de_memoria (cpu-utils.c:316)
+==5482==    by 0x10BE3A: obtener_pagina_de_memoria (cpu-utils.c:266)
+==5482==    by 0x10D8CC: manejar_cache_miss (cpu-utils.c:761)
+==5482==    by 0x10E39C: ejecutar_instruccion (instrucciones.c:200)
+==5482==    by 0x10B68E: manejar_respuesta_de_instruccion (cpu-utils.c:90)
+==5482==    by 0x10A9E2: manejar_conexion_memoria (cpu-memoria.c:42)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Invalid read of size 4
+==5482==    at 0x10C502: recibir_marco_solicitado (cpu-utils.c:403)
+==5482==    by 0x10C481: solicitar_marco_a_memoria (cpu-utils.c:390)
+==5482==    by 0x10DA6D: actualizar_memoria_principal_completa (cpu-utils.c:792)
+==5482==    by 0x10B26A: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:31)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482==  Address 0x4c39684 is 0 bytes after a block of size 4 alloc'd
+==5482==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==5482==    by 0x10F5DE: recibir_buffer_en_paquete (serializacion.c:166)
+==5482==    by 0x10C4CC: recibir_marco_solicitado (cpu-utils.c:401)
+==5482==    by 0x10C481: solicitar_marco_a_memoria (cpu-utils.c:390)
+==5482==    by 0x10DA6D: actualizar_memoria_principal_completa (cpu-utils.c:792)
+==5482==    by 0x10B26A: manejar_conexion_kernel_dispatch (cpu-k-dispatch.c:31)
+==5482==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==5482==    by 0x4A81A03: clone (clone.S:100)
+==5482== 
+==5482== Warning: set address range perms: large range [0x59c87040, 0xa9167040) (undefined)

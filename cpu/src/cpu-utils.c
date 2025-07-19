@@ -231,14 +231,14 @@ void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_
     eliminar_paquete(paquete_read);
 }
 
-void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos){
-    // Mandamos la ejecución con la dirección física final
+void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos, uint32_t tamanio) {
     t_paquete* paquete_write = crear_paquete_con_codigo(WRITE_MEMORIA);
     agregar_a_paquete(paquete_write, &pid, sizeof(uint8_t));
     agregar_a_paquete(paquete_write, &direccion_fisica_final, sizeof(uint32_t));
-    agregar_a_paquete(paquete_write, datos, strlen(datos) + 1);
+    agregar_a_paquete(paquete_write, datos, tamanio); 
     enviar_paquete(paquete_write, fd_conexion_memoria);
-    log_debug(logger_cpu, "Enviando WRITE a Memoria: PID=%d, Direccion Fisica Final=%d, Contenido: %s", pid, direccion_fisica_final, datos);
+
+    log_debug(logger_cpu, "Enviando WRITE a Memoria: PID=%d, Direccion Fisica Final=%d", pid, direccion_fisica_final);
     eliminar_paquete(paquete_write);
 }
 
@@ -285,9 +285,14 @@ char* recibir_read_o_write_de_memoria() {
     log_debug(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);
 
     // Deserializar el contenido
-    char* contenido = malloc(paquete->buffer->size + 1);  
-    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
-    contenido[paquete->buffer->size] = '\0'; 
+     int desplazamiento = 0;
+    uint32_t tamanio;
+    memcpy(&tamanio, paquete->buffer->stream + desplazamiento, sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
+
+    char* contenido = malloc(tamanio);
+    memcpy(contenido, paquete->buffer->stream + desplazamiento, tamanio);
+
 
     log_debug(logger_cpu, "Contenido recibido: %s", contenido);
 
@@ -303,8 +308,14 @@ char* recibir_read_o_write_de_memoria() {
 }
 
 char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
-    char* contenido = malloc(paquete->buffer->size);
-    memcpy(contenido, paquete->buffer->stream, paquete->buffer->size);
+    uint32_t tamanio = 0;
+    uint32_t desplazamiento = 0;
+    memcpy(&tamanio, paquete->buffer->stream + desplazamiento, sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
+
+    char* contenido = malloc(tamanio + 1); // +1 para el '\0'
+    memcpy(contenido, paquete->buffer->stream + desplazamiento, tamanio);
+    log_debug(logger_cpu, "Contenido deserializado: %s", contenido);
     return contenido;
 }
 
@@ -528,15 +539,15 @@ t_memoria_cache* inicializar_cache(char* algoritmo, uint32_t cant_paginas, uint3
     cache->puntero_reemplazo = 0;
     cache->retardo = retardo;
     cache->cantidad_paginas = cant_paginas;
-    cache->paginas = malloc(sizeof(t_pagina_de_cache) * cant_paginas);
+    cache->paginas = malloc(sizeof(t_pagina_de_cache) * cache->cantidad_paginas);
 
-    for (uint32_t i = 0; i < cant_paginas; i++) {
+    for (uint32_t i = 0; i < cache->cantidad_paginas; i++) {
         cache->paginas[i].nro_pagina = -1; // -1 significa que está libre
         cache->paginas[i].contenido = malloc(tam_pagina);
         cache->paginas[i].bit_uso = false;
         cache->paginas[i].bit_modificado = false;
     }
-    log_info(logger_cpu, "CACHE inicializada, Algoritmo: %s | Cant. Paginas: %d", algoritmo, cant_paginas);
+    log_info(logger_cpu, "CACHE inicializada, Algoritmo: %s | Cant. Paginas: %d", algoritmo, cache->cantidad_paginas);
     return cache;
 }
 
@@ -614,7 +625,8 @@ char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer
 
 void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir){
     // Validaciones básicas
-    uint32_t tamanio_a_escribir = strlen(datos_a_escribir) + 1; // +1 para incluir el terminador nulo
+    log_error(logger_cpu, "Escribiendo en cache: Indice: %d, Desplazamiento: %d, Datos: %s", indice, desplazamiento, datos_a_escribir);
+    uint32_t tamanio_a_escribir = strlen(datos_a_escribir); // +1 para incluir el terminador nulo
     if (indice < 0 || indice >= memoria_cache->cantidad_paginas){
         log_error(logger_cpu, "Índice de página fuera de rango: %d", indice);
         return;
@@ -657,7 +669,7 @@ int reemplazo_clock(t_memoria_cache* cache){
                 pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
                 uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
                 uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
-                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
                 log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
@@ -694,7 +706,7 @@ int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tam_pagina) {
                 pre_dir.entrada_nivel = calcular_entradas_por_nivel(pagina->nro_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
                 uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
                 uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
-                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
                 log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
@@ -780,9 +792,9 @@ void actualizar_memoria_principal_completa() {
 
             uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
             uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
-
+            log_error(logger_cpu, "COntenido de pagina antes de enviar a memoria: %s", pagina->contenido);
             // Escribir en memoria principal
-            enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido);
+            enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
             respuesta = recibir_read_o_write_de_memoria();
 
             if (respuesta && strcmp(respuesta, "WRITE completado con éxito") == 0) {
