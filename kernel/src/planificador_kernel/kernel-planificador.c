@@ -44,15 +44,15 @@ void iniciar_planificacion_largo_plazo(){
     
     char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){
-    
-        sem_wait(&sem_cantidad_pcbs_en_new);
+        if(!list_is_empty(estado_new->cola) || !list_is_empty(estado_susp_ready->cola)){
+            sem_wait(&sem_cantidad_pcbs_en_new);
 
-        bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
-    
-        bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
+            bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
+        
+            bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
 
-        _cola_susp_ready_esta_vacia ?  _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready) :  _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
-
+            _cola_susp_ready_esta_vacia ?  _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready) :  _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
+        }
     }
 
     pthread_exit(NULL);

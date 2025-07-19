@@ -10,7 +10,10 @@ int main(int argc, char* argv[]) {
 	char* ip_kernel;
 	char* puerto_kernel;
 
-	t_config* config_io = iniciar_config("./io.config");
+	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	string_append(&path_relativo, argv[2]);
+
+	t_config* config_io = iniciar_config(path_relativo);
     
 	/* ---------------- LOGGING ---------------- */
 	logger_io = log_create("io.log", "log", true, LOG_LEVEL_TRACE);

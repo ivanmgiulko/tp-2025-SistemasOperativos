@@ -105,11 +105,16 @@ uint8_t asignar_pid(){
     return valor_pid;
 }
 
-void inicializar_estructuras()
+void inicializar_estructuras(char* path_relativo, char* path_config)
 {
     logger_kernel = log_create("kernel.log", "log", true, LOG_LEVEL_TRACE); 
 
-	configuracion_kernel = crear_config_kernel("./kernel.config", logger_kernel);
+    char* path_relativo_config = string_duplicate(path_relativo);
+    string_append(&path_relativo_config, path_config);
+
+	configuracion_kernel = crear_config_kernel(path_relativo_config, logger_kernel);
+
+    free(path_relativo_config);
 
     // INICIAMOS LISTA DE CPU E IOs
     lista_cpus = malloc(sizeof(t_lista_cpus));

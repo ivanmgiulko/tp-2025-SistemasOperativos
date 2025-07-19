@@ -1,6 +1,141 @@
-==5477== Memcheck, a memory error detector
-==5477== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==5477== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==5477== Command: ./bin/kernel
-==5477== Parent PID: 2458
-==5477== 
+==40870== Memcheck, a memory error detector
+==40870== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==40870== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==40870== Command: ./bin/kernel
+==40870== Parent PID: 40527
+==40870== 
+==40870== Thread 6:
+==40870== Invalid read of size 8
+==40870==    at 0x10DAA0: pasar_pcb_blocked_a_exit (cambio-estado-proceso.c:114)
+==40870==    by 0x10F9A6: manejar_conexion_kernel_memoria (conexion-kernel-memoria.c:51)
+==40870==    by 0x10F460: manejar_cliente_interrupt (conexion-kernel-cpu.c:144)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870==  Address 0x8 is not stack'd, malloc'd or (recently) free'd
+==40870== 
+==40870== 
+==40870== Process terminating with default action of signal 11 (SIGSEGV)
+==40870==  Access not within mapped region at address 0x8
+==40870==    at 0x10DAA0: pasar_pcb_blocked_a_exit (cambio-estado-proceso.c:114)
+==40870==    by 0x10F9A6: manejar_conexion_kernel_memoria (conexion-kernel-memoria.c:51)
+==40870==    by 0x10F460: manejar_cliente_interrupt (conexion-kernel-cpu.c:144)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870==  If you believe this happened as a result of a stack
+==40870==  overflow in your program's main thread (unlikely but
+==40870==  possible), you can try to increase the size of the
+==40870==  main thread stack using the --main-stacksize= flag.
+==40870==  The main thread stack size used in this run was 8388608.
+==40870== 
+==40870== HEAP SUMMARY:
+==40870==     in use at exit: 219,745 bytes in 355 blocks
+==40870==   total heap usage: 1,336 allocs, 981 frees, 265,489 bytes allocated
+==40870== 
+==40870== Thread 1:
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 130 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10DFF4: _iniciar_server_para_cpu_interrupt (manejar-conexion-cpu.c:15)
+==40870==    by 0x10E72E: main (kernel-main.c:19)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 131 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10E0A8: _iniciar_server_para_cpu_dispatch (manejar-conexion-cpu.c:30)
+==40870==    by 0x10E738: main (kernel-main.c:21)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 132 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10DEAD: _iniciar_server_para_io (manejar-conexion-io.c:14)
+==40870==    by 0x10E742: main (kernel-main.c:23)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 133 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10E7DE: main (kernel-main.c:31)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 134 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10E16C: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:47)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 135 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10E22D: manejar_conexion_kernel_dispatch (manejar-conexion-cpu.c:66)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 136 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10DF55: manejar_conexion_kernel_io (manejar-conexion-io.c:29)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 137 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10B770: _iniciar_cuando_apreta_enter (utils-planificador.c:77)
+==40870==    by 0x10E31A: iniciar_planificacion_largo_plazo (kernel-planificador.c:36)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870== 
+==40870== 272 bytes in 1 blocks are possibly lost in loss record 138 of 183
+==40870==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==40870==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==40870==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==40870==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==40870==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==40870==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==40870==    by 0x10B799: _iniciar_cuando_apreta_enter (utils-planificador.c:81)
+==40870==    by 0x10E31A: iniciar_planificacion_largo_plazo (kernel-planificador.c:36)
+==40870==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==40870==    by 0x49EEA03: clone (clone.S:100)
+==40870== 
+==40870== LEAK SUMMARY:
+==40870==    definitely lost: 0 bytes in 0 blocks
+==40870==    indirectly lost: 0 bytes in 0 blocks
+==40870==      possibly lost: 2,448 bytes in 9 blocks
+==40870==    still reachable: 217,297 bytes in 346 blocks
+==40870==         suppressed: 0 bytes in 0 blocks
+==40870== Reachable blocks (those to which a pointer was found) are not shown.
+==40870== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==40870== 
+==40870== For lists of detected and suppressed errors, rerun with: -s
+==40870== ERROR SUMMARY: 10 errors from 10 contexts (suppressed: 0 from 0)
