@@ -194,7 +194,6 @@ t_proceso_swap* buscar_proceso_en_swap(uint8_t pid) {
 }
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-    pathArchivoPseudocodigo = "/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/kernel/PATH_INSTRUCCIONES.txt";
     log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
     
     // Construir la ruta correcta. Si es una ruta relativa, agregarle "../" para salir del directorio memoria
@@ -696,15 +695,18 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	void* datos_leidos = malloc(tamanio_a_leer);
 	memcpy(datos_leidos, memoria_del_sistema->memoria_principal + direccion_fisica, tamanio_a_leer);
 	char* datos_leidos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
-	memcpy(datos_leidos_como_string, datos_leidos, tamanio_a_leer);
+    memcpy(datos_leidos_como_string, datos_leidos, tamanio_a_leer);
 
-	// Log obligatorio
-	log_trace(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
-	log_trace(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
+    // Asegurarte de que termine en \0
+    datos_leidos_como_string[tamanio_a_leer] = '\0';
+
+    // Logs
+    log_trace(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
+    log_trace(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
 
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
-	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesRead++;
 
     // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
 	t_paquete* paquete_confirmacion_read = crear_paquete_con_codigo(READ_MEMORIA);

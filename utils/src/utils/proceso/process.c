@@ -5,7 +5,7 @@ t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial)
     t_pcb* nuevoPCB = malloc(sizeof(t_pcb));
     nuevoPCB->pathArchivoPseudocodigo = path;
     nuevoPCB->tamanioMemoria = tamanio;
-    nuevoPCB->path_length = strlen(path);
+    nuevoPCB->path_length = strlen(path) + 1;
     nuevoPCB->pid = pid;
     nuevoPCB->pc = 0;
     nuevoPCB->estadoProceso = NEW;
@@ -104,7 +104,7 @@ void incrementar_contador(t_contador* contador){
 }
 void enviar_proceso_a_memoria(t_pcb proceso, int socket_cliente, int cod_op){
     t_buffer* buffer = malloc(sizeof(t_buffer));
-    buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length);
+    buffer->size = sizeof(uint8_t) + sizeof(uint32_t) * 2 + (proceso.path_length+1);
     buffer->stream = malloc(buffer->size);
     uint32_t offset = 0;
 

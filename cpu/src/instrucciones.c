@@ -203,7 +203,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 usleep(memoria_cache->retardo * 1000);
                 escribir_en_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.write.datos);
             //    log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
-                log_error(logger_cpu, "Contenido (parcial) de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
+                log_error(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
 
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); // Libera el semáforo de CPU
