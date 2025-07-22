@@ -8,8 +8,12 @@
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-io/modulo-io.h>
 #include <utils_kernel/kernel-de-serializaciones/conexion-con-memoria/modulo-memoria.h>
 
-void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
+void _enviar_desde_new_a_ready() 
 { 
+    char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
+
+    bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
+
     if(_cola_new_estaba_vacia) {
 
     _enviar_proceso_new_a_cola_ready();
@@ -33,8 +37,12 @@ void _enviar_desde_new_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingr
     }
 }
 
-void _enviar_desde_susp_ready_a_ready(bool _cola_new_estaba_vacia, char* algortimo_ingreso_ready) 
+void _enviar_desde_susp_ready_a_ready() 
 {
+    char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
+
+    bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
+
     if(_cola_new_estaba_vacia) {
            
         _enviar_proceso_susp_ready_a_cola_ready();
@@ -114,8 +122,6 @@ void inicializar_estructuras(char* path_relativo, char* path_config)
 
 	configuracion_kernel = crear_config_kernel(path_relativo_config, logger_kernel);
 
-    free(path_relativo_config);
-
     // INICIAMOS LISTA DE CPU E IOs
     lista_cpus = malloc(sizeof(t_lista_cpus));
     lista_cpus->lista_cpus = list_create();
@@ -130,7 +136,7 @@ void inicializar_estructuras(char* path_relativo, char* path_config)
     sem_init(&sem_cantidad_pcbs_en_ready, 0, 0);
     sem_init(&sem_cantidad_pcbs_en_blocked, 0, 0);
  
-
+    sem_init(&bin_susp_blocked, 0, 0);
     sem_init(&bin_eliminar_procesos_en_interfaces, 0, 0);
     sem_init(&bin_proceso_eliminar, 0, 1);
     sem_init(&bin_cpu_disponible, 0, 0);
@@ -381,4 +387,15 @@ void enviar_a_ejecutar_proceso(t_cpu_conectada* cpu, t_pcb* pcb) {
     enviar_proc_cpu(*infoProceso, cpu->socket_dispatch);
     free(infoProceso);
 
+}
+
+void swap_susp_ready_a_ready() {
+
+    while(1) {
+    
+        sem_wait(&bin_susp_blocked);
+    
+        _enviar_desde_susp_ready_a_ready();
+    
+    }
 }

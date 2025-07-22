@@ -4,7 +4,6 @@
     #include "kernel-gestor.h"
     #include "utils_kernel/kernel-structs-enums.h"
     
-
     extern t_lista_cpus* lista_cpus;
 
     extern t_estado* estado_new;        
@@ -21,6 +20,8 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
+
+    extern sem_t bin_susp_blocked;
     extern sem_t bin_eliminar_procesos_en_interfaces;
     extern sem_t bin_proceso_eliminar;
     extern sem_t bin_cpu_disponible;
@@ -28,9 +29,9 @@
     extern t_contador* pid_contador;
     extern t_temporal* tiempo_esperando;
 
-    void _enviar_desde_new_a_ready(bool , char* );
+    void _enviar_desde_new_a_ready();
 
-    void _enviar_desde_susp_ready_a_ready(bool , char* );
+    void _enviar_desde_susp_ready_a_ready();
 
     void _iniciar_cuando_apreta_enter();
 
@@ -66,7 +67,7 @@
     /**
 	* @brief Inicializa todas las colas que se piden la consigna del TP (2025 - 1er Cuatri)
 	*/
-    void inicializar_estructuras();
+    void inicializar_estructuras(char*, char*);
 
     /**
 	* @brief Inicializa el struct t_estado
@@ -163,5 +164,7 @@
     void enviar_a_ejecutar_proceso(t_cpu_conectada* , t_pcb*);
 
     void iniciar_temporizador_suspblocked(void* pcb);
+
+    void swap_susp_ready_a_ready();
 
 #endif // UTILS_PLANIFICADOR_H_

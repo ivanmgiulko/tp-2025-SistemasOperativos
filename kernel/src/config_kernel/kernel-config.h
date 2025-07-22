@@ -25,6 +25,7 @@
         char *ESTIMACION_INICIAL;
         char *TIEMPO_SUSPENSION;
         char *LOG_LEVEL;
+        char *RUTA_RELATIVA;
     } t_kernel_config;
 
     /**

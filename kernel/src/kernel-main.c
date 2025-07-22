@@ -12,17 +12,21 @@ int main(int argc, char* argv[]) {
 
 	// _chequear_segundo_argumento_es_numero(argv[2]);
 
+	argv[1] = "PATH_INSTRUCCIONES";
+
+	argv[2] = "256";
+
+	argv[3] = "prueba/";
+
+	argv[4] = "kernel.config";
+
 	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-
-	// argv[1] = "prueba/PATH_INSTRUCCIONES.txt";
-
-	// argv[2] = "256";
-
-	// argv[3] = "prueba/kernel.config";
-
+	string_append(&path_relativo, argv[3]);
+	
 	// Iniciamos las Colas con sus respectivos Mutex (como si fuera un monitor); tambien inicia Log y Config
-	inicializar_estructuras(path_relativo, argv[3]);
-
+	inicializar_estructuras(path_relativo, argv[4]);
+	configuracion_kernel->RUTA_RELATIVA = string_duplicate(path_relativo);
+	
 	// Iniciamos la comunicacion con CPUs y con IO 
 	_iniciar_server_para_cpu_interrupt();
 
@@ -31,8 +35,9 @@ int main(int argc, char* argv[]) {
 	_iniciar_server_para_io();
 
 	string_append(&path_relativo, argv[1]);
+	string_append(&path_relativo, ".txt");
 
-	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", argv[1], argv[2]);
+	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", path_relativo, argv[2]);
 	crear_proceso_cero(path_relativo, atoi(argv[2]));
 	
 	pthread_t hilo_planificador_largo_plazo;

@@ -15,15 +15,13 @@
 	 * @brief Cantidad minima de argumentos que se debe ingresar al ejecutar una 
      *        instancia de Kernel (./bin/kernel [arg1] [arg2])
 	 */
-    #define CANT_MINIMA_ARGUMENTOS 2
+    #define CANT_MINIMA_ARGUMENTOS 3
 
     // CONFIG
     t_kernel_config* configuracion_kernel;
 
     // LOG
     t_log* logger_kernel;
-
-    // LISTAS
 
     // CONEXIONES
     int fd_server_io;

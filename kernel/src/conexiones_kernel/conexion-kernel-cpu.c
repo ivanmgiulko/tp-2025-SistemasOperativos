@@ -90,15 +90,19 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 log_info(logger_kernel, "%d - Solicitó syscall: INIT_PROC", pid);
 
                 char* archivo = deserializar_archivo_instrucciones(offset, paquete);
+                
+                char* ruta_absoluta = string_duplicate(configuracion_kernel->RUTA_RELATIVA);
+                string_append(&ruta_absoluta, archivo);
+                string_append(&ruta_absoluta, ".txt");
 
                 int tamanio_proceso = deserializar_tamanio_proceso(offset, paquete);
 
-                t_pcb* nuevo_proceso = iniciarPCB(archivo, tamanio_proceso, asignar_pid(), atoi(configuracion_kernel->ESTIMACION_INICIAL));
+                t_pcb* nuevo_proceso = iniciarPCB(ruta_absoluta, tamanio_proceso, asignar_pid(), atoi(configuracion_kernel->ESTIMACION_INICIAL));
 
                 log_info(logger_kernel, "%d Se crea el proceso - Estado: NEW", nuevo_proceso->pid);
 
                 pasar_pcb_a_new(nuevo_proceso);
-    
+
                 eliminar_paquete(paquete);
                 break;
 
