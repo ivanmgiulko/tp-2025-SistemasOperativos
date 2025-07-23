@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 
-    argv[1] = "prueba/memoria.config";
+    // argv[1] = "prueba/memoria.config";
 
 	string_append(&path_relativo, argv[1]);
     

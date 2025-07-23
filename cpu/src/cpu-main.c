@@ -1,13 +1,13 @@
 #include "cpu.h"
 int main(int argc, char* argv[]){
-	// if(argc < 3){
-	// 	fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
-	// 	return EXIT_FAILURE;
-	// }
+	if(argc < 3){
+		fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
+		return EXIT_FAILURE;
+	}
  
-	argv[1] = "1";
+	// argv[1] = "1";
 
-	argv[2] = "prueba/";
+	// argv[2] = "prueba/";
 
 	char* cpu_id = argv[1];
 
