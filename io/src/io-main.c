@@ -14,6 +14,8 @@ int main(int argc, char* argv[]) {
 	string_append(&path_relativo, argv[2]);
 
 	t_config* config_io = iniciar_config(path_relativo);
+
+	free(path_relativo);
     
 	/* ---------------- LOGGING ---------------- */
 	logger_io = log_create("io.log", "log", true, LOG_LEVEL_TRACE);
@@ -34,6 +36,7 @@ int main(int argc, char* argv[]) {
 	pthread_t hilo_cliente_io_akernel;
     pthread_create(&hilo_cliente_io_akernel, NULL, (void*)manejar_conexion_io, (void*) conexion_kernel_fd);
     pthread_join(hilo_cliente_io_akernel, NULL);
+	
 	
     config_destroy(config_io);
 	log_destroy(logger_io);

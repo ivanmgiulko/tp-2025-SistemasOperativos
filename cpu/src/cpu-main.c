@@ -1,30 +1,41 @@
 #include "cpu.h"
 int main(int argc, char* argv[]){
-	if(argc<2){
-		fprintf(stderr, "Falta ID del CPU\n");
-		return EXIT_FAILURE;
-	}
+	// if(argc < 3){
+	// 	fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
+	// 	return EXIT_FAILURE;
+	// }
+ 
+	argv[1] = "1";
+
+	argv[2] = "prueba/";
+
 	char* cpu_id = argv[1];
-	char path_config[64];
-	sprintf(path_config, "./cpu%s.config", cpu_id);
-	t_config* config_cpu = iniciar_config(path_config);
-	char* puerto_kernel_interrupt = config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
-	char* puerto_kernel_dispatch = config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH");
-    char* ip_kernel = config_get_string_value(config_cpu, "IP_KERNEL");
-	char* puerto_memoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
-    char* ip_memoria = config_get_string_value(config_cpu, "IP_MEMORIA");
-	entradas_cache = atoi(config_get_string_value(config_cpu,"ENTRADAS_CACHE"));
-	retardo_cache = atoi(config_get_string_value(config_cpu, "RETARDO_CACHE"));
-	algoritmo_reemplazo_cache = config_get_string_value(config_cpu, "REEMPLAZO_CACHE");
-    uint32_t maximas_entradas_tlb = atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
-	char* algoritmo_reemplazo_tlb = config_get_string_value(config_cpu, "REEMPLAZO_TLB");
-	algoritmo = algoritmo_from_string(algoritmo_reemplazo_tlb);
+
+	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	string_append(&path_relativo, argv[2]);
+	string_append(&path_relativo, "cpu");
+	string_append(&path_relativo, argv[1]);
+	string_append(&path_relativo, ".config");
+
+	t_config* config_cpu = iniciar_config(path_relativo);
+
+	char* puerto_kernel_interrupt 	= config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT");
+	char* puerto_kernel_dispatch 	= config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH");
+    char* ip_kernel 				= config_get_string_value(config_cpu, "IP_KERNEL");
+	char* puerto_memoria 			= config_get_string_value(config_cpu, "PUERTO_MEMORIA");
+    char* ip_memoria 				= config_get_string_value(config_cpu, "IP_MEMORIA");
+	entradas_cache 					= atoi(config_get_string_value(config_cpu,"ENTRADAS_CACHE"));
+	retardo_cache 					= atoi(config_get_string_value(config_cpu, "RETARDO_CACHE"));
+	algoritmo_reemplazo_cache 		= config_get_string_value(config_cpu, "REEMPLAZO_CACHE");
+    uint32_t maximas_entradas_tlb 	= atoi(config_get_string_value(config_cpu, "ENTRADAS_TLB"));
+	char* algoritmo_reemplazo_tlb 	= config_get_string_value(config_cpu, "REEMPLAZO_TLB");
+	algoritmo 						= algoritmo_from_string(algoritmo_reemplazo_tlb);
 
 	/* ---------------- LOGGING ---------------- */
 	char *directorioLogger = string_new(); // Gloria eterna al creador de las commons
 	string_append(&directorioLogger,"cpu-");
 	string_append(&directorioLogger, cpu_id);
-		string_append(&directorioLogger,".log");
+	string_append(&directorioLogger,".log");
 
 	logger_cpu = log_create(directorioLogger, "log", true, LOG_LEVEL_TRACE);
 	log_info(logger_cpu, "%s", directorioLogger);

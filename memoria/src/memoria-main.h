@@ -10,6 +10,8 @@
 	 * @brief #include "memoria-main.h"
 	 */
     
+    #define CANT_MINIMA_ARGUMENTOS 1
+
     // LOGS
     t_log* logger_memoria;
     
