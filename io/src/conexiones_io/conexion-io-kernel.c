@@ -95,7 +95,7 @@ int manejar_conexion_io(int socket_cliente){
 			log_debug(logger_io, "Llego el PID: %d | El tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
 
 			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
-			usleep(proceso_bloqueado->tiempo);
+			usleep(proceso_bloqueado->tiempo * 1000);
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
 			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado->pid, PROCESO_DESBLOQUEADO);
