@@ -165,6 +165,6 @@
 
     void iniciar_temporizador_suspblocked(void* pcb);
 
-    void swap_susp_ready_a_ready();
+    void iniciar_swap_out();
 
 #endif // UTILS_PLANIFICADOR_H_

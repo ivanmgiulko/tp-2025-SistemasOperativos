@@ -22,7 +22,7 @@ void _enviar_desde_new_a_ready()
 
         if(strcmp(algortimo_ingreso_ready, "FIFO") == 0) { 
             
-             _enviar_proceso_new_a_cola_ready();
+            _enviar_proceso_new_a_cola_ready();
             
         } else if(strcmp(algortimo_ingreso_ready, "PMCP") == 0) {
                 
@@ -212,8 +212,11 @@ void encolar_pcb_en_estado(t_estado* estado, t_pcb* pcb)
 
 t_pcb* peek_cola_mutex(t_estado* cola_mutex, uint8_t indice) 
 {
+    t_pcb* pcb = NULL;
     pthread_mutex_lock(&(cola_mutex->mutex));
-    t_pcb* pcb = list_get(cola_mutex->cola, indice);
+    if(list_size(cola_mutex->cola) > indice) {
+        pcb = list_get(cola_mutex->cola, indice);
+    }
     pthread_mutex_unlock(&(cola_mutex->mutex));
     return pcb;
 }
@@ -227,17 +230,20 @@ bool _tiene_menos_tamanio(void* a, void* b)
 } 
 
 void _enviar_proceso_new_a_cola_ready() {
+    
     t_pcb* pcb_en_new = peek_cola_mutex(estado_new, 0);
 
-    bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
+    if(pcb_en_new != NULL) {
+        bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_new);
             
-    if(hay_espacio_en_memoria) { 
-        pcb_en_new = pop_cola_mutex(estado_new);
-        pasar_pcb_new_a_ready(pcb_en_new);
-    } else { 
-        log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
-        // El proceso sigue en la cola de New
-        sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
+        if(hay_espacio_en_memoria) { 
+            pcb_en_new = pop_cola_mutex(estado_new);
+            pasar_pcb_new_a_ready(pcb_en_new);
+        } else { 
+            log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
+            // El proceso sigue en la cola de New
+            sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
+        }
     }
 }
 
@@ -245,15 +251,17 @@ void _enviar_proceso_susp_ready_a_cola_ready()
 {
     t_pcb* pcb_en_susp_ready = peek_cola_mutex(estado_susp_ready, 0);
 
-    bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_susp_ready);
+    if(pcb_en_susp_ready != NULL) {
+        bool hay_espacio_en_memoria = preguntar_a_memoria_espacio(pcb_en_susp_ready);
             
-    if(hay_espacio_en_memoria) { 
-        pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
-        pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
-    } else { 
-        log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
-        // El proceso sigue en la cola de New
-        sem_wait(&sem_hay_espacio_en_memoria);        // Espera el semaforo desde kernel-memoria
+        if(hay_espacio_en_memoria) { 
+            pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
+            pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
+        } else { 
+            log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
+            // El proceso sigue en la cola de New
+            sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
+        }
     }
 }
 
@@ -389,7 +397,7 @@ void enviar_a_ejecutar_proceso(t_cpu_conectada* cpu, t_pcb* pcb) {
 
 }
 
-void swap_susp_ready_a_ready() {
+void iniciar_swap_out() {
 
     while(1) {
     

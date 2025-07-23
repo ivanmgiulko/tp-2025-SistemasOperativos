@@ -36,23 +36,25 @@ void iniciar_planificacion_largo_plazo(){
 
     _iniciar_cuando_apreta_enter();
 
-    char* algortimo_ingreso_ready = configuracion_kernel->ALGORITMO_INGRESO_A_READY;
     while(1){
-        if(!list_is_empty(estado_new->cola) || !list_is_empty(estado_susp_ready->cola)){
-            sem_wait(&sem_cantidad_pcbs_en_new);
 
-            bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
+        sem_wait(&sem_cantidad_pcbs_en_new);
+
+        bool _cola_susp_ready_esta_vacia = _verificar_cola_susp_ready_esta_vacia();
         
-            bool _cola_new_estaba_vacia = _verificar_cola_new_estaba_vacia();  // :v
-
-            _cola_susp_ready_esta_vacia ?  _enviar_desde_new_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready) :  _enviar_desde_susp_ready_a_ready(_cola_new_estaba_vacia, algortimo_ingreso_ready);
-        }
+        _cola_susp_ready_esta_vacia ? _enviar_desde_new_a_ready() : sem_post(&bin_susp_blocked);
+        
     }
 
     pthread_exit(NULL);
 }
 
-void iniciar_planificador_mediano_plazo() {
+void iniciar_planificador_mediano_plazo() 
+{
+    pthread_t hilo_swap_out;
+    pthread_create(&hilo_swap_out, NULL, (void*)iniciar_swap_out, NULL);
+    pthread_detach(hilo_swap_out);
+
     while(1){
         sem_wait(&sem_cantidad_pcbs_en_blocked);
 
