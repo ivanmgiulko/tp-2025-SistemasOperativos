@@ -73,6 +73,7 @@ void suspender_proceso_swap(uint8_t pid) {
     int tam_pagina = atoi(config_memoria->TAM_PAGINA);
     int entradas_por_tabla = atoi(config_memoria->ENTRADAS_POR_TABLA);
     int cantidad_niveles = atoi(config_memoria->CANTIDAD_NIVELES);
+    int marcos_liberados_bitmap = 0;
 
     // Instanciamos proceso del swap
     t_proceso_swap* proceso_swap = malloc(sizeof(t_proceso_swap));
@@ -97,8 +98,14 @@ void suspender_proceso_swap(uint8_t pid) {
         void* origen = memoria_del_sistema->memoria_principal + marco * tam_pagina;
         fwrite(origen, 1, tam_pagina, swapfile);
 
+        // Liberamos el marco swapeado en el bitmap de memoria
+        memoria_del_sistema->bitmap_marcos_ocupados[marco] = false;
+        marcos_liberados_bitmap++;
+
         log_trace(logger_memoria, "PID %d: Página %d escrita en offset %d de SWAP", pid, i, offset);
     }
+    log_trace(logger_memoria, "PID %d: Se liberaron %d marcos del bitmap de memoria", pid, marcos_liberados_bitmap);
+
     //METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesSWAP++;
