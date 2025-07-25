@@ -432,7 +432,10 @@ void destruir_tlb(tlb_t* tlb) {
 }
 
 void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante, algoritmo_tlb_t algoritmo){
-	
+	if (tlb->cantidad_entradas == 0) {
+    log_warning(logger_cpu, "No se usa TLB: cantidad de entradas es 0.");
+    return;
+    }
  	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
         if (tlb->entradas[i].bit_en_uso == 0) {
             tlb->entradas[i].nro_pagina = nro_pagina_entrante;
@@ -474,7 +477,7 @@ int esta_en_tlb(uint32_t nro_pagina){
 			marco_asociado = tlb->entradas[i].marco_asociado;
 			log_info(logger_cpu, "TLB HIT: PID <%d> - TLB HIT - Pagina: <%d>",pcb_actual->pid, nro_pagina);
 			// TLB Hit: “PID: <PID> - TLB HIT - Pagina: <NUMERO_PAGINA>”
-
+            tlb->entradas[i].instante_referencia = ++contador_accesos_tlb;
 			return marco_asociado;
 		}
 	}
@@ -505,20 +508,25 @@ algoritmo_tlb_t algoritmo_from_string(const char* str) {
 }
 
  void agregar_a_tlb_lru(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante) {
-    uint64_t min_ref = tlb->entradas[0].instante_referencia;
-    int indice_lru = 0;
-    for (uint32_t i = 1; i < tlb->cantidad_entradas; i++) {
+    int indice_lru = -1;
+    uint64_t min_ref = UINT64_MAX;
+
+
+    for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
         if (tlb->entradas[i].instante_referencia < min_ref) {
             min_ref = tlb->entradas[i].instante_referencia;
             indice_lru = i;
         }
     }
+    log_info(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>",
+            indice_lru, nro_pagina_entrante, marco_asociado_entrante);
+
+
+    // Insertar entrada
     tlb->entradas[indice_lru].nro_pagina = nro_pagina_entrante;
     tlb->entradas[indice_lru].marco_asociado = marco_asociado_entrante;
     tlb->entradas[indice_lru].bit_en_uso = 1;
     tlb->entradas[indice_lru].instante_referencia = ++contador_accesos_tlb;
-    log_info(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>", 
-            indice_lru, nro_pagina_entrante, marco_asociado_entrante);
 }
 
 // FUNCIONES DE CACHE
