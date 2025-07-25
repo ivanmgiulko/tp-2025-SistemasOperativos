@@ -8,8 +8,16 @@
 
 char* recibir_respuesta_memoria(int socket_cliente) { 
     int size;
-	char* buffer = recibir_buffer(&size, socket_cliente);
-	return buffer;
+    char* buffer = recibir_buffer(&size, socket_cliente);
+
+    uint32_t tamanio_mensaje;
+    memcpy(&tamanio_mensaje, buffer, sizeof(uint32_t));
+
+    char* mensaje = malloc(tamanio_mensaje);
+    memcpy(mensaje, buffer + sizeof(uint32_t), tamanio_mensaje);
+
+    free(buffer); 
+    return mensaje; 
 }
 
 int manejar_conexion_kernel_memoria(int socket_cliente){
@@ -27,6 +35,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 		case PROCESO_MEMORIA:
 			char* validacion_espacio = recibir_respuesta_memoria(socket_cliente);
+			printf("Validación de espacio en memoria: %s\n", validacion_espacio);
 			if(strcmp(validacion_espacio, "No hay espacio en memoria") == 0) {
 				eliminar_paquete(paquete);
 				free(validacion_espacio);
