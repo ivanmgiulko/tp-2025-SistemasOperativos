@@ -1,14 +1,26 @@
 #include "modulo-memoria.h"
+t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer) {
+    t_respuesta_dump* respuesta_dump = malloc(sizeof(t_respuesta_dump));
+    int desplazamiento = 0;
+    uint32_t tamanio;
 
-t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer)
-{
-	t_respuesta_dump* respuesta_dump = malloc(sizeof(t_respuesta_dump));
+    // Leer tamaño del PID
+    memcpy(&tamanio, buffer->stream + desplazamiento, sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
 
-	void* stream = buffer->stream;
+    // Leer PID
+    memcpy(&(respuesta_dump->pid), buffer->stream + desplazamiento, sizeof(uint8_t));
+    desplazamiento += sizeof(uint8_t);
 
-    memcpy(&(respuesta_dump->pid), stream, sizeof(uint8_t)); stream += sizeof(uint8_t);
-	memcpy(&(respuesta_dump->respuesta), stream, sizeof(bool)); stream += sizeof(bool);
-	
+    // Leer tamaño de la respuesta
+    memcpy(&tamanio, buffer->stream + desplazamiento, sizeof(uint32_t));
+    desplazamiento += sizeof(uint32_t);
+
+    // Leer respuesta
+    memcpy(&(respuesta_dump->respuesta), buffer->stream + desplazamiento, sizeof(bool));
+    desplazamiento += sizeof(bool);
+
+    printf("La respuesta del DUMP es: %d\n", respuesta_dump->respuesta);
     return respuesta_dump;
 }
 

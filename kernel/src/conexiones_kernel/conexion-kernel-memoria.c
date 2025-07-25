@@ -56,21 +56,23 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			
 			t_respuesta_dump* resp_dump = recibir_respuesta_dump(paquete->buffer);
 
-			t_pcb* proceso_desbloqueado = _sacar_pcb_de_cola(resp_dump->pid, estado_blocked);
-			
-			proceso_desbloqueado = list_get(estado_blocked->cola, 0);
+			t_pcb* proceso_desbloqueado = malloc(sizeof(t_pcb));
+
+			proceso_desbloqueado = buscar_proceso_en_cola(estado_blocked, resp_dump->pid);
+
+			if(proceso_desbloqueado == NULL) proceso_desbloqueado = buscar_proceso_en_cola(estado_susp_blocked, resp_dump->pid);
 
 			if(resp_dump->respuesta == false){
+				log_debug(logger_kernel, "Fallo en el DUMP");	
 
 				free(resp_dump);
 				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
-				log_debug(logger_kernel, "Fallo en el DUMP");	
 			
 			} else {
+				log_debug(logger_kernel, "Acierto en el DUMP");
 
 				free(resp_dump);
 				pasar_pcb_blocked_a_ready(proceso_desbloqueado);
-				log_debug(logger_kernel, "Acierto en el DUMP");
 				
 			}
 			eliminar_paquete(paquete);
