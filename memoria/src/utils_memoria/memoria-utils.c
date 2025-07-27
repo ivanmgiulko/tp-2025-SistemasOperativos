@@ -15,6 +15,8 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
         log_error(logger_memoria, "Error al reservar la memoria principal");
         exit(EXIT_FAILURE);
     }
+    // Limpiamos contenido basura del heap donde se alocó la memoria (con ceros)
+    memset(memoria.memoria_principal, 0, memoria.tam_memoria);
 
     memoria.bitmap_marcos_ocupados = calloc(memoria.cant_marcos, sizeof(bool));
     if (memoria.bitmap_marcos_ocupados == NULL) {
