@@ -5,7 +5,7 @@ int manejar_conexion_memoria(){
     while (1) {
         pthread_mutex_lock(&mutex_conexion_memoria);
         while (!receptor_habilitado) {
-            log_trace(logger_cpu, "[RECEPTOR] En pausa, esperando señal...");
+            log_debug(logger_cpu, "[RECEPTOR] En pausa, esperando señal...");
             pthread_cond_wait(&condicion_reactivacion_recepcion_memoria, &mutex_conexion_memoria);
         }
         pthread_mutex_unlock(&mutex_conexion_memoria);
@@ -32,13 +32,13 @@ int manejar_conexion_memoria(){
                 break;
 
             case DATOS_DE_MEMORIA:
-                log_info(logger_cpu, "Recibí los datos de memoria");
+                log_debug(logger_cpu, "Recibí los datos de memoria");
                 recibir_datos_de_memoria(paquete, mmu);
                 memoria_cache = inicializar_cache(algoritmo_reemplazo_cache, entradas_cache, mmu->tamanio_pagina, retardo_cache);
                 break;
 
             case INSTRUCCION:
-                log_info(logger_cpu, "[INSTRUCCION_THREAD] Recibí la instrucción solicitada a MEMORIA");
+                log_debug(logger_cpu, "[INSTRUCCION_THREAD] Recibí la instrucción solicitada a MEMORIA");
                 manejar_respuesta_de_instruccion(paquete);
                 break;
 

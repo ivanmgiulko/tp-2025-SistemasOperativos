@@ -213,6 +213,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             //Si la cache no esta activada
             else{
                 //TLB
+                if(tlb_esta_activada()){
                 //Verifica si la página está en TLB
                 marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
@@ -221,7 +222,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                     marco_correspondiente = tlb_miss(pre_direccion_fisica);
                 }
                 //TLB_HIT    
-
+                }
+                else marco_correspondiente = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
                 //Calcula direccion fisica
                 direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
                 mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
@@ -265,6 +267,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             //Si la cache no esta activada
             else{
                 //TLB
+                if(tlb_esta_activada()){
                 //Verifica si la página está en TLB
                 marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
@@ -273,7 +276,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                     marco_correspondiente = tlb_miss(pre_direccion_fisica);
                 }
                 //TLB_HIT    
-
+                }
+                else marco_correspondiente = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
                 //Calcula direccion fisica
                 direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
                 mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;

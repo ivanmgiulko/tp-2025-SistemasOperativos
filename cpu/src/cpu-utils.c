@@ -21,7 +21,7 @@ void recibir_datos_de_memoria(t_paquete* paquete, mmu_t* mmu) {
     memcpy(&(mmu->cantidad_niveles), paquete->buffer->stream + offsett, sizeof(uint32_t)); offsett += sizeof(uint32_t)*2;
     memcpy(&(mmu->cantidad_entradas_tabla), paquete->buffer->stream + offsett, sizeof(uint32_t));
 
-    log_info(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
+    log_debug(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
           mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
 
     // uint32_t buffer_size;
@@ -319,6 +319,22 @@ char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
     return contenido;
 }
 
+char* recibir_string_de_memoria(){
+    t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
+    paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
+    recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
+    if(paquete->buffer->stream == NULL){
+    log_error(logger_cpu, "ERROR al recibir paquete desde memoria (contenido NULL)");
+    eliminar_paquete(paquete);
+    return NULL;
+    }
+    char* mensaje = deserializar_read_o_write_de_memoria(paquete);
+    log_trace(logger_cpu, "Mensaje recibido de memoria: %s", mensaje);
+    eliminar_paquete(paquete);
+    return mensaje;
+}
+
+
 //FUNCIONES DE DIRECCIONES
 //Traduce una direccion logica de W/R a sus componentes utiles para calcular la direccion fisica
 uint32_t * calcular_entradas_por_nivel(int nro_pagina, int cantidad_niveles, int cantidad_entradas_tabla) {
@@ -422,6 +438,14 @@ tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
 	}
 	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
 	return tlb;
+}
+
+bool tlb_esta_activada(){
+    if(tlb->cantidad_entradas == 0){
+        log_warning(logger_cpu, "TLB no está activada: cantidad de entradas es 0.");
+        return false;
+    }
+    return true;
 }
 
 void destruir_tlb(tlb_t* tlb) {
@@ -555,7 +579,7 @@ t_memoria_cache* inicializar_cache(char* algoritmo, uint32_t cant_paginas, uint3
         cache->paginas[i].bit_uso = false;
         cache->paginas[i].bit_modificado = false;
     }
-    log_info(logger_cpu, "CACHE inicializada, Algoritmo: %s | Cant. Paginas: %d", algoritmo, cache->cantidad_paginas);
+    log_debug(logger_cpu, "CACHE inicializada, Algoritmo: %s | Cant. Paginas: %d", algoritmo, cache->cantidad_paginas);
     return cache;
 }
 
@@ -625,10 +649,17 @@ char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer
     memoria_cache->paginas[indice].bit_uso = true;
 
     // Copiar los datos a un nuevo buffer y devolver
-    char* datos_leidos = malloc(tamanio_a_leer);
-    memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
+    // char* datos_leidos = malloc(tamanio_a_leer);
+    // memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
 
-    return datos_leidos;
+    void* datos_leidos = malloc(tamanio_a_leer);
+	memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
+
+	char* datos_leidos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
+    memcpy(datos_leidos_como_string, datos_leidos, tamanio_a_leer);
+
+    free(datos_leidos);
+    return datos_leidos_como_string;
 }
 
 void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir){
@@ -678,6 +709,12 @@ int reemplazo_clock(t_memoria_cache* cache){
                 uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
                 uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
                 enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
+                char* mensaje_confirmacion = recibir_string_de_memoria();
+                if(mensaje_confirmacion == NULL) {
+                    log_error(logger_cpu, "Error al recibir confirmación de escritura en memoria");
+                    free(pre_dir.entrada_nivel);
+                    return -1; // Error al recibir confirmación
+                }
                 log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
@@ -715,6 +752,12 @@ int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tam_pagina) {
                 uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
                 uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
                 enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
+                char* mensaje_confirmacion = recibir_string_de_memoria();
+                if(mensaje_confirmacion == NULL) {
+                    log_error(logger_cpu, "Error al recibir confirmación de escritura en memoria");
+                    free(pre_dir.entrada_nivel);
+                    return -1; // Error al recibir confirmación
+                }
                 log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
@@ -749,21 +792,28 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
 
         }
     }
-
+    int marco;
     //Verifico TLB
-    int marco = esta_en_tlb(pre_direccion_fisica.nro_pagina);
-    
-    //Si la pagina NO está en TLB, es necesario acceder a la tabla de paginas
-    if (marco == -1) {
-        log_warning(logger_cpu, "Página %d NO encontrada en TLB,es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
-        // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
-            marco = tlb_miss(pre_direccion_fisica);
+    if(tlb_esta_activada()){
+        marco = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+        
+        //Si la pagina NO está en TLB, es necesario acceder a la tabla de paginas
+        if (marco == -1) {
+            log_warning(logger_cpu, "Marco correspondiente a la Página %d NO encontrado en TLB, Es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+            // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
+                marco = tlb_miss(pre_direccion_fisica);
 
-     }
-     //Si la pagina ya esta en la TLB, no necesito acceder a la tabla de paginas para obtener el marco
-     else{
-        log_debug(logger_cpu, "Página %d encontrada en TLB, no es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+        }
+        //Si la pagina ya esta en la TLB, no necesito acceder a la tabla de paginas para obtener el marco
+        else{
+            log_debug(logger_cpu, "Página %d encontrada en TLB, no es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+        }
     }
+    else {
+        log_warning(logger_cpu, "TLB no está activada, se accederá a la tabla de páginas directamente");
+        // Accede a la tabla de páginas para obtener el marco
+        marco = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
+    } 
     //Una vez que sabemos el marco de la página, podemos calcular la direccion física
     uint32_t direccion_fisica_final = pre_direccion_fisica.nro_pagina * mmu->tamanio_pagina;
     //Con la dirección física, buscamos la página en memoria y la cargamos en cache

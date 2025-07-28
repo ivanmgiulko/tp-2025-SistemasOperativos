@@ -24,7 +24,7 @@
     t_memoria_del_sistema* memoria_del_sistema;
     procesos_en_swap_t* procesos_en_swap; 
     int retardo_memoria;
-
+    bool primera_conexion_a_memoria = true;
     // LISTA DE PROCESOS EN SWAP
     
 #endif // MEMORIA_H_

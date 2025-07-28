@@ -31,5 +31,5 @@
     // VARIABLES
     extern int cantMemoria;
     extern int retardo_memoria;
-
+    extern bool primera_conexion_a_memoria;
 #endif // MEMORIA_GESTOR_H_

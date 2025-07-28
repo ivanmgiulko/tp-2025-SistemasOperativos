@@ -203,7 +203,7 @@ uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
 void loggear_mensaje_desde_buffer(t_buffer* buffer, t_log* logger){
 	int desplazamiento = 0;
 	char* mensaje = leer_string_desde_buffer(buffer, &desplazamiento);
-	log_trace(logger, "Me llego el mensaje :<%s/>", mensaje);
+	log_debug(logger, "Me llego el mensaje :<%s/>", mensaje);
 	free(mensaje);
 }
 

@@ -38,19 +38,19 @@ int main(int argc, char* argv[]){
 	string_append(&directorioLogger,".log");
 
 	logger_cpu = log_create(directorioLogger, "log", true, LOG_LEVEL_TRACE);
-	log_info(logger_cpu, "%s", directorioLogger);
+	log_debug(logger_cpu, "%s", directorioLogger);
     // log_info(logger_cpu, "Primer log");
 	free(directorioLogger);
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
-	log_info(logger_cpu, "ID CPU: %s", cpu_id);
-	log_info(logger_cpu, "IP Kernel: %s", ip_kernel);
-	log_trace(logger_cpu , "Entradas TLB: %d", maximas_entradas_tlb);
-	log_info(logger_cpu, "Puerto Kernel Interrupt: %s",puerto_kernel_interrupt);
-	log_info(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
-	log_info(logger_cpu, "IP Memoria: %s", ip_memoria);
-	log_info(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
-	mmu = inicializar_mmu();	
-	
+	log_debug(logger_cpu, "ID CPU: %s", cpu_id);
+	log_debug(logger_cpu, "IP Kernel: %s", ip_kernel);
+	log_debug(logger_cpu , "Entradas TLB: %d", maximas_entradas_tlb);
+	log_debug(logger_cpu, "Puerto Kernel Interrupt: %s",puerto_kernel_interrupt);
+	log_debug(logger_cpu, "Puerto Kernel Dispatch: %s", puerto_kernel_dispatch);
+	log_debug(logger_cpu, "IP Memoria: %s", ip_memoria);
+	log_debug(logger_cpu, "Puerto Memoria: %s", puerto_memoria);
+	mmu = inicializar_mmu();
+
 
 	//	IP_MEMORIA=127.0.0.4
 	//	PUERTO_MEMORIA=40074

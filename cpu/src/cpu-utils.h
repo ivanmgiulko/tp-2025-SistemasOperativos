@@ -91,6 +91,7 @@ void agregar_a_tlb_lru(uint32_t , uint32_t );
 extern uint32_t proxima_a_reemplazar;
 extern uint32_t contador_accesos_tlb;
 void limpiar_tlb();
+bool tlb_esta_activada();
 
 
 //FUNCIONES Y DEFINICIONES DE CACHE
@@ -128,6 +129,8 @@ void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escrib
 int buscar_espacio_libre_en_cache(t_memoria_cache* cache);
 void agregar_pagina_a_cache(uint32_t nro_pagina, int indice_libre, char* contenido);
 int reemplazo_clock(t_memoria_cache* cache);
+int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tamanio_pagina);
+char* recibir_string_de_memoria();
 
 int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica);
 void actualizar_memoria_principal_completa();
