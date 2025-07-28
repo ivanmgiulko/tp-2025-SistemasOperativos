@@ -27,15 +27,14 @@ void enviar_proceso_en_cola_io(t_io* io_a_encolar_instancia, t_instancia_io* ins
 	}else{
 		uint8_t* pid_proceso_en_cola = pop_pid_esperando_io(io_a_encolar_instancia);
 		
-		t_pcb* proceso_en_cola = malloc(sizeof(t_pcb));
-
-		proceso_en_cola = buscar_proceso_en_cola(estado_blocked, *pid_proceso_en_cola);
+		t_pcb* proceso_en_cola = buscar_proceso_en_cola(estado_blocked, *pid_proceso_en_cola);
 
 		if(proceso_en_cola == NULL) proceso_en_cola = buscar_proceso_en_cola(estado_susp_blocked, *pid_proceso_en_cola);
 		
 		instancia_io->pid = *pid_proceso_en_cola;
 		proceso_en_cola->datos_io->instancia_utilizada = instancia_io;
 		enviar_proceso_a_io_para_bloqueo(*pid_proceso_en_cola,proceso_en_cola->datos_io->tiempo, instancia_io->socket_io);
+		
 		log_info(logger_kernel, "Se envio el proceso [%d] a la interfaz [%s]", *pid_proceso_en_cola, io_a_encolar_instancia->nombre);
 		}
 
@@ -116,44 +115,59 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 	
 			// Tomamos la instancia desconectada y que debemos eliminar
 			t_instancia_io* instancia_a_eliminar = eliminar_y_devolver_instancia(interfaz_de_instancia_finalizada, socket_cliente_io);
-			
-			t_pcb* proceso_a_eliminar = malloc(sizeof(t_pcb));
+	
 			// Chequeamos si la instancia a eliminar tenia un proceso ejecutando en ella
 			if(instancia_a_eliminar->pid != -1) {
 				// Si tenia un proceso ejecutando lo pasamos a EXIT
 				log_error(logger_kernel, "Se elimino una instancia de [%s]", interfaz_de_instancia_finalizada->nombre);
+				
+				
+				t_pcb* proceso_a_eliminar = buscar_proceso_en_cola(estado_blocked, instancia_a_eliminar->pid);
 
-				proceso_a_eliminar = _sacar_pcb_de_cola(instancia_a_eliminar->pid, estado_blocked_aux);
-				eliminar_proceso_de_io(interfaz_de_instancia_finalizada, proceso_a_eliminar->pid);
+				if(proceso_a_eliminar == NULL){
+					proceso_a_eliminar = buscar_proceso_en_cola(estado_susp_blocked, instancia_a_eliminar->pid);	
+					_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_susp_blocked);
+				}else{
+					_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_blocked);
+				}
+				
 				pasar_pcb_blocked_a_exit(proceso_a_eliminar);
 			}else{
 				log_error(logger_kernel, "La interfaz que se elimino no tenia ningun proceso...");	
 			}
-
+	
 			pthread_mutex_lock(&(interfaz_de_instancia_finalizada->mutex_lista));
 			free(instancia_a_eliminar);
+			bool era_ultima_instancia = list_is_empty(interfaz_de_instancia_finalizada->instancias);
 			pthread_mutex_unlock(&(interfaz_de_instancia_finalizada->mutex_lista));
-				
+
 			// Ahora chequeamos si la instancia que eliminamos era la ultima de la interfaz
-			if(list_is_empty(interfaz_de_instancia_finalizada->instancias)) {
+			if(era_ultima_instancia) {
+				printf("Paso a eliminar todos los procesos que estaban esperando en la interfaz de IO\n");
 				// Si era la ultima entonces agarramos todos los procesos que estaban esperando para usar la interfaz y los pasamos a exit
 				for (int i = 0; i < list_size(interfaz_de_instancia_finalizada->procesos); i++) {
-					pthread_mutex_lock(&(interfaz_de_instancia_finalizada->mutex_lista));
-					proceso_a_eliminar = list_get(interfaz_de_instancia_finalizada->procesos, i);
-					pthread_mutex_unlock(&(interfaz_de_instancia_finalizada->mutex_lista));
-
-					_sacar_pcb_de_cola(proceso_a_eliminar->pid, estado_blocked_aux);
-					eliminar_proceso_de_io(interfaz_de_instancia_finalizada, proceso_a_eliminar->pid);
-					pasar_pcb_blocked_a_exit(proceso_a_eliminar);
+					uint8_t* pid_proceso_en_cola = pop_pid_esperando_io(interfaz_de_instancia_finalizada);
+		
+					t_pcb* proceso_en_cola = buscar_proceso_en_cola(estado_blocked, *pid_proceso_en_cola);
+					
+					if(proceso_en_cola == NULL){
+						proceso_en_cola = buscar_proceso_en_cola(estado_susp_blocked, instancia_a_eliminar->pid);	
+						_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_susp_blocked);
+					}else{
+						_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_blocked);
 					}
+				
+					eliminar_proceso_de_io(interfaz_de_instancia_finalizada, proceso_en_cola->pid);
+					pasar_pcb_blocked_a_exit(proceso_en_cola);
+				}
 				// Finalmente eliminamos la interfaz de IO
 				eliminar_interfaz(interfaz_de_instancia_finalizada);
 			} 
 			 
-			sem_post(&bin_eliminar_procesos_en_interfaces);
 			eliminar_paquete(paquete);
-			free(proceso_a_eliminar);
+		
 			return EXIT_FAILURE;
+			break;
 		default:
 			log_warning(logger_kernel, "Operacion desconocida. No quieras meter la pata");
 			eliminar_paquete(paquete);

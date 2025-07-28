@@ -124,6 +124,20 @@ void pasar_pcb_blocked_a_exit(t_pcb* pcb)
     
 }
 
+void pasar_pcb_suspblocked_a_exit(t_pcb* pcb) 
+{ 
+    encolar_pcb_en_estado(estado_exit, pcb);
+
+    pcb->metricas_estado->cantVecesExit++;
+    temporal_stop(pcb->metricas_tiempo->tiempoEnSuspBlocked);
+    temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
+
+    pcb->estadoProceso = EXIT;
+    log_info(logger_kernel, "%d Pasa del estado SUSP.BLOCKED al estado EXIT", pcb->pid);
+    _enviar_a_finalizar_proceso(pcb);
+    
+}
+
 void pasar_pcb_ready_a_exec(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exec, pcb);

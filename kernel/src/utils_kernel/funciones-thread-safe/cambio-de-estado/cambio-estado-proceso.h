@@ -27,6 +27,8 @@
 
     void pasar_pcb_blocked_a_exit(t_pcb* pcb);
 
+    void pasar_pcb_suspblocked_a_exit(t_pcb* pcb);
+
     void pasar_de_exec_a_blocked(t_pcb* pcb);
     
     void pasar_de_exec_a_exit(t_pcb* pcb);
