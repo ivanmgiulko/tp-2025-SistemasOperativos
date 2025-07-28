@@ -160,9 +160,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 recibir_paquete(socket_interrupt, paquete);
                 
-                memcpy(&pid, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+                memcpy(&pid, paquete->buffer->stream + *offset, sizeof(uint8_t)); *offset += sizeof(uint8_t);
 
-                memcpy(&pc, paquete->buffer->stream + *offset, sizeof(int)); *offset += sizeof(int);
+                memcpy(&pc, paquete->buffer->stream + *offset, sizeof(uint16_t)); *offset += sizeof(uint16_t);
 
                 log_info(logger_kernel, "%d - Desalojado por algoritmo SJF/SRT", pid);
 

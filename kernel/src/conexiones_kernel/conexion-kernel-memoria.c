@@ -62,7 +62,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 			if(proceso_desbloqueado == NULL) proceso_desbloqueado = buscar_proceso_en_cola(estado_susp_blocked, resp_dump->pid);
 
-			if(resp_dump->respuesta == false){
+			if(resp_dump->respuesta == 0){
 				log_debug(logger_kernel, "Fallo en el DUMP");	
 
 				free(resp_dump);

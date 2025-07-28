@@ -121,7 +121,6 @@ int manejar_conexion_cliente(int socket_cliente){
 				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
 
 				log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
-				//enviar_proceso_terminado("NO FINALIZA EL PROCESO :(", socket_cliente);
 				
 				enviar_proceso_terminado(pidEliminado, socket_cliente);
 			
@@ -177,10 +176,10 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				if (!resultado) { // Sale mal
 					log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
-					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, false, socket_cliente);
+					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 0, socket_cliente);
 				} else { // Sale bien
 					log_debug(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
-					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, true, socket_cliente);
+					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 1, socket_cliente);
 				}
 				break;
 

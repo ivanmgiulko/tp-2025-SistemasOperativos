@@ -817,12 +817,12 @@ t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer)
     return proceso_a_dumpear;
 }
 
-void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente) {
+void enviar_respuesta_dump_memory(uint8_t pid, uint8_t respuesta, int socket_cliente) {
 
     t_paquete* paquete = crear_paquete_con_codigo(RESPUESTA_DUMPEO);
 
     agregar_a_paquete(paquete, &pid, sizeof(uint8_t));
-    agregar_a_paquete(paquete, &respuesta, sizeof(bool));
+    agregar_a_paquete(paquete, &respuesta, sizeof(uint8_t));
 
     enviar_paquete(paquete, socket_cliente);
     

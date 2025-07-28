@@ -121,7 +121,7 @@ void enviar_proceso_terminado(uint8_t pid, int socket_cliente);
 
 t_pcb* recibir_proceso_a_dumpear_desde_kernel(t_buffer* buffer);
 
-void enviar_respuesta_dump_memory(uint8_t pid, bool respuesta, int socket_cliente);
+void enviar_respuesta_dump_memory(uint8_t pid, uint8_t respuesta, int socket_cliente);
 
 bool realizar_dump_memory(uint8_t pid);
 

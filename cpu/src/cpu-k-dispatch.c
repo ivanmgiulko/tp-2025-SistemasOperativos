@@ -26,13 +26,13 @@ int manejar_conexion_kernel_dispatch(){
 					// 	log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
 					
 					// }				
-				if(pcb_actual->pid != infoPCB->pid){
-					limpiar_tlb();
+				if(pcb_actual->pid != infoPCB->pid && !flag_exit){
 					if(cache_esta_activada())
 						actualizar_memoria_principal_completa();
-
-				} 
-				
+					if(tlb_esta_activada())
+						limpiar_tlb();
+					
+				}
 				pthread_mutex_lock(&mutex_cpu);
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;
@@ -40,7 +40,7 @@ int manejar_conexion_kernel_dispatch(){
 
 				log_trace(logger_cpu, "#cpu-k-dispatch.c PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 				pedir_instruccion_a_memoria(infoPCB);
-				
+				flag_exit = false;	
 				free(infoPCB);
 				
 				eliminar_paquete(paquete);

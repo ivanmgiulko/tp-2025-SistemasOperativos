@@ -165,9 +165,9 @@ void recibir_buffer_en_paquete(int socket_cliente, t_paquete* paquete)
 }
 
 char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
+    uint32_t tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
 
     char* string = malloc(tamanio);
     memcpy(string, buffer->stream + *desplazamiento, tamanio);
@@ -177,9 +177,9 @@ char* leer_string_desde_buffer(t_buffer* buffer, int* desplazamiento) {
 }
 
 uint8_t leer_uint8_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
+    uint32_t tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
 
     uint8_t valor;
     memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint8_t));
@@ -189,9 +189,9 @@ uint8_t leer_uint8_desde_buffer(t_buffer* buffer, int* desplazamiento){
 }
 
 uint32_t leer_uint32_desde_buffer(t_buffer* buffer, int* desplazamiento){
-    int tamanio;
-    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(int));
-    *desplazamiento += sizeof(int);
+    uint32_t tamanio;
+    memcpy(&tamanio, buffer->stream + *desplazamiento, sizeof(uint32_t));
+    *desplazamiento += sizeof(uint32_t);
 
     uint32_t valor;
     memcpy(&valor, buffer->stream + *desplazamiento, sizeof(uint32_t));
@@ -206,27 +206,3 @@ void loggear_mensaje_desde_buffer(t_buffer* buffer, t_log* logger){
 	log_debug(logger, "Me llego el mensaje :<%s/>", mensaje);
 	free(mensaje);
 }
-
-//ME PARECE MEDIO AL PEDO IVAN :C
-// t_paquete* recibir_paquete_sin_codigo(int socket) {
-//     t_paquete* paquete = malloc(sizeof(t_paquete));
-//     crear_buffer(paquete);
-
-//     // Leer tamaño del buffer
-//     if (recv(socket, &(paquete->buffer->size), sizeof(int), MSG_WAITALL) <= 0) {
-//         free(paquete->buffer);
-//         free(paquete);
-//         return NULL; // Error al recibir
-//     }
-    
-//     // Leer contenido del buffer
-//     paquete->buffer->stream = malloc(paquete->buffer->size);
-//     if (recv(socket, paquete->buffer->stream, paquete->buffer->size, MSG_WAITALL) <= 0) {
-//         free(paquete->buffer->stream);
-//         free(paquete->buffer);
-//         free(paquete);
-//         return NULL; // Error al recibir
-//     }
-
-//     return paquete;
-// }

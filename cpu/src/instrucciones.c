@@ -423,10 +423,11 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_exit);
 
             log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
-            
-            // actualizar_memoria_principal_completa();
-            // limpiar_tlb();
-            
+            flag_exit = true;
+            if(cache_esta_activada())
+                actualizar_memoria_principal_completa();
+            if(tlb_esta_activada())
+				limpiar_tlb();
             sem_post(&sem_cpu_kernel);
 			break;
 		default:

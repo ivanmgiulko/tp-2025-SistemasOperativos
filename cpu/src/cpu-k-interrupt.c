@@ -3,8 +3,7 @@
 
 int manejar_conexion_kernel_interrupt(){
    while (1) {
-		t_paquete* paquete = malloc(sizeof(t_paquete));
-		crear_buffer(paquete);
+        t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 		paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_kernel_interrupt);
 
 		switch (paquete->codigo_operacion) {
@@ -15,21 +14,10 @@ int manejar_conexion_kernel_interrupt(){
 				break;
 			
 			case PROCESO_DESALOJAR:
-				limpiar_tlb();
-				if(cache_esta_activada())
-						actualizar_memoria_principal_completa();
+			
 
 				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
-				
-				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-				// 	log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
-
-				// }
-				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-				// 	log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
-
-				// }
 				free(paquete);
 			
 				break;

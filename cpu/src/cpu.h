@@ -22,6 +22,7 @@ algoritmo_tlb_t algoritmo;
 sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 bool flag_interrupt = false;
+bool flag_exit = false;
 int fd_conexion_kernel_interrupt;
 int fd_conexion_kernel_dispatch;
 int fd_conexion_memoria;

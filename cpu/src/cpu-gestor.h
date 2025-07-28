@@ -30,6 +30,8 @@ extern int32_t ultimo_marco_obtenido;
 extern char* ultima_escritura;
 extern char* ultima_lectura;
 extern bool flag_interrupt;
+extern bool flag_exit;
+
 //conexiones
 extern int fd_conexion_kernel_interrupt;
 extern int fd_conexion_kernel_dispatch;
