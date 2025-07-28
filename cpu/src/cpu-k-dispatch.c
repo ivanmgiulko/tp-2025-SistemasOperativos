@@ -38,7 +38,6 @@ int manejar_conexion_kernel_dispatch(){
 				pcb_actual->pc = infoPCB->pc;
 				pthread_mutex_unlock(&mutex_cpu);
 
-				log_trace(logger_cpu, "#cpu-k-dispatch.c PID: %d | PC: %d", infoPCB->pid, infoPCB->pc);
 				pedir_instruccion_a_memoria(infoPCB);
 				flag_exit = false;	
 				free(infoPCB);

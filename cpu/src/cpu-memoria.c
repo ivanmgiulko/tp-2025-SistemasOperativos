@@ -15,13 +15,13 @@ int manejar_conexion_memoria(){
 
         // 🛑 Esto solo debería ejecutarse si receptor_habilitado sigue siendo true
         paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
-        log_warning(logger_cpu, "[RECV] Recibido código de operación: %s (nro: %d)", 
-                    convertir_cod_op_a_string(paquete->codigo_operacion), 
-                    paquete->codigo_operacion);
+ //       log_warning(logger_cpu, "[RECV] Recibido código de operación: %s (nro: %d)", 
+  //                  convertir_cod_op_a_string(paquete->codigo_operacion), 
+    //                paquete->codigo_operacion);
         recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
 
         if(paquete->buffer->stream == NULL){
-            log_error(logger_cpu, "ERROR al recibir paquete desde memoria (contenido NULL)");
+        //    log_error(logger_cpu, "ERROR al recibir paquete desde memoria (contenido NULL)");
             eliminar_paquete(paquete);
             continue;
         }
@@ -32,13 +32,12 @@ int manejar_conexion_memoria(){
                 break;
 
             case DATOS_DE_MEMORIA:
-                log_debug(logger_cpu, "Recibí los datos de memoria");
+          //      log_debug(logger_cpu, "Recibí los datos de memoria");
                 recibir_datos_de_memoria(paquete, mmu);
                 memoria_cache = inicializar_cache(algoritmo_reemplazo_cache, entradas_cache, mmu->tamanio_pagina, retardo_cache);
                 break;
 
             case INSTRUCCION:
-                log_debug(logger_cpu, "[INSTRUCCION_THREAD] Recibí la instrucción solicitada a MEMORIA");
                 manejar_respuesta_de_instruccion(paquete);
                 break;
 
@@ -61,7 +60,6 @@ int manejar_conexion_memoria(){
             }
 
             case FIN_PID:
-                log_info(logger_cpu, "Recibi el fin de PID");
                 sem_post(&sem_cpu_kernel);
                 break;
 

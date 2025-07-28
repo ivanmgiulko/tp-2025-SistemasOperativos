@@ -4,11 +4,7 @@ void manejar_hilos_clientes(int server_fd){
 
     while(1){
         int socket_cliente = esperar_cliente(server_fd, logger_memoria);
-		if(primera_conexion_a_memoria){
-		log_info(logger_memoria, "## Kernel Conectado - FD del socket: %d", socket_cliente);
-		primera_conexion_a_memoria = false;
-		}
-		else log_debug(logger_memoria, "## CLIENTE Conectado - FD del socket: %d", socket_cliente);
+		log_debug(logger_memoria, "## CLIENTE Conectado - FD del socket: %d", socket_cliente);
         pthread_t hilo_cliente;
         pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion_cliente, (void*)socket_cliente);
         pthread_detach(hilo_cliente);
@@ -21,9 +17,7 @@ int manejar_conexion_cliente(int socket_cliente){
 	while (1) {
 		t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
-		log_warning(logger_memoria, "[RECV] Recibido código de operación: %s (nro: %d)", convertir_cod_op_a_string(paquete->codigo_operacion), paquete->codigo_operacion);
 		recibir_buffer_en_paquete(socket_cliente, paquete);
-		log_trace(logger_memoria, "Tamaño del buffer recibido: %d", paquete->buffer->size);
 		//Verifico que el contenido no sea nulo
 		if(paquete->buffer->stream == NULL){
 			log_error(logger_memoria, "ERROR al recibir paquete (contenido NULL)");
@@ -37,7 +31,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				//recibir_mensaje(socket_cliente, logger_memoria);
 				loggear_mensaje_desde_buffer(paquete->buffer, logger_memoria);
 				break;
-
+			case KERNEL_CONECTADO:
+				log_info(logger_memoria, "## Kernel Conectado - FD del socket: <%d>", socket_cliente);				
+				break;
 			case CPU_PIDE_DATOS:
 				log_debug(logger_memoria, "Recibí petición de datos desde CPU");
 				//recibir_mensaje(socket_cliente, logger_memoria);
@@ -79,7 +75,7 @@ int manejar_conexion_cliente(int socket_cliente){
 						agregar_proceso(proceso_a_inicializar);
 					}
 					//falta agregar caso de error para el log
-					log_info(logger_memoria, "## PID: %d - Proceso Creado - Tamaño: %d", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
+					log_info(logger_memoria, "## PID: <%d> - Proceso Creado - Tamaño: <%d>", proceso_a_inicializar->pid, proceso_a_inicializar->tamanioMemoria);
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
 
@@ -114,11 +110,9 @@ int manejar_conexion_cliente(int socket_cliente){
 				t_pcbMemoria* proceso_a_finalizar = deserializar_proceso(paquete->buffer);
  
 				int pidParaEliminar = proceso_a_finalizar->pid;
-				log_warning(logger_memoria, "PID recibido para finalizar: %d", pidParaEliminar);
 				int pidEliminado = finalizar_proceso(pidParaEliminar);				
 
 				cantMemoria += proceso_a_finalizar->tamanioMemoria;
-				log_warning(logger_memoria, "el tamanio de la memo es ahora: %d", cantMemoria);
 
 				log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 				
@@ -130,7 +124,6 @@ int manejar_conexion_cliente(int socket_cliente){
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
 
-				log_debug(logger_memoria, "Recibi la petición de instruccion desde CPU");
 				
 				manejar_peticion_de_instruccion(socket_cliente, paquete);
 				break;
@@ -140,7 +133,6 @@ int manejar_conexion_cliente(int socket_cliente){
 				//(retardo equivalene a acceder a cada nivel)
 				usleep( retardo_memoria * atoi(config_memoria->CANTIDAD_NIVELES) * 1000);
 
-				log_debug(logger_memoria, "Recibí solicitud de ACCESO A TABLA DE PAGINAS");
 				
 				manejar_acceso_tablas_de_paginas(socket_cliente, paquete);
 				break;
@@ -148,32 +140,25 @@ int manejar_conexion_cliente(int socket_cliente){
 			case WRITE_MEMORIA:
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
-				log_debug(logger_memoria, "Recibí paquete de ejecución de WRITE");
 				manejar_escritura_memoria(socket_cliente, paquete);
 				break;
 
 			case READ_MEMORIA:
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
-				log_debug(logger_memoria, "Recibí paquete de ejecución de READ");
 				manejar_lectura_memoria(socket_cliente, paquete);
 				break;
 
 			case PROCESO_DUMPEAR:
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
-				log_debug(logger_memoria, "Recibí paquete de ejecución de DUMP_MEMORY");
 				
 
 				t_pcb* proceso_a_dumpear = recibir_proceso_a_dumpear_desde_kernel(paquete->buffer);
-				log_info(logger_memoria, "## PID: %d - Memory Dump solicitado", proceso_a_dumpear->pid);
+				log_info(logger_memoria, "## PID: <%d> - Memory Dump solicitado", proceso_a_dumpear->pid);
 
 				// realizar el DUMP de "proceso_a_dumpear"
 				bool resultado = realizar_dump_memory(proceso_a_dumpear->pid);
-				if (!resultado){
-					log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
-				}
-
 				if (!resultado) { // Sale mal
 					log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
 					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 0, socket_cliente);

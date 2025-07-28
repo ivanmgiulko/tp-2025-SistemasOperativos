@@ -165,6 +165,7 @@ bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new)
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    _avisar_kernel_a_memoria(fd_conexion_memoria);
 
     enviar_proceso_a_memoria(*pcb_en_new, fd_conexion_memoria, PROCESO_MEMORIA);
 
@@ -369,6 +370,7 @@ void iniciar_temporizador_suspblocked(void* pcb){
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    _avisar_kernel_a_memoria(fd_conexion_memoria);
 
     usleep(tiempo_maximo_espera * 1000);
 

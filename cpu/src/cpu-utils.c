@@ -21,40 +21,13 @@ void recibir_datos_de_memoria(t_paquete* paquete, mmu_t* mmu) {
     memcpy(&(mmu->cantidad_niveles), paquete->buffer->stream + offsett, sizeof(uint32_t)); offsett += sizeof(uint32_t)*2;
     memcpy(&(mmu->cantidad_entradas_tabla), paquete->buffer->stream + offsett, sizeof(uint32_t));
 
-    log_debug(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
-          mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
-
-    // uint32_t buffer_size;
-    // // Recibir tamaño del buffer
-    // if (recv(fd_conexion_memoria, &buffer_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
-    //     log_error(logger_cpu, "Error al recibir el tamaño del buffer");
-    //     return;
-    // }
-
-    // // Recibir el contenido del buffer
-    // void* buffer_stream = malloc(buffer_size);
-    // if (recv(fd_conexion_memoria, buffer_stream, buffer_size, MSG_WAITALL) <= 0) {
-    //     log_error(logger_cpu, "Error al recibir el contenido del buffer");
-    //     free(buffer_stream);
-    //     return;
-    // }
-
-    // // Ahora sí, deserializá los datos
-    // if (buffer_size < sizeof(uint32_t) * 3) {
-    //     log_error(logger_cpu, "El tamaño del buffer es insuficiente para deserializar los datos de memoria");
-    //     free(buffer_stream);
-    //     return;
-    // }
-    // void* stream = buffer_stream;
-    //  memcpy(&(mmu->tamanio_pagina), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    //  memcpy(&(mmu->cantidad_niveles), stream, sizeof(uint32_t)); stream += sizeof(uint32_t);
-    //  memcpy(&(mmu->cantidad_entradas_tabla), stream, sizeof(uint32_t));
-    // free(buffer_stream);	 
+    // log_debug(logger_cpu, "Datos de memoria recibidos: tamanio_pagina=%d, cantidad_niveles=%d, cantidad_entradas_tabla=%d",
+    //       mmu->tamanio_pagina, mmu->cantidad_niveles, mmu->cantidad_entradas_tabla);
 }
 
 void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
 	
-    log_info(logger_cpu, "Iniciando la peticion de instruccion a memoria");
+    log_info(logger_cpu, "## PID: <%d> - FETCH - Program Counter: <%d>", infoPCB->pid, infoPCB->pc);
 
     t_paquete* paquete = crear_paquete_instruccion();
     agregar_a_paquete(paquete, &(infoPCB->pid), sizeof(uint8_t));
@@ -65,7 +38,6 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
     }
     //Envía la peticion serializada a MEMORIA
     enviar_paquete(paquete, fd_conexion_memoria);
-	log_debug(logger_cpu, "Petición envíada, aguardo respuesta");
     eliminar_paquete(paquete); 
 }	
 	
@@ -74,30 +46,27 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 	//Deserializa la instrucción recibida
     int desplazamiento = 0;
 	char* respuesta_instruccion = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
-	log_info(logger_cpu, "Instrucción recibida de Memoria: %s", respuesta_instruccion);
 
 	t_instruccion* instruccion = malloc(sizeof(t_instruccion));
 	instruccion = decode(respuesta_instruccion);
 	if (!instruccion) {
-        log_error(logger_cpu, "Error al decodificar la instrucción");
         // No olvides liberar respuesta->instruccion antes de salir
         free_instruccion(instruccion);
         free(respuesta_instruccion);
         return;  // Finaliza la función si no se pudo decodificar la instrucción
     }
-	log_debug(logger_cpu, "Instrucción decodificada: %d", instruccion->tipo);
 	
 	ejecutar_instruccion(instruccion);
 	//ejecutar_instruccion(instruccion);
 	//Se chequea luego de excecute, si llego una interrupcion.
 
 
-	log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
+	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
 	pthread_t hilo_interrupt;
 	pthread_create(&hilo_interrupt, NULL, (void*)check_interrupt, NULL);
 	pthread_detach(hilo_interrupt);
 	
-	log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
+	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
 
 	// si hay interrupcion, se detiene la ejecucion del proceso actual y se envia a kernel el proceso desalojado.
 	// si no hay interrupcion, se pide la siguiente instruccion a memoria.
@@ -132,7 +101,6 @@ void _crear_conexion_kernel_dispatch(char* ip_kernel, char* puerto_kernel_dispat
 }
 
 void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) { 
-	//log_info(logger_cpu, "[CONEXION] Conectando a memoria en ip:%s, puerto:%s", ip_memoria, puerto_memoria);
 	fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
 	
 	if(fd_conexion_memoria == -1){
@@ -140,7 +108,6 @@ void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) {
 		abort();
 	}
 	
-	//log_info(logger_cpu, "[CONEXION] Conectado a memoria con FD: %d", fd_conexion_memoria);
 	pedir_datos_a_memoria("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
 }
 
@@ -164,14 +131,13 @@ void check_interrupt(){
 	sem_wait(&sem_cpu);
 
 	if(flag_interrupt){
-		log_warning(logger_cpu, "Interrupcion detectada, se procede a desalojar el proceso actual");
+		log_warning(logger_cpu, "## Llega interrupción al puerto Interrupt");
 		// Enviar el proceso desalojado a kernel
 		flag_interrupt = false; 
 		sem_post(&sem_cpu_kernel);
 		enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
 	
 	} else {
-		log_info(logger_cpu, "No hay interrupciones, se procede a pedir la siguiente instrucción a memoria");
 		pedir_instruccion_a_memoria(pcb_actual);
 	}
 	
@@ -210,7 +176,6 @@ mmu_t* inicializar_mmu(){
     mmu->cantidad_entradas_tabla = 0; 
     mmu->cantidad_niveles = 0; 
 	mmu->ultima_direccion_fisica_calculada = 0;
-    log_info(logger_cpu, "MMU inicializada");
     return mmu;
 }
 
@@ -227,7 +192,7 @@ void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_
     agregar_a_paquete(paquete_read, &direccion_fisica_final, sizeof(uint32_t));
     agregar_a_paquete(paquete_read, &tamanio, sizeof(uint32_t));
     enviar_paquete(paquete_read, fd_conexion_memoria);
-    log_debug(logger_cpu, "Enviando READ a Memoria: PID=%d, Direccion Fisica Final=%d, Tamanio=%d", pid, direccion_fisica_final, tamanio);
+//    log_debug(logger_cpu, "Enviando READ a Memoria: PID=%d, Direccion Fisica Final=%d, Tamanio=%d", pid, direccion_fisica_final, tamanio);
     eliminar_paquete(paquete_read);
 }
 
@@ -238,7 +203,7 @@ void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* 
     agregar_a_paquete(paquete_write, datos, tamanio); 
     enviar_paquete(paquete_write, fd_conexion_memoria);
 
-    log_debug(logger_cpu, "Enviando WRITE a Memoria: PID=%d, Direccion Fisica Final=%d", pid, direccion_fisica_final);
+//    log_debug(logger_cpu, "Enviando WRITE a Memoria: PID=%d, Direccion Fisica Final=%d", pid, direccion_fisica_final);
     eliminar_paquete(paquete_write);
 }
 
@@ -257,7 +222,7 @@ char* obtener_pagina_de_memoria(uint8_t pid, uint32_t direccion_fisica) {
 
     // Verificar que la respuesta sea válida
     if (paquete_respuesta->codigo_operacion != READ_MEMORIA) {
-        log_error(logger_cpu, "Error al obtener página de memoria, código de operación: %d", paquete_respuesta->codigo_operacion);
+//        log_error(logger_cpu, "Error al obtener página de memoria, código de operación: %d", paquete_respuesta->codigo_operacion);
         eliminar_paquete(paquete_respuesta);
         return NULL;
     }
@@ -275,14 +240,13 @@ char* recibir_read_o_write_de_memoria() {
 
     // Validar tipo de operación recibida
     if (paquete->codigo_operacion != READ_MEMORIA && paquete->codigo_operacion != WRITE_MEMORIA) {
-        log_error(logger_cpu, "Error: Código de operación inesperado: %d", paquete->codigo_operacion);
+//        log_error(logger_cpu, "Error: Código de operación inesperado: %d", paquete->codigo_operacion);
         eliminar_paquete(paquete);
         return NULL;
     }
 
     // Recibir el buffer
     recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
-    log_debug(logger_cpu, "Tamaño del buffer recibido: %d", paquete->buffer->size);
 
     // Deserializar el contenido
      int desplazamiento = 0;
@@ -298,9 +262,9 @@ char* recibir_read_o_write_de_memoria() {
 
     // Log según el tipo de operación
     if (paquete->codigo_operacion == READ_MEMORIA) {
-        log_info(logger_cpu, "READ_MEMORIA recibido. Contenido: %s", contenido);
+        log_debug(logger_cpu, "READ_MEMORIA recibido. Contenido: %s", contenido);
     } else if (paquete->codigo_operacion == WRITE_MEMORIA) {
-        log_info(logger_cpu, "WRITE_MEMORIA recibido. Contenido: %s", contenido);
+        log_debug(logger_cpu, "WRITE_MEMORIA recibido. Contenido: %s", contenido);
     }
 
     eliminar_paquete(paquete);
@@ -357,10 +321,10 @@ t_pre_direccion_fisica calcular_pre_direccion_fisica(int direccion_logica) {
 	uint32_t  TAMANIO_PAGINA = mmu->tamanio_pagina;
 	uint32_t  CANT_NIVELES = mmu->cantidad_niveles;
 	uint32_t  CANT_ENTRADAS_TABLA = mmu->cantidad_entradas_tabla;
-	log_debug(logger_cpu,"Tamanio Pagina = %d", TAMANIO_PAGINA);
-	log_debug(logger_cpu,"Cantdad niveles = %d", CANT_NIVELES);
-	log_debug(logger_cpu,"entradas tabla = %d", CANT_ENTRADAS_TABLA);
-	log_debug(logger_cpu, "direccion logica = %d", direccion_logica);
+	// log_debug(logger_cpu,"Tamanio Pagina = %d", TAMANIO_PAGINA);
+	// log_debug(logger_cpu,"Cantdad niveles = %d", CANT_NIVELES);
+	// log_debug(logger_cpu,"entradas tabla = %d", CANT_ENTRADAS_TABLA);
+	// log_debug(logger_cpu, "direccion logica = %d", direccion_logica);
 	
     resultado.nro_pagina = direccion_logica / TAMANIO_PAGINA;
     resultado.desplazamiento = direccion_logica % TAMANIO_PAGINA;
@@ -404,11 +368,9 @@ int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, u
     }
 
     int32_t marco = recibir_marco_solicitado(paquete);
+    log_info(logger_cpu,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", 
+             pid, pre_direccion_fisica.nro_pagina, marco);
     eliminar_paquete(paquete);
-
-
-    
-
     return marco;
 }
 
@@ -436,13 +398,11 @@ tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
         tlb->entradas[i].marco_asociado = UINT32_MAX;
         tlb->entradas[i].instante_referencia = 0;
 	}
-	log_info(logger_cpu, "TLB inicializada, CANTIDAD DE ENTRADAS <%d>", tlb->cantidad_entradas);
 	return tlb;
 }
 
 bool tlb_esta_activada(){
     if(tlb->cantidad_entradas == 0){
-        log_warning(logger_cpu, "TLB no está activada: cantidad de entradas es 0.");
         return false;
     }
     return true;
@@ -465,9 +425,9 @@ void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrant
             tlb->entradas[i].nro_pagina = nro_pagina_entrante;
             tlb->entradas[i].marco_asociado = marco_asociado_entrante;
 			tlb->entradas[i].bit_en_uso = 1; 
-            log_info(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
-            log_warning(logger_cpu, "TLB: bit en uso <%d> - Marco <%d> en numero de pagina <%d>", tlb->entradas[i].bit_en_uso, tlb->entradas[i].marco_asociado, 
-						tlb->entradas[i].nro_pagina);
+            log_debug(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
+            // log_warning(logger_cpu, "TLB: bit en uso <%d> - Marco <%d> en numero de pagina <%d>", tlb->entradas[i].bit_en_uso, tlb->entradas[i].marco_asociado, 
+			// 			tlb->entradas[i].nro_pagina);
 
 			return;
         }
@@ -499,13 +459,13 @@ int esta_en_tlb(uint32_t nro_pagina){
 	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
 		if ((tlb->entradas[i].nro_pagina == nro_pagina) && tlb->entradas[i].bit_en_uso == 1) {
 			marco_asociado = tlb->entradas[i].marco_asociado;
-			log_info(logger_cpu, "TLB HIT: PID <%d> - TLB HIT - Pagina: <%d>",pcb_actual->pid, nro_pagina);
+			log_info(logger_cpu, "PID <%d> - TLB HIT - Pagina: <%d>",pcb_actual->pid, nro_pagina);
 			// TLB Hit: “PID: <PID> - TLB HIT - Pagina: <NUMERO_PAGINA>”
             tlb->entradas[i].instante_referencia = ++contador_accesos_tlb;
 			return marco_asociado;
 		}
 	}
-	log_info(logger_cpu, "TLB MISS: Página %d no encontrada en TLB", nro_pagina);
+	log_info(logger_cpu, "PID: <%d> - TLB MISS - Pagina: <%d>", pcb_actual->pid,nro_pagina);
 	return -1;
 }
 
@@ -527,7 +487,7 @@ algoritmo_tlb_t algoritmo_from_string(const char* str) {
     tlb->entradas[proxima_a_reemplazar].marco_asociado = marco_asociado_entrante;
     tlb->entradas[proxima_a_reemplazar].bit_en_uso = 1;
     tlb->entradas[proxima_a_reemplazar].instante_referencia = ++contador_accesos_tlb;
-    log_info(logger_cpu, "TLB llena. Reemplazo FIFO en posicion <%d>: Pagina <%d> - Marco <%d>", proxima_a_reemplazar, nro_pagina_entrante, marco_asociado_entrante);
+    log_debug(logger_cpu, "TLB llena. Reemplazo FIFO en posicion <%d>: Pagina <%d> - Marco <%d>", proxima_a_reemplazar, nro_pagina_entrante, marco_asociado_entrante);
     proxima_a_reemplazar = (proxima_a_reemplazar + 1) % tlb->cantidad_entradas;
 }
 
@@ -542,7 +502,7 @@ algoritmo_tlb_t algoritmo_from_string(const char* str) {
             indice_lru = i;
         }
     }
-    log_info(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>",
+    log_debug(logger_cpu, "TLB llena. Reemplazo LRU en posicion <%d>: Pagina <%d> - Marco <%d>",
             indice_lru, nro_pagina_entrante, marco_asociado_entrante);
 
 
@@ -619,16 +579,12 @@ int buscar_pagina_en_cache(t_memoria_cache* cache, int nro_pagina_buscado) {
     for (int i = 0; i < cache->cantidad_paginas; i++) {
         if (cache->paginas[i].nro_pagina == nro_pagina_buscado) {
             cache->paginas[i].bit_uso = true;
-            for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-					log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
-
-				}
-            log_info(logger_cpu, "PID: %d - Cache Hit - Pagina: %d", pcb_actual->pid, nro_pagina_buscado);
+            log_info(logger_cpu, "PID: <%d> - Cache Hit - Pagina: <%d>", pcb_actual->pid, nro_pagina_buscado);
             return i; // devuelve el índice de esa página dentro del array
         }
     }
 
-    log_info(logger_cpu, "PID: %d - Cache Miss - Pagina: %d", pcb_actual->pid, nro_pagina_buscado);
+    log_info(logger_cpu, "PID: <%d> - Cache Miss - Pagina: <%d>", pcb_actual->pid, nro_pagina_buscado);
     return -1; // no se encontró
 }
 
@@ -648,10 +604,7 @@ char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer
     // Marcar bit de uso
     memoria_cache->paginas[indice].bit_uso = true;
 
-    // Copiar los datos a un nuevo buffer y devolver
-    // char* datos_leidos = malloc(tamanio_a_leer);
-    // memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
-
+   
     void* datos_leidos = malloc(tamanio_a_leer);
 	memcpy(datos_leidos, memoria_cache->paginas[indice].contenido + desplazamiento, tamanio_a_leer);
 
@@ -664,7 +617,7 @@ char* leer_de_cache(int indice, uint32_t desplazamiento, uint32_t tamanio_a_leer
 
 void escribir_en_cache(int indice, uint32_t desplazamiento, char* datos_a_escribir){
     // Validaciones básicas
-    log_error(logger_cpu, "Escribiendo en cache: Indice: %d, Desplazamiento: %d, Datos: %s", indice, desplazamiento, datos_a_escribir);
+    log_debug(logger_cpu, "Escribiendo en cache: Indice: %d, Desplazamiento: %d, Datos: %s", indice, desplazamiento, datos_a_escribir);
     uint32_t tamanio_a_escribir = strlen(datos_a_escribir); // +1 para incluir el terminador nulo
     if (indice < 0 || indice >= memoria_cache->cantidad_paginas){
         log_error(logger_cpu, "Índice de página fuera de rango: %d", indice);
@@ -692,7 +645,7 @@ void agregar_pagina_a_cache(uint32_t nro_pagina, int indice_libre, char* conteni
     memoria_cache->paginas[indice_libre].nro_pagina = nro_pagina;
     memcpy(memoria_cache->paginas[indice_libre].contenido, contenido, mmu->tamanio_pagina);
     //LOG OBLIGATORIO
-    log_info(logger_cpu, "PID: %d - Cache Add - Pagina: %d", pcb_actual->pid, nro_pagina);
+    log_info(logger_cpu, "PID: <%d> - Cache Add - Pagina: <%d>", pcb_actual->pid, nro_pagina);
 }
 
 int reemplazo_clock(t_memoria_cache* cache){
@@ -715,7 +668,7 @@ int reemplazo_clock(t_memoria_cache* cache){
                     free(pre_dir.entrada_nivel);
                     return -1; // Error al recibir confirmación
                 }
-                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+                log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
             }
@@ -758,7 +711,7 @@ int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tam_pagina) {
                     free(pre_dir.entrada_nivel);
                     return -1; // Error al recibir confirmación
                 }
-                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+                log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
                 pagina->bit_modificado = false;
                 int victima = cache->puntero_reemplazo;
@@ -782,7 +735,7 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     //Busco espacio libre para la nueva pagina
     int marco_cache = buscar_espacio_libre_en_cache(memoria_cache);
     if (marco_cache == -1) {
-        log_warning(logger_cpu, "iniciando algoritmo de reemplazo");
+  //      log_warning(logger_cpu, "iniciando algoritmo de reemplazo");
         //ACA APLICA EL ALGORITMO DE REEMPLAZO DE CACHE
         if (memoria_cache->algoritmo_reemplazo == CLOCK) {      
             
@@ -825,20 +778,16 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     //agrego la pag a cache
     agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, pagina);
     free(pagina);
-    log_debug(logger_cpu, "Se agrego la página %d del proceso  PID: %d a CACHE", pre_direccion_fisica.nro_pagina, pcb_actual->pid);
     return marco_cache;
 }
 void actualizar_memoria_principal_completa() {
     char* respuesta;
-    log_warning(logger_cpu, "Estoy dentro de actualizar_memoria_principal_completa");
-
     // 🛑 Desactivar receptor para control total de recv
     pthread_mutex_lock(&mutex_conexion_memoria);
     receptor_habilitado = false;
     pthread_mutex_unlock(&mutex_conexion_memoria);
 
     for (uint32_t i = 0; i < memoria_cache->cantidad_paginas; i++) {
-        log_warning(logger_cpu, "Estoy dentro del for de actualizar_memoria_principal_completa");
 
         t_pagina_de_cache* pagina = &memoria_cache->paginas[i];
         if (pagina->nro_pagina != -1 && pagina->bit_modificado) {
@@ -850,13 +799,13 @@ void actualizar_memoria_principal_completa() {
 
             uint32_t marco = solicitar_marco_a_memoria(pre_dir, pcb_actual->pid);
             uint32_t direccion_fisica = calcular_direccion_fisica_final(marco, pre_dir);
-            log_error(logger_cpu, "COntenido de pagina antes de enviar a memoria: %s", pagina->contenido);
+            log_debug(logger_cpu, "Contenido de pagina antes de enviar a memoria: %s", pagina->contenido);
             // Escribir en memoria principal
             enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
             respuesta = recibir_read_o_write_de_memoria();
 
             if (respuesta && strcmp(respuesta, "WRITE completado con éxito") == 0) {
-                log_info(logger_cpu, "PID: %d - Memory Update - Página: %d - Frame: %d", pcb_actual->pid, pagina->nro_pagina, marco);
+                log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
             } else if (respuesta) {
                 log_error(logger_cpu, "Error al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
                 log_error(logger_cpu, "Respuesta inesperada de memoria: %s", respuesta);

@@ -42,7 +42,6 @@ instruccion_t obtener_tipo(char* nombre_instr) {
 t_instruccion* parse_noop(char* linea) {
     t_instruccion* instr = malloc(sizeof(t_instruccion));
     instr->tipo = INSTR_NOOP;
-    log_info(logger_cpu, "ADENTRO DEL PARSER NOOP A VER EL TIPO: %d", instr->tipo);
     return instr;
 }
 
@@ -144,7 +143,6 @@ t_instruccion* parse_exit(char* linea) {
 }
 
 t_instruccion* decode(char* linea) {
-    log_debug(logger_cpu, "Decodificando instrucción: %s", linea);
 
     // Dividir la línea en partes
     char** partes = string_split(linea, " ");  
@@ -174,7 +172,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
     uint32_t direccion_fisica_final, marco_correspondiente;
     t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
     
-    log_trace(logger_cpu, "PID: %d | PC: %d", pcb_actual->pid, pcb_actual->pc);
 
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
@@ -202,8 +199,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //RETARDO DE CACHE:
                 usleep(memoria_cache->retardo * 1000);
                 escribir_en_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.write.datos);
-            //    log_info(logger_cpu, "<CACHE> PID: <%d> - Accion: <ESCRIBIR> - Valor : <%s>", pcb_actual->pid, instruccion->parametros.write.datos);
-                log_error(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
+                log_debug(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
 
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); // Libera el semáforo de CPU
@@ -230,7 +226,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 
                 //Envia el WRITE a memoria
                 enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos)+1);
-                log_info(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
+                log_debug(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
                 eliminar_paquete(paquete);
                 
                 if (ultima_escritura) 
@@ -284,7 +280,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 
                 //Envia el read a memoria
                 enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio);
-                log_info(logger_cpu, "READ enviado a Memoria. Esperando respuesta...");
                 eliminar_paquete(paquete);
                 
                 sem_post(&sem_memoria); // Espera a que la memoria confirme el read
@@ -294,7 +289,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
         
 		case INSTR_GOTO:
-            log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> con parametros %d",
+            log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%d>",
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
             pcb_actual->pc = instruccion->parametros.go_to.valor;
             //pcb_actual->pc++;
@@ -309,7 +304,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			////////////////////////////
                         
 		case INSTR_IO:
-			log_info(logger_cpu, "syscall detectada... parametros %s %d",
+			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
 
             char* dispositivo = instruccion->parametros.io.dispositivo;
@@ -337,7 +332,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             free(paquete_io);
 
-            log_info(logger_cpu, "Enviando SYSCALL_IO a Kernel");
+            log_debug(logger_cpu, "Enviando SYSCALL_IO a Kernel");
             sem_post(&sem_cpu_kernel);
             
             // sem_wait(&sem_cpu);
@@ -346,7 +341,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
 			break;
 		case INSTR_INIT_PROC:
-			log_info(logger_cpu, "syscall detectada... parametros %s %d",
+			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, 
+                obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
             char* archivo = instruccion->parametros.init_proc.archivo;
             int tamanio = instruccion->parametros.init_proc.tamanio;
@@ -370,7 +366,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             free(paquete_init_proc);
 
-            log_info(logger_cpu, "Enviando SYSCALL_INIT_PROC a Kernel");
             
             pcb_actual->pc++;
            
@@ -378,7 +373,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 		case INSTR_DUMP_MEMORY:
 
-			log_info(logger_cpu, "syscall detectada... parametros ");
+			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s>", pcb_actual->pid, 
+                obtener_nombre_instruccion(instruccion->tipo));
 
             pcb_actual->pc++;
 
@@ -397,7 +393,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             free(paquete_dump_memory);
             
-            log_info(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
+            log_debug(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
 
             sem_post(&sem_cpu_kernel);
 
@@ -405,7 +401,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 		case INSTR_EXIT:
 
-			log_info(logger_cpu, "syscall detectada... parametros ");
+			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s>", pcb_actual->pid, 
+                obtener_nombre_instruccion(instruccion->tipo));
 
             
             paquete->codigo_operacion = SYSCALL_EXIT;
@@ -422,7 +419,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete);
             free(paquete_exit);
 
-            log_info(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
+            log_debug(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             flag_exit = true;
             if(cache_esta_activada())
                 actualizar_memoria_principal_completa();

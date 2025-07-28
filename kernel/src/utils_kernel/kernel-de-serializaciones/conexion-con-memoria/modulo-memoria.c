@@ -70,3 +70,9 @@ void enviar_a_liberar_memoria(int socket_memoria, t_pcb proceso)
     free(a_enviar);
     eliminar_paquete(paquete);
 }
+
+void _avisar_kernel_a_memoria(int socket_memoria){
+    t_paquete* paquete = crear_paquete_con_codigo(KERNEL_CONECTADO);
+    enviar_paquete(paquete, socket_memoria);
+    eliminar_paquete(paquete);
+}

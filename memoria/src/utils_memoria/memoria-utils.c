@@ -104,7 +104,6 @@ void suspender_proceso_swap(uint8_t pid) {
         memoria_del_sistema->bitmap_marcos_ocupados[marco] = false;
         marcos_liberados_bitmap++;
 
-        log_trace(logger_memoria, "PID %d: Página %d escrita en offset %d de SWAP", pid, i, offset);
     }
     log_trace(logger_memoria, "PID %d: Se liberaron %d marcos del bitmap de memoria", pid, marcos_liberados_bitmap);
 
@@ -203,7 +202,6 @@ t_proceso_swap* buscar_proceso_en_swap(uint8_t pid) {
 }
 
 char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
-    log_debug(logger_memoria, "Leyendo instrucciones desde el archivo: %s", pathArchivoPseudocodigo);
     
     // Construir la ruta correcta. Si es una ruta relativa, agregarle "../" para salir del directorio memoria
     char* ruta_corregida;
@@ -216,7 +214,6 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
         sprintf(ruta_corregida, "../%s", pathArchivoPseudocodigo);
     }
     
-    log_debug(logger_memoria, "Intentando abrir archivo en: %s", ruta_corregida);
     FILE* archivo = fopen(ruta_corregida, "r");
     if (!archivo) {
         log_error(logger_memoria, "Error abriendo archivo de pseudocodigo");
@@ -256,7 +253,6 @@ char** leer_instrucciones(char* pathArchivoPseudocodigo, int* cantidad) {
 
 void agregar_proceso(t_pcbMemoria* pcb) {
     int cant_inst = 0;
-    log_debug(logger_memoria, "Path recibido en PCB: %s", pcb->pathArchivoPseudocodigo);
 
     pcb->metricas_proceso = iniciarMetricasProceso();
     char** instrucciones = leer_instrucciones(pcb->pathArchivoPseudocodigo, &cant_inst);
@@ -303,14 +299,14 @@ void informar_metricas_memoria(uint8_t pid){
     metricas_proceso m = memoria_del_sistema->procesos[encontrado].metricas_proceso;
 
     log_info(logger_memoria,
-    "## PID: %d - Proceso Destruido \n"
+    "## PID: <%d> - Proceso Destruido \n"
     "- Métricas - \n"
-    "Acc.T.Pag: %d;\n"
-    "Inst.Sol.: %d;\n"
-    "SWAP: %d;\n"
-    "Mem.Prin.: %d;\n"
-    "Lec.Mem.: %d;\n"
-    "Esc.Mem.: %d",
+    "Acc.T.Pag: <%d>;\n"
+    "Inst.Sol.: <%d>;\n"
+    "SWAP: <%d>;\n"
+    "Mem.Prin.: <%d>;\n"
+    "Lec.Mem.: <%d>;\n"
+    "Esc.Mem.: <%d>",
     pid, m.cantVecesTP, m.cantVecesInstrucciones, m.cantVecesSWAP,
     m.cantVecesMP, m.cantVecesRead, m.cantVecesWrite);
 }
@@ -324,7 +320,6 @@ uint8_t finalizar_proceso(uint8_t pid) {
         //log_trace(logger_memoria, "libero instruccion %s del proceso con PID %d", memoria_del_sistema->procesos[encontrado].instrucciones[j], pid);
         free(memoria_del_sistema->procesos[encontrado].instrucciones[j]);
     }
-    log_debug(logger_memoria, "libero: %d instrucciones del proceso con PID %d", memoria_del_sistema->procesos[encontrado].cant_instrucciones, pid);
     free(memoria_del_sistema->procesos[encontrado].instrucciones);
 
     //Liberar espacio en memoria
@@ -362,24 +357,13 @@ uint8_t finalizar_proceso(uint8_t pid) {
 
 char* obtener_instruccion(uint8_t pid, uint16_t pc) {
 
-    //log_trace(logger_memoria, "ENTRA A OBTENER INSTRUCCION PID %d PC %d", pid, pc);
-
-    //Esto no debería pasar nunca!!
-    // if (memoria_del_sistema == NULL || memoria_del_sistema->procesos == NULL) {
-    //     log_error(logger_memoria, "memoria_del_sistema o procesos no están inicializados");
-    //     return NULL;
-    // }
-
-    //log_debug(logger_memoria, "Cant de procesos actual: %d", memoria_del_sistema->cant_procesos);
     pthread_mutex_lock(&memoria_del_sistema->mutex);
 
     for (int i = 0; i < memoria_del_sistema->cant_procesos; i++) {
         if (memoria_del_sistema->procesos[i].pid == pid) {
-            log_trace(logger_memoria, "Instrucción solicitada: PID %d, PC %d", pid, pc);
             if (pc < memoria_del_sistema->procesos[i].cant_instrucciones) {
                 //METRICA
                 memoria_del_sistema->procesos[i].metricas_proceso.cantVecesInstrucciones++;
-                //log_debug(logger_memoria, "Se incrementa la métrica CantInstrucciones del proceso pid: %d", pid);
                 pthread_mutex_unlock(&memoria_del_sistema->mutex);
                 return memoria_del_sistema->procesos[i].instrucciones[pc];
             } else {  
@@ -391,9 +375,6 @@ char* obtener_instruccion(uint8_t pid, uint16_t pc) {
     }
 
     pthread_mutex_unlock(&memoria_del_sistema->mutex);
-    
-    log_error(logger_memoria, "PID %d no encontrado", pid);
-    log_error(logger_memoria, "cant procesos: %d", memoria_del_sistema->cant_procesos);
     return "NULL"; // PID no encontrado
 }
 
@@ -598,14 +579,11 @@ void liberar_espacios_memoria_usuario(t_tabla_pagina* tabla_primera, t_memoria_d
 
 void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete) {
     if (paquete->buffer->size < sizeof(int) * 2) {
-        log_error(logger_memoria, "El tamaño del buffer es insuficiente para deserializar la instrucción");
         return;
     }
 
     t_peticion_instruccion* peticion = deserializar_peticion_instruccion(paquete->buffer->stream);
 
-    log_debug(logger_memoria, "PID recibido: %d", peticion->pid);
-    log_debug(logger_memoria, "PC recibido: %d", peticion->pc);
 
 	//Obtengo la instruccion correspondiente al PID y PC recibido de cpu
 	char* respuesta_instruccion = string_duplicate(obtener_instruccion(peticion->pid, peticion->pc));
@@ -613,9 +591,6 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete) {
 	//Entra a este if cuando el pc es mayor a cant de instrucciones
 	if(strcmp(respuesta_instruccion, "PC FINALIZADO")== 0){
 	
-		log_warning(logger_memoria, "No hay más instrucciones a ejecutar para este proceso");
-		log_trace(logger_memoria, "Serializando paquete:");
-		log_trace(logger_memoria, "Código de operación: %d", FIN_PID);
 
 		t_paquete* paquete_fin = crear_paquete_con_codigo(FIN_PID);
         enviar_paquete(paquete_fin, socket_cliente);
@@ -637,22 +612,16 @@ void manejar_peticion_de_instruccion(int socket_cliente, t_paquete* paquete) {
 
 	//Entra acá si encontro el proceso y la instrucción
 	else{
-		log_info(logger_memoria, "## PID: %d - Obtener instrucción: %d - Instrucción: %s",peticion->pid, peticion->pc, respuesta_instruccion);
+		log_info(logger_memoria, "## PID: <%d> - Obtener instrucción: <%d> - Instrucción: <%s>",peticion->pid, peticion->pc, respuesta_instruccion);
 		
         //Serializo la respuesta
 		t_paquete* paquete_instruccion = crear_paquete_con_codigo(INSTRUCCION);
         agregar_a_paquete(paquete_instruccion, respuesta_instruccion, strlen(respuesta_instruccion)+1);
         
-		log_trace(logger_memoria, "Serializando paquete:");
-		log_trace(logger_memoria, "Código de operación: %d", paquete_instruccion->codigo_operacion);
-		log_trace(logger_memoria, "Tamaño del buffer: %d", paquete_instruccion->buffer->size);
-		log_trace(logger_memoria, "Instrucción: %s", respuesta_instruccion);
 
 		//Envio la instruccion serializada envio a CPU 
 		
-		log_debug(logger_memoria, "Enviando Instrucción a CPU");
 		enviar_paquete(paquete_instruccion, socket_cliente);
-        log_warning(logger_memoria, "[SEND] Instrucción ENVIADA al socket: %d, suerte cpu!!", socket_cliente);
 	    //Libero memoria
         eliminar_paquete(paquete_instruccion);
 	    free(respuesta_instruccion);
@@ -672,8 +641,7 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 
 	// Log obligatorio
-	log_info(logger_memoria, "## PID: %d - Escritura - Dir. Física: %d - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
-    log_debug(logger_memoria, "DATOS <%s>", datos);
+	log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
@@ -682,8 +650,6 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	t_paquete* paquete_confirmacion_write = crear_paquete_con_codigo(WRITE_MEMORIA);
     char* mensaje_confirmacion_write = "WRITE completado con éxito";
     agregar_a_paquete(paquete_confirmacion_write, mensaje_confirmacion_write, strlen(mensaje_confirmacion_write)+1);
-
-    log_warning(logger_memoria, "Enviando confirmación de WRITE a CPU: %s", mensaje_confirmacion_write);
     enviar_paquete(paquete_confirmacion_write, socket_cliente);
 
 	free(datos);
@@ -697,9 +663,6 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &offset);
 	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
 	uint32_t tamanio_a_leer = leer_uint32_desde_buffer(paquete->buffer, &offset);
-
-    log_warning(logger_memoria, "READ recibido - Dirección: %d | Tamaño: %d", direccion_fisica, tamanio_a_leer);
-
 	void* datos_leidos = malloc(tamanio_a_leer);
 	memcpy(datos_leidos, memoria_del_sistema->memoria_principal + direccion_fisica, tamanio_a_leer);
 	char* datos_leidos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
@@ -709,7 +672,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
     datos_leidos_como_string[tamanio_a_leer] = '\0';
 
     // Logs
-    log_info(logger_memoria, "## PID: %d - Lectura - Dir. Física: %d - Tamaño: %d", pid, direccion_fisica, tamanio_a_leer);
+    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
     log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
 
 	//METRICAS
@@ -721,8 +684,6 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	
     agregar_a_paquete(paquete_confirmacion_read, datos_leidos_como_string, strlen(datos_leidos_como_string)+1);
 
-	log_trace(logger_memoria, "[SEND] Enviando código de operación: %d (READ_MEMORIA)", READ_MEMORIA);
-	log_trace(logger_memoria, "[SEND] Enviando tamaño: %d", tamanio_a_leer);
 	log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
 
     enviar_paquete(paquete_confirmacion_read, socket_cliente);
@@ -775,13 +736,9 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 
     agregar_a_paquete(paquete_marco, &marco, sizeof(int32_t));
     
-	// LOG DEL TAMAÑO DEL BUFFER Y CONTENIDO
-    log_trace(logger_memoria, "[SEND] Enviando código de operación: %d (OBTENER_MARCO_CORRESPONDIENTE)", OBTENER_MARCO_CORRESPONDIENTE);
-    log_trace(logger_memoria, "[SEND] Enviando tamaño: %d", paquete_marco->buffer->size);
     log_trace(logger_memoria, "[SEND] Enviando marco: %d", marco);
 
     enviar_paquete(paquete_marco, socket_cliente);
-    log_warning(logger_memoria, "[SEND] MARCO ENVIADO al socket: %d, suerte cpu!!", socket_cliente);
     eliminar_paquete(paquete_marco);
     free(direccion.entrada_nivel);
 }
@@ -881,7 +838,6 @@ bool realizar_dump_memory(uint8_t pid) {
 		free(entradas_por_nivel);
 
         if (marco == -1) {
-            log_warning(logger_memoria, "Página %d no asignada (se saltea)", nro_pagina);
             char vacio[tam_pagina];
             memset(vacio, 0, tam_pagina);
             fwrite(vacio, 1, tam_pagina, file);  // rellena con ceros si no está asignada

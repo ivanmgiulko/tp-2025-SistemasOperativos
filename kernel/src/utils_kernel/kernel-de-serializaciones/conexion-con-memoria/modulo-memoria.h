@@ -14,4 +14,6 @@
 
 	void enviar_a_liberar_memoria(int socket_memoria, t_pcb proceso);
 
+	void _avisar_kernel_a_memoria(int socket_memoria);
+
 #endif // MODULO_MEMORIA_H_

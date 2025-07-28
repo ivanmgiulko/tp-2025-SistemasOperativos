@@ -114,9 +114,9 @@ typedef struct  {
     metricas_tiempo* iniciarMetricasTiempo();
     metricas_proceso iniciarMetricasProceso();
 
-    t_pcb* iniciarPCB(char* path, int tamanio, int pid, uint64_t estimacion_inicial);
+    t_pcb* iniciarPCB(char* path, uint32_t tamanio, uint8_t pid, uint64_t estimacion_inicial);
 
-    void enviar_proceso_a_memoria(t_pcb , int , int);
+    void enviar_proceso_a_memoria(t_pcb , int , uint32_t);
 
     t_pcbMemoria* deserializar_proceso(t_buffer* );
 

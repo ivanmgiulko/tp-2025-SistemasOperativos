@@ -39,7 +39,6 @@ int main(int argc, char* argv[]){
 
 	logger_cpu = log_create(directorioLogger, "log", true, LOG_LEVEL_TRACE);
 	log_debug(logger_cpu, "%s", directorioLogger);
-    // log_info(logger_cpu, "Primer log");
 	free(directorioLogger);
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
 	log_debug(logger_cpu, "ID CPU: %s", cpu_id);

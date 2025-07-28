@@ -1,5 +1,6 @@
 #include "cambio-estado-proceso.h"
 #include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
+#include <utils_kernel/kernel-de-serializaciones/conexion-con-memoria/modulo-memoria.h>
 
 void pasar_pcb_a_new(t_pcb* pcb) 
 {
@@ -196,7 +197,7 @@ void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-
+    _avisar_kernel_a_memoria(fd_conexion_memoria);
     // Falta realizar prueba
     enviar_proceso_a_memoria(*proceso_a_finalizar, fd_conexion_memoria, PROCESO_FINALIZAR);
 
