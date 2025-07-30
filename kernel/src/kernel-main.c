@@ -20,7 +20,9 @@ int main(int argc, char* argv[]) {
 
 	// argv[4] = "kernel.config";
 
-	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+
+//	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 	string_append(&path_relativo, argv[3]);
 	
 	// Iniciamos las Colas con sus respectivos Mutex (como si fuera un monitor); tambien inicia Log y Config

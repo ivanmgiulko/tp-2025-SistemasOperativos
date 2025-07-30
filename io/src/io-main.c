@@ -10,7 +10,9 @@ int main(int argc, char* argv[]) {
 	char* ip_kernel;
 	char* puerto_kernel;
 
-	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+//	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+
 	string_append(&path_relativo, argv[2]);
 
 	t_config* config_io = iniciar_config(path_relativo);
