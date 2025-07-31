@@ -4,16 +4,18 @@ void manejar_hilos_clientes(int server_fd){
 
     while(1){
         int socket_cliente = esperar_cliente(server_fd, logger_memoria);
+		int * ptr_socket_cliente = malloc(sizeof(int));
+		*ptr_socket_cliente = socket_cliente;
 		log_debug(logger_memoria, "## CLIENTE Conectado - FD del socket: %d", socket_cliente);
         pthread_t hilo_cliente;
-        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion_cliente, (void*)socket_cliente);
+        pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion_cliente, (void*)ptr_socket_cliente);
         pthread_detach(hilo_cliente);
     }
 
 }
 
-int manejar_conexion_cliente(int socket_cliente){
-	
+int manejar_conexion_cliente(void* void_socket_cliente){
+	int socket_cliente = *(int*)void_socket_cliente;
 	while (1) {
 		t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
@@ -79,11 +81,17 @@ int manejar_conexion_cliente(int socket_cliente){
 					enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 				}
 
+				log_error(logger_memoria, "UNLOCK: %d", socket_cliente);
+
 				pthread_mutex_unlock(&memoria_del_sistema->mutex);
+
+				log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
+
+				close(socket_cliente);  // cerrá el socket
+    			pthread_exit(NULL);  
 				break; 
 		
 			case PROCESO_SUSPENDIDO_MEMORIA:
-				
 				pthread_mutex_lock(&memoria_del_sistema->mutex);
 
 				//RETARDO DE MEMORIA
@@ -100,10 +108,13 @@ int manejar_conexion_cliente(int socket_cliente){
 
 				pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
+				log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
+
+				close(socket_cliente);  // cerrá el socket
+    			pthread_exit(NULL);  
 				break;
 
 			case PROCESO_FINALIZAR:
-				
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
 
@@ -117,7 +128,11 @@ int manejar_conexion_cliente(int socket_cliente){
 				log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 				
 				enviar_proceso_terminado(pidEliminado, socket_cliente);
-			
+				close(socket_cliente);  // cerrá el socket
+
+				log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
+
+    			pthread_exit(NULL);  
 				break; 
 
 			case INSTRUCCION:
@@ -166,11 +181,18 @@ int manejar_conexion_cliente(int socket_cliente){
 					log_debug(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
 					enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 1, socket_cliente);
 				}
+				close(socket_cliente);
+
+				log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
+
+				pthread_exit(NULL);
 				break;
 
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "LINUS TORVALD TE MALDIGO");
 				log_error(logger_memoria, "el cliente se desconecto.");
+				close(socket_cliente);  // cerrá el socket
+    			pthread_exit(NULL);  
 				eliminar_paquete(paquete);
 				return EXIT_FAILURE;
 				break;
@@ -179,8 +201,8 @@ int manejar_conexion_cliente(int socket_cliente){
 				break;
 		}
 		// Liberar memoria del paquete recibido
+		
 		eliminar_paquete(paquete);
 	}
-
 	return EXIT_SUCCESS;
 }

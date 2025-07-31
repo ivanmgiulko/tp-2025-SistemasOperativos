@@ -21,6 +21,6 @@
 	* @param socket_cliente: Socket del cliente que se conecta a Memoria
 	* @returns 0 (finalizando la conexion previamente) en caso de que se termine de manejar la conexion dada entre la Memo y Kernel o CPU
 	*/
-    int manejar_conexion_cliente(int socket_cliente);
+    int manejar_conexion_cliente(void* socket_cliente);
 
 #endif // MEMORIA_CONEXIONES_H_

@@ -12,8 +12,8 @@ int main(int argc, char* argv[]){
 	char* cpu_id = argv[1];
 
 
-//	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+//	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 	string_append(&path_relativo, argv[2]);
 	string_append(&path_relativo, "cpu");
 	string_append(&path_relativo, argv[1]);
