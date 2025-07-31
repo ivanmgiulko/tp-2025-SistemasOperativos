@@ -5,11 +5,14 @@
 void pasar_pcb_a_new(t_pcb* pcb) 
 {
     encolar_pcb_en_estado(estado_new, pcb);
+    pthread_mutex_lock(&pcb->mutex);
     
     pcb->metricas_estado->cantVecesNew++;
     temporal_resume(pcb->metricas_tiempo->tiempoEnNew);
 
     pcb->estadoProceso = NEW;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa al estado NEW", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
  
@@ -19,11 +22,16 @@ void pasar_pcb_new_a_ready(t_pcb* pcb)
 { 
     encolar_pcb_en_estado(estado_ready, pcb);
 
+    pthread_mutex_lock(&pcb->mutex);
+
     pcb->metricas_estado->cantVecesReady++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnNew);
     temporal_resume(pcb->metricas_tiempo->tiempoEnReady);
 
     pcb->estadoProceso = READY;
+
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado NEW al estado READY", pcb->pid);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
@@ -31,6 +39,7 @@ void pasar_pcb_new_a_ready(t_pcb* pcb)
 
 void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
     encolar_pcb_en_estado(estado_ready, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesReady++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnSuspReady);
@@ -40,6 +49,7 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
     log_info(logger_kernel, "%d Pasa del estado SUSP-READY al estado READY", pcb->pid);
 
     pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
+    pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
@@ -47,6 +57,7 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
 void pasar_pcb_blocked_a_ready(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_ready, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesReady++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
@@ -57,6 +68,7 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
 
     pcb->estimacion_rafaga_anterior = pcb->estimacion_actual;
     pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
+    pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
@@ -64,6 +76,8 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
 void pasar_pcb_exec_a_ready(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_ready, pcb);
+
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesReady++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
@@ -74,6 +88,7 @@ void pasar_pcb_exec_a_ready(t_pcb* pcb)
 
     pcb->estimacion_rafaga_anterior = pcb->estimacion_actual;
     pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
+    pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
 }
@@ -89,24 +104,30 @@ void pasar_pcb_blocked_a_suspblocked(t_pcb* pcb) {
    
     _sacar_pcb_de_cola(pcb->pid,estado_blocked); 
     encolar_pcb_en_estado(estado_susp_blocked, pcb);
+    pthread_mutex_lock(&pcb->mutex);
    
     pcb->metricas_estado->cantVecesSuspBlocked++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
     temporal_resume(pcb->metricas_tiempo->tiempoEnSuspBlocked);
 
     pcb->estadoProceso = SUSP_BLOCEKD;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado BLOCKED al estado SUSP-BLOCKED", pcb->pid);
 }
 
 void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb) 
 {
     encolar_pcb_en_estado(estado_susp_ready, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesSuspReady++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnSuspBlocked);
     temporal_resume(pcb->metricas_tiempo->tiempoEnSuspReady);
 
     pcb->estadoProceso = SUSP_READY;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado SUSP-BLOCKED al estado SUSP-READY", pcb->pid);
     sem_post(&sem_cantidad_pcbs_en_new); // Le avisa al planificador cuando hay un proceso en NEW, asi evitamos la espera activa
 }
@@ -114,12 +135,15 @@ void pasar_pcb_suspblocked_a_suspready(t_pcb* pcb)
 void pasar_pcb_blocked_a_exit(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exit, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesExit++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnBlocked);
     temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
 
     pcb->estadoProceso = EXIT;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado BLOCKED al estado EXIT", pcb->pid);
     _enviar_a_finalizar_proceso(pcb);
     
@@ -128,12 +152,15 @@ void pasar_pcb_blocked_a_exit(t_pcb* pcb)
 void pasar_pcb_suspblocked_a_exit(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exit, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesExit++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnSuspBlocked);
     temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
 
     pcb->estadoProceso = EXIT;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado SUSP.BLOCKED al estado EXIT", pcb->pid);
     _enviar_a_finalizar_proceso(pcb);
     
@@ -142,36 +169,41 @@ void pasar_pcb_suspblocked_a_exit(t_pcb* pcb)
 void pasar_pcb_ready_a_exec(t_pcb* pcb) 
 { 
     encolar_pcb_en_estado(estado_exec, pcb);
-
+    pthread_mutex_lock(&pcb->mutex);
     pcb->metricas_estado->cantVecesExec++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnReady);
     temporal_resume(pcb->metricas_tiempo->tiempoEnExec);
 
     pcb->estadoProceso = EXEC;
+    pthread_mutex_unlock(&pcb->mutex);
     log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcb->pid);
 }
 
 void pasar_de_exec_a_blocked(t_pcb* pcb)
 {
     encolar_pcb_en_estado(estado_blocked, pcb);
-
+    pthread_mutex_lock(&pcb->mutex);
     pcb->metricas_estado->cantVecesBlocked++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
     temporal_resume(pcb->metricas_tiempo->tiempoEnBlocked);
 
     pcb->estadoProceso = BLOCKED;
+    pthread_mutex_unlock(&pcb->mutex);
+
     log_info(logger_kernel, "%d Pasa del estado EXEC al estado BLOCKED", pcb->pid);
 }
 
 void pasar_de_exec_a_exit(t_pcb* pcb)
 {
     encolar_pcb_en_estado(estado_exit, pcb);
+    pthread_mutex_lock(&pcb->mutex);
 
     pcb->metricas_estado->cantVecesExit++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
     temporal_resume(pcb->metricas_tiempo->tiempoEnExit);
-
     pcb->estadoProceso = EXIT;
+
+    pthread_mutex_unlock(&pcb->mutex);
     log_info(logger_kernel, "%d Pasa del estado EXEC al estado EXIT", pcb->pid);
     _enviar_a_finalizar_proceso(pcb);
 }

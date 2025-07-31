@@ -14,9 +14,9 @@ t_pcb* iniciarPCB(char* path, uint32_t tamanio, uint8_t pid, uint64_t estimacion
     nuevoPCB->estimacion_rafaga_anterior = 0; // Estn(n)
     nuevoPCB->estimacion_actual = estimacion_inicial; // Est(n + 1)
     nuevoPCB->tiempo_rafaga = 0; // R(n)
-
     nuevoPCB->metricas_estado = iniciarMetricasEstado();
     nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();
+    pthread_mutex_init(&(nuevoPCB->mutex), NULL);
 
     t_datos_io* datos_io = malloc(sizeof(t_datos_io));
     datos_io->dispositivo = "";

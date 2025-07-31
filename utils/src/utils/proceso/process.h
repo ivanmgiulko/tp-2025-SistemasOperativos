@@ -88,7 +88,7 @@ typedef struct
     char* pathArchivoPseudocodigo;
     uint32_t path_length;
     uint32_t tamanioMemoria;
-
+    pthread_mutex_t mutex;
     // Datos de IO
     t_datos_io* datos_io; 
 } t_pcb; 
