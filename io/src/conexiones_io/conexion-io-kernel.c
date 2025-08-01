@@ -25,9 +25,9 @@ void enviar_nombre_interfaz(char* mensaje, int socket_cliente) {
 	// Recibo respuesta del kernel del HandShake
 	recv(socket_cliente, &result, sizeof(int32_t), 0);
 	if (result == 1) {
-		log_info(logger_io, "Handshake con [KERNEL] exitoso!");
+		log_debug(logger_io, "Handshake con [KERNEL] exitoso!");
 	} else {
-		log_error(logger_io, "Handshake con [KERNEL] fallido!");
+		log_debug(logger_io, "Handshake con [KERNEL] fallido!");
 		free(mensaje_handshake);
 		abort();
 	}

@@ -3,17 +3,17 @@
 
 int main(int argc, char* argv[]) {
 
-    // if(argc <= CANT_MINIMA_ARGUMENTOS){
-	// 	fprintf(stderr, "Falta la ruta al config de memoria webon... \n");
-	// 	return EXIT_FAILURE;
-	// }
+    if(argc <= CANT_MINIMA_ARGUMENTOS){
+		fprintf(stderr, "Falta la ruta al config de memoria webon... \n");
+		return EXIT_FAILURE;
+	}
 
-    char* puerto_servidor_memoria;
+    char* puerto_servidor_memoria; 
 
     char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-//    char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+//  char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 
-    argv[1] = "prueba_cortoplazo/memoria.config";
+    // argv[1] = "prueba_cortoplazo/memoria.config";
 
 	string_append(&path_relativo, argv[1]);
     

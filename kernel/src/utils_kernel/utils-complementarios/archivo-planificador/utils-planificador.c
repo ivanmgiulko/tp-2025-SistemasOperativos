@@ -374,13 +374,13 @@ void planificar_con_srt()
 void iniciar_temporizador_suspblocked(void* pcb){
     t_pcb* _proceso_bloqueado = (t_pcb*)pcb;
     int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
-
-    
     //  _avisar_kernel_a_memoria(fd_conexion_memoria);
     
+    uint8_t pid_aux = _proceso_bloqueado->pid;
+
     usleep(tiempo_maximo_espera * 1000);
     
-    if(buscar_proceso_en_cola(estado_blocked, _proceso_bloqueado->pid) != NULL){
+    if(buscar_proceso_en_cola(estado_blocked, pid_aux) != NULL){
         
         pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
         

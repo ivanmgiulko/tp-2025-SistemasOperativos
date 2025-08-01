@@ -10,8 +10,6 @@
 		SOCKET_DISPATCH
 	 } t_sockets_cpu;
 
-
-
     /* LISTAS COMPARTIDAS CON SUS ELEMENTOS */
     
     // Lista de las CPUs
@@ -31,13 +29,6 @@
 		uint8_t pid;
 		bool respuesta;
 	} t_respuesta_dump;
-
-    typedef enum {
-        FIFO,
-        SJF,
-        PMCP,
-        SJF_SIN_DESALOJO
-    } p_algoritmos;
 
     typedef struct {
         t_list* cola;

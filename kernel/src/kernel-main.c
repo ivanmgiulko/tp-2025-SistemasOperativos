@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
 	argv[1] = "PLANI_CORTO_PLAZO";
 
-	argv[2] = "256";
+	argv[2] = "0";
 
 	argv[3] = "prueba_cortoplazo/";
 
