@@ -60,20 +60,8 @@ void eliminar_proceso_de_io(t_io* io, uint8_t pid)
 }
 
 void eliminar_interfaz(t_io* interfaz) {
-
-    bool _es_la_interfaz(void* ptr) {
-        t_io* io = (t_io*) ptr;
-        return (strcmp(io->nombre, interfaz->nombre) == 0);
-    }
-
-    log_error(logger_kernel, "La interfaz [%s] ya no tiene mas instancias, por lo que fue eliminada la interfaz completamente...", interfaz->nombre);
-    
-    pthread_mutex_lock(&(interfaz->mutex_lista));
     list_destroy(interfaz->instancias);
     list_destroy(interfaz->procesos);
-    list_remove_by_condition(lista_de_io->lista_ios, _es_la_interfaz);
     free(interfaz->nombre);
 	free(interfaz);
-    pthread_mutex_unlock(&(interfaz->mutex_lista));
-
 }

@@ -29,13 +29,14 @@ t_cpu_conectada* _buscar_cpu_en_lista(uint8_t id_cpu)
 
 t_cpu_conectada* buscar_cpu_que_usa_proceso(t_list* cpus, uint8_t pid) 
 {
+    t_cpu_conectada* cpu_encontrada = NULL;
     bool _es_el_proceso(void* ptr) {
         t_cpu_conectada* cpu = (t_cpu_conectada*) ptr;
         return cpu->pid_en_cpu == pid;
     }
 
     pthread_mutex_lock(&lista_cpus->mutex_lista);
-    t_cpu_conectada* cpu_encontrada = list_find(cpus, _es_el_proceso);
+    cpu_encontrada = list_find(cpus, _es_el_proceso);
     pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
     return cpu_encontrada;

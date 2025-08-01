@@ -10,10 +10,14 @@ t_pcb* iniciarPCB(char* path, uint32_t tamanio, uint8_t pid, uint64_t estimacion
     nuevoPCB->pc = 0;
     nuevoPCB->estadoProceso = NEW;
 
-    nuevoPCB->estimacion_aux = 0;
-    nuevoPCB->estimacion_rafaga_anterior = 0; // Estn(n)
-    nuevoPCB->estimacion_actual = estimacion_inicial; // Est(n + 1)
-    nuevoPCB->tiempo_rafaga = 0; // R(n)
+  
+    nuevoPCB->estimacion_parcial = estimacion_inicial;
+    nuevoPCB->estimacion_actual = estimacion_inicial; 
+    nuevoPCB->tiempo_rafaga_total = 0;
+    nuevoPCB->tiempo_rafaga_parcial = temporal_create();
+    temporal_stop(nuevoPCB->tiempo_rafaga_parcial);
+    nuevoPCB->tiempo_rafaga_parcial->elapsed_ms = 0;
+
     nuevoPCB->metricas_estado = iniciarMetricasEstado();
     nuevoPCB->metricas_tiempo = iniciarMetricasTiempo();
     pthread_mutex_init(&(nuevoPCB->mutex), NULL);

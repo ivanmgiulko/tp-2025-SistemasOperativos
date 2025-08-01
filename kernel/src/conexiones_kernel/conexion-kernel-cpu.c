@@ -41,15 +41,7 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 t_datos_io _syscall_io_recibida = _deserializar_syscall_io(offset, paquete);
                 
-                liberar_cpu_de_proceso(pid); // Libero a la cpu en la que se encuentra alojada el proceso
-                
-                t_pcb* _proceso_a_bloquear = _sacar_pcb_de_cola(pid, estado_exec);
-                
-                _proceso_a_bloquear->pc = pc;
-                
-                _proceso_a_bloquear->tiempo_rafaga = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec) - _proceso_a_bloquear->estimacion_aux;
-                
-                _proceso_a_bloquear->estimacion_aux = temporal_gettime(_proceso_a_bloquear->metricas_tiempo->tiempoEnExec);
+                t_pcb* _proceso_a_bloquear = sacar_proceso_de_exec(pid, pc);
                 
                 t_io* interfaz_io_existente = buscar_io(_syscall_io_recibida.dispositivo); 
                 
@@ -57,17 +49,24 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 
                     log_info(logger_kernel, "%d - Bloqueado por IO: %s", pid, _syscall_io_recibida.dispositivo);    
                 
+                    pthread_mutex_lock(&_proceso_a_bloquear->mutex);
                     _proceso_a_bloquear->datos_io->dispositivo =_syscall_io_recibida.dispositivo;
                     _proceso_a_bloquear->datos_io->tiempo = _syscall_io_recibida.tiempo;
+                    pthread_mutex_unlock(&_proceso_a_bloquear->mutex);
+
                     pasar_de_exec_a_blocked(_proceso_a_bloquear); 
                     
-                    t_instancia_io* instancia_disponible = devolver_instancia_disponible(_syscall_io_recibida.dispositivo);
+                    t_instancia_io* instancia_disponible = buscar_instancia_disponible(interfaz_io_existente);
 
                     if(instancia_disponible != NULL) {
+                        
                         pthread_mutex_lock(&instancia_disponible->mutex_instancia);
                         instancia_disponible->pid = _proceso_a_bloquear->pid;
-                        _proceso_a_bloquear->datos_io->instancia_utilizada = instancia_disponible;
                         pthread_mutex_unlock(&instancia_disponible->mutex_instancia);
+                        
+                        pthread_mutex_lock(&_proceso_a_bloquear->mutex);
+                        _proceso_a_bloquear->datos_io->instancia_utilizada = instancia_disponible;
+                        pthread_mutex_unlock(&_proceso_a_bloquear->mutex);
 
                         enviar_proceso_a_io_para_bloqueo(_proceso_a_bloquear->pid,_syscall_io_recibida.tiempo, instancia_disponible->socket_io);
                     } else {
@@ -91,10 +90,8 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 log_info(logger_kernel, "%d - Solicitó syscall: INIT_PROC", pid);
 
                 char* archivo = deserializar_archivo_instrucciones(offset, paquete);
-                
-                char* ruta_absoluta = string_duplicate(configuracion_kernel->RUTA_RELATIVA);
-                string_append(&ruta_absoluta, archivo);
-                string_append(&ruta_absoluta, ".txt");
+
+                char* ruta_absoluta = string_from_format("%s%s.txt", configuracion_kernel->RUTA_RELATIVA, archivo);
 
                 int tamanio_proceso = deserializar_tamanio_proceso(offset, paquete);
 
@@ -108,28 +105,18 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 break;
 
             case SYSCALL_DUMP_MEMORY:
-                
                 recibir_paquete(socket_interrupt, paquete);
                 
                 pid = _deserializar_pid(offset, paquete); 
                 pc = _deserializar_pc(offset, paquete); 
 
                 log_info(logger_kernel, "%d - Solicitó syscall: DUMP_MEMORY", pid);
-                
-                liberar_cpu_de_proceso(pid); // Libero a la cpu para que mande otro proceso
 
-                t_pcb* _proceso_a_dumpear = _sacar_pcb_de_cola(pid, estado_exec);
-
-                _proceso_a_dumpear->pc = pc;
-                _proceso_a_dumpear->tiempo_rafaga = temporal_gettime(_proceso_a_dumpear->metricas_tiempo->tiempoEnExec) - _proceso_a_dumpear->estimacion_aux;
-                _proceso_a_dumpear->estimacion_aux = temporal_gettime(_proceso_a_dumpear->metricas_tiempo->tiempoEnExec);
+                t_pcb* _proceso_a_dumpear =  sacar_proceso_de_exec(pid, pc);
 
                 pasar_de_exec_a_blocked(_proceso_a_dumpear);
 
-
-                char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-                char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-                int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+                int fd_conexion_memoria = crear_conexion(configuracion_kernel->IP_MEMORIA, configuracion_kernel->PUERTO_MEMORIA);
 
                 uint32_t resultado_handshake;
                 uint32_t t_modulo = 0;
@@ -138,7 +125,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 if(resultado_handshake == 1){
                     enviar_proceso_a_dumpear_en_memoria(fd_conexion_memoria, *_proceso_a_dumpear);
-    
                     manejar_conexion_kernel_memoria(fd_conexion_memoria);
                 }
 
@@ -175,10 +161,9 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 log_info(logger_kernel, "%d - Desalojado por algoritmo SJF/SRT", pid);
 
-                t_pcb* _proceso_desalojado = _sacar_pcb_de_cola(pid, estado_exec);
-                _proceso_desalojado->pc = pc;
-
-                liberar_cpu_de_proceso(pid);
+                t_pcb* _proceso_desalojado = sacar_proceso_de_exec(pid, pc);
+            
+                actualizar_metricas_proceso(_proceso_desalojado, pc);
 
                 pasar_pcb_exec_a_ready(_proceso_desalojado);
 
@@ -233,4 +218,24 @@ void* manejar_cliente_dispatch(void* socket_cliente_ptr) {
     pthread_exit(NULL);
 	close(socket_dispatch);
 	return EXIT_SUCCESS;
+}
+
+
+void actualizar_metricas_proceso(t_pcb* proceso, uint16_t pc) {
+    pthread_mutex_lock(&proceso->mutex);
+    proceso->estimacion_parcial -= temporal_gettime(proceso->tiempo_rafaga_parcial);
+    pthread_mutex_unlock(&proceso->mutex);
+}
+
+t_pcb* sacar_proceso_de_exec(uint8_t pid, uint16_t pc) {
+    liberar_cpu_de_proceso(pid); 
+    t_pcb* proceso = _sacar_pcb_de_cola(pid, estado_exec);
+
+    pthread_mutex_lock(&proceso->mutex);
+    proceso->pc = pc;
+    proceso->tiempo_rafaga_total += temporal_gettime(proceso->tiempo_rafaga_parcial);
+    temporal_stop(proceso->tiempo_rafaga_parcial);
+    proceso->tiempo_rafaga_parcial->elapsed_ms = 0;
+    pthread_mutex_unlock(&proceso->mutex);
+    return proceso;
 }
