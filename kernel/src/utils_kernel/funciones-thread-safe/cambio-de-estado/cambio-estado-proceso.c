@@ -229,9 +229,18 @@ void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    _avisar_kernel_a_memoria(fd_conexion_memoria);
+   // _avisar_kernel_a_memoria(fd_conexion_memoria);
     // Falta realizar prueba
-    enviar_proceso_a_memoria(*proceso_a_finalizar, fd_conexion_memoria, PROCESO_FINALIZAR);
 
-    manejar_conexion_kernel_memoria(fd_conexion_memoria);
+    uint32_t resultado_handshake;
+    uint32_t t_modulo = 0;
+    send(fd_conexion_memoria, &t_modulo, sizeof(uint32_t), 0);
+    recv(fd_conexion_memoria, &resultado_handshake, sizeof(uint32_t), MSG_WAITALL);
+
+    if(resultado_handshake == 1){
+        enviar_proceso_a_memoria(*proceso_a_finalizar, fd_conexion_memoria, PROCESO_FINALIZAR);
+        manejar_conexion_kernel_memoria(fd_conexion_memoria);
+    }
+
+ 
 }

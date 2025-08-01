@@ -102,13 +102,23 @@ void _crear_conexion_kernel_dispatch(char* ip_kernel, char* puerto_kernel_dispat
 
 void _crear_conexion_cpu_memoria(char* ip_memoria, char* puerto_memoria) { 
 	fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-	
+
 	if(fd_conexion_memoria == -1){
 		log_error(logger_cpu, "Error al iniciar conexion de MEMORIA");
 		abort();
 	}
+
 	
-	pedir_datos_a_memoria("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+    uint32_t resultado_handshake;
+    uint32_t t_modulo = 1;
+    send(fd_conexion_memoria, &t_modulo, sizeof(uint32_t), 0);
+
+    recv(fd_conexion_memoria, &resultado_handshake, sizeof(uint32_t), MSG_WAITALL);
+
+    if(resultado_handshake == 1){
+        pedir_datos_a_memoria("Te saludo desde el modulo [[CPU]]", fd_conexion_memoria);
+    }
+	
 }
 
 void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {

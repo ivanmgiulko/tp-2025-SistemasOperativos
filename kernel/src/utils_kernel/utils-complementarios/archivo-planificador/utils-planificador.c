@@ -165,9 +165,16 @@ bool preguntar_a_memoria_espacio(t_pcb* pcb_en_new)
     char* ip_memoria = configuracion_kernel->IP_MEMORIA;
     char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
     int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    _avisar_kernel_a_memoria(fd_conexion_memoria);
+ //   _avisar_kernel_a_memoria(fd_conexion_memoria);
 
-    enviar_proceso_a_memoria(*pcb_en_new, fd_conexion_memoria, PROCESO_MEMORIA);
+    uint32_t resultado_handshake;
+    uint32_t t_modulo = 0;
+    send(fd_conexion_memoria, &t_modulo, sizeof(uint32_t), 0);
+    recv(fd_conexion_memoria, &resultado_handshake, sizeof(uint32_t), MSG_WAITALL);
+
+    if(resultado_handshake == 1){
+        enviar_proceso_a_memoria(*pcb_en_new, fd_conexion_memoria, PROCESO_MEMORIA);
+    }
 
     return manejar_conexion_kernel_memoria(fd_conexion_memoria);
 }
@@ -367,17 +374,30 @@ void planificar_con_srt()
 void iniciar_temporizador_suspblocked(void* pcb){
     t_pcb* _proceso_bloqueado = (t_pcb*)pcb;
     int64_t tiempo_maximo_espera = strtoll(configuracion_kernel->TIEMPO_SUSPENSION, NULL, 10);
-    char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-    int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-    _avisar_kernel_a_memoria(fd_conexion_memoria);
 
+    
+    //  _avisar_kernel_a_memoria(fd_conexion_memoria);
+    
     usleep(tiempo_maximo_espera * 1000);
-
+    
     if(buscar_proceso_en_cola(estado_blocked, _proceso_bloqueado->pid) != NULL){
+        
         pasar_pcb_blocked_a_suspblocked(_proceso_bloqueado);
-        enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
-        manejar_conexion_kernel_memoria(fd_conexion_memoria);        
+        
+        char* ip_memoria = configuracion_kernel->IP_MEMORIA;
+        char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
+        int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
+    
+        uint32_t resultado_handshake;
+        uint32_t t_modulo = 0;
+        send(fd_conexion_memoria, &t_modulo, sizeof(uint32_t), 0);
+        recv(fd_conexion_memoria, &resultado_handshake, sizeof(uint32_t), MSG_WAITALL);
+
+        if(resultado_handshake == 1){
+            enviar_a_liberar_memoria(fd_conexion_memoria, *_proceso_bloqueado);
+            manejar_conexion_kernel_memoria(fd_conexion_memoria);   
+        }
+
     }
     pthread_exit(NULL);
 }

@@ -73,6 +73,7 @@ void enviar_a_liberar_memoria(int socket_memoria, t_pcb proceso)
 
 void _avisar_kernel_a_memoria(int socket_memoria){
     t_paquete* paquete = crear_paquete_con_codigo(KERNEL_CONECTADO);
+    printf("KERNEL ESTA CONECTADO CON FD: %d\n", socket_memoria);
     enviar_paquete(paquete, socket_memoria);
     eliminar_paquete(paquete);
 }
