@@ -13,7 +13,7 @@ void _agregar_socket_en_cpu(uint8_t id_cpu, t_sockets_cpu tipo_socket, int valor
         case SOCKET_INTERRUPT:
             cpu_a_utilizar->socket_interrupt = valor_socket; // Asignar el socket de interrupt
             break;
-            case SOCKET_DISPATCH:
+        case SOCKET_DISPATCH:
             cpu_a_utilizar->socket_dispatch = valor_socket; // Asignar el socket de dispatch
             break;
         }
@@ -48,7 +48,7 @@ void liberar_cpu_de_proceso(uint8_t pid)
     cpu_a_liberar->pid_en_cpu = -1;
     pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
-    log_debug(logger_kernel, "Se libero un CPU CARAJO");
+    log_debug(logger_kernel, "[Se libero un cpu | se envia otro proceso a ejecutarse]");
 
     sem_post(&bin_cpu_disponible);
 }

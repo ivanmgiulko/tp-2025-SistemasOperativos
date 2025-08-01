@@ -6,20 +6,6 @@
 #include <utils_kernel/manejar-conexiones/modulo-memoria/manejar-conexion-memoria.h>
 // #include <utils_kernel/utils-complementarios/conexion-con-memoria
 
-char* recibir_respuesta_memoria(int socket_cliente) { 
-    int size;
-    char* buffer = recibir_buffer(&size, socket_cliente);
-
-    uint32_t tamanio_mensaje;
-    memcpy(&tamanio_mensaje, buffer, sizeof(uint32_t));
-
-    char* mensaje = malloc(tamanio_mensaje);
-    memcpy(mensaje, buffer + sizeof(uint32_t), tamanio_mensaje);
-
-    free(buffer); 
-    return mensaje; 
-}
-
 int manejar_conexion_kernel_memoria(int socket_cliente){
 	while (1) {
 		
@@ -34,6 +20,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			break;
 
 		case PROCESO_MEMORIA:
+
 			char* validacion_espacio = recibir_respuesta_memoria(socket_cliente);
 			if(strcmp(validacion_espacio, "No hay espacio en memoria") == 0) {
 				eliminar_paquete(paquete);
@@ -55,25 +42,12 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			
 			t_respuesta_dump* resp_dump = recibir_respuesta_dump(paquete->buffer);
 
-			t_pcb* proceso_desbloqueado = malloc(sizeof(t_pcb));
-
-			proceso_desbloqueado = buscar_proceso_en_cola(estado_blocked, resp_dump->pid);
+			t_pcb* proceso_desbloqueado = buscar_proceso_en_cola(estado_blocked, resp_dump->pid);
 
 			if(proceso_desbloqueado == NULL) proceso_desbloqueado = buscar_proceso_en_cola(estado_susp_blocked, resp_dump->pid);
 
-			if(resp_dump->respuesta == 0){
-				log_debug(logger_kernel, "Fallo en el DUMP");	
+			recibir_respuesta_dumpeo(resp_dump, proceso_desbloqueado);
 
-				free(resp_dump);
-				pasar_pcb_blocked_a_exit(proceso_desbloqueado);
-			
-			} else {
-				log_debug(logger_kernel, "Acierto en el DUMP");
-
-				free(resp_dump);
-				pasar_pcb_blocked_a_ready(proceso_desbloqueado);
-				
-			}
 			eliminar_paquete(paquete);
 			return EXIT_SUCCESS;
 
@@ -81,7 +55,7 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 		
 		case SUSPENSION_HECHA:
 
-			log_debug(logger_kernel, "EL PROCESO FUE SUSPENDIDO Y TENGO MAS MEMORIA AHORA");
+			log_debug(logger_kernel, "Se ha suspendido un proceso | mas memoria disponible");
 
 			sem_post(&sem_cantidad_pcbs_en_new);
 			sem_post(&sem_hay_espacio_en_memoria);
@@ -99,41 +73,18 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 			*offset = 0;
 
 			uint8_t pid = _deserializar_pid(offset, paquete);
-			
-			log_info(logger_kernel, "%d - Finaliza el proceso", pid);
 
+			free(offset);
+			
 			t_pcb* proceso_finalizado = _sacar_pcb_de_cola(pid, estado_exit);
 			temporal_stop(proceso_finalizado->metricas_tiempo->tiempoEnExit);
 
-			log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
-			proceso_finalizado->pid, 
-			proceso_finalizado->metricas_estado->cantVecesNew, 		   proceso_finalizado->metricas_tiempo->tiempoEnNew->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesReady,       proceso_finalizado->metricas_tiempo->tiempoEnReady->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesBlocked,     proceso_finalizado->metricas_tiempo->tiempoEnBlocked->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesExec, 	   proceso_finalizado->metricas_tiempo->tiempoEnExec->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesExit,        proceso_finalizado->metricas_tiempo->tiempoEnExit->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesSuspReady,   proceso_finalizado->metricas_tiempo->tiempoEnSuspReady->elapsed_ms,
-			proceso_finalizado->metricas_estado->cantVecesSuspBlocked, proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked->elapsed_ms);
+			loguear_y_finalizar_proceso(proceso_finalizado);
 
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnBlocked);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnExec);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnExit);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnNew);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnReady);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked);
-			temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspReady);
-
-			free(proceso_finalizado->metricas_estado);
-			free(proceso_finalizado->metricas_tiempo);
-			free(proceso_finalizado);
-			
 			sem_post(&sem_hay_espacio_en_memoria);
 			sem_post(&sem_cantidad_pcbs_en_new);
-
 			sem_post(&bin_proceso_eliminar);
 			
-			free(offset);
-
 			eliminar_paquete(paquete);
 			
 			return EXIT_SUCCESS;
