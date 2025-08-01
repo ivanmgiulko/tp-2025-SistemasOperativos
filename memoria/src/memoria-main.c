@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     char* puerto_servidor_memoria; 
 
     char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-//  char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+    //  char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 
     // argv[1] = "prueba_cortoplazo/memoria.config";
 

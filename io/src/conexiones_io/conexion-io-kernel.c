@@ -86,26 +86,31 @@ int manejar_conexion_io(int socket_cliente){
 		switch (paquete->codigo_operacion) {
 		case MENSAJE:
 			recibir_mensaje(socket_cliente, logger_io);
+			free(paquete);
 			break;
 
 		case PROCESO_BLOQUEADO:
 			recibir_paquete(socket_cliente, paquete);
 
 			t_info_proceso* proceso_bloqueado = recibir_proceso_bloqueado(paquete->buffer);
-			log_debug(logger_io, "Llego el PID: %d | El tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
 
 			log_info(logger_io, "## PID: %d - Inicio de IO - Tiempo: %ld", proceso_bloqueado->pid, proceso_bloqueado->tiempo);
 			usleep(proceso_bloqueado->tiempo * 1000);
 			log_info(logger_io, "## PID: %d - Fin de IO", proceso_bloqueado->pid);
 			
 			enviar_pid_desbloqueado(socket_cliente, proceso_bloqueado->pid, PROCESO_DESBLOQUEADO);
+			
+			eliminar_paquete(paquete);
+			free(proceso_bloqueado);
 			break;
 
 		case -1:
 			log_error(logger_io, "el cliente se desconecto.");
+			eliminar_paquete(paquete);
 			return EXIT_FAILURE;
 		default:
 			log_warning(logger_io, "Operacion desconocida. No quieras meter la pata");
+			eliminar_paquete(paquete);
 			break;
 		}
 	}
