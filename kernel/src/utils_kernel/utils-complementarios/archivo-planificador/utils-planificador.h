@@ -20,7 +20,7 @@
     extern sem_t sem_cantidad_pcbs_en_ready;
     extern sem_t sem_cantidad_pcbs_en_blocked;
     extern sem_t sem_hay_espacio_en_memoria;
-
+    extern sem_t sem_puede_replanificar_srt;
     extern sem_t bin_susp_blocked;
     extern sem_t bin_eliminar_procesos_en_interfaces;
     extern sem_t bin_proceso_eliminar;

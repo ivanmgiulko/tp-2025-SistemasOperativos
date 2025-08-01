@@ -35,6 +35,7 @@ void pasar_pcb_new_a_ready(t_pcb* pcb)
     log_info(logger_kernel, "%d Pasa del estado NEW al estado READY", pcb->pid);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&sem_puede_replanificar_srt);
 }
 
 void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) { 
@@ -48,10 +49,14 @@ void pasar_pcb_susp_ready_a_ready(t_pcb* pcb) {
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "%d Pasa del estado SUSP-READY al estado READY", pcb->pid);
 
-    pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
+    uint64_t nueva_estimacion = calcular_estimacion_actual(pcb->estimacion_actual, pcb->tiempo_rafaga_total);
+    pcb->tiempo_rafaga_total = 0;
+    pcb->estimacion_actual = nueva_estimacion;
+    pcb->estimacion_parcial = nueva_estimacion;
     pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&sem_puede_replanificar_srt);
 }
 
 void pasar_pcb_blocked_a_ready(t_pcb* pcb) 
@@ -66,11 +71,14 @@ void pasar_pcb_blocked_a_ready(t_pcb* pcb)
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "%d Pasa del estado BLOCKED al estado READY", pcb->pid);
 
-    pcb->estimacion_rafaga_anterior = pcb->estimacion_actual;
-    pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
+    uint64_t nueva_estimacion = calcular_estimacion_actual(pcb->estimacion_actual, pcb->tiempo_rafaga_total);
+    pcb->tiempo_rafaga_total = 0;
+    pcb->estimacion_actual = nueva_estimacion;
+    pcb->estimacion_parcial = nueva_estimacion;
     pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&sem_puede_replanificar_srt);
 }
 
 void pasar_pcb_exec_a_ready(t_pcb* pcb) 
@@ -86,16 +94,19 @@ void pasar_pcb_exec_a_ready(t_pcb* pcb)
     pcb->estadoProceso = READY;
     log_info(logger_kernel, "%d Pasa del estado EXEC al estado READY", pcb->pid);
 
-    pcb->estimacion_rafaga_anterior = pcb->estimacion_actual;
-    pcb->estimacion_actual = calcular_estimacion_actual(pcb->tiempo_rafaga, pcb->estimacion_rafaga_anterior);
     pthread_mutex_unlock(&pcb->mutex);
 
     sem_post(&sem_cantidad_pcbs_en_ready); 
+    sem_post(&sem_puede_replanificar_srt);
 }
 
-uint64_t calcular_estimacion_actual(int64_t rafagas_hechas, uint64_t estimacion_anterior) {
-    float alfa = atof(configuracion_kernel->ALFA);
-    uint64_t estimacion = alfa * rafagas_hechas + (1 - alfa) * estimacion_anterior;
+uint64_t calcular_estimacion_actual(int64_t estimacion_actual, uint64_t tiempo_rafaga_total) {
+    double alfa = atof(configuracion_kernel->ALFA);
+    log_error(logger_kernel, "Estimacion anterior: %ld, Tiempo de rafaga total: %ld, Alfa: %f\n", estimacion_actual, tiempo_rafaga_total, alfa);
+
+    uint64_t estimacion = (uint64_t)((1.0 - alfa) * estimacion_actual + alfa * tiempo_rafaga_total);
+
+    log_error(logger_kernel, "NUEVA ESTIMACION: %ld\n", estimacion);
     return estimacion;
 }
 
@@ -173,16 +184,17 @@ void pasar_pcb_ready_a_exec(t_pcb* pcb)
     pcb->metricas_estado->cantVecesExec++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnReady);
     temporal_resume(pcb->metricas_tiempo->tiempoEnExec);
-
+    temporal_resume(pcb->tiempo_rafaga_parcial);
     pcb->estadoProceso = EXEC;
     pthread_mutex_unlock(&pcb->mutex);
     log_info(logger_kernel, "%d Pasa del estado READY al estado EXEC", pcb->pid);
 }
 
-void pasar_de_exec_a_blocked(t_pcb* pcb)
+void pasar_de_exec_a_blocked(t_pcb* pcb )
 {
     encolar_pcb_en_estado(estado_blocked, pcb);
     pthread_mutex_lock(&pcb->mutex);
+   
     pcb->metricas_estado->cantVecesBlocked++;
     temporal_stop(pcb->metricas_tiempo->tiempoEnExec);
     temporal_resume(pcb->metricas_tiempo->tiempoEnBlocked);
@@ -226,11 +238,8 @@ t_pcb* _sacar_pcb_de_cola(uint8_t pid, t_estado* estado)
 void _enviar_a_finalizar_proceso(t_pcb* proceso_a_finalizar)
 { 
     sem_wait(&bin_proceso_eliminar);
-    char* ip_memoria = configuracion_kernel->IP_MEMORIA;
-    char* puerto_memoria = configuracion_kernel->PUERTO_MEMORIA;
-    int fd_conexion_memoria = crear_conexion(ip_memoria, puerto_memoria);
-   // _avisar_kernel_a_memoria(fd_conexion_memoria);
-    // Falta realizar prueba
+
+    int fd_conexion_memoria = crear_conexion(configuracion_kernel->IP_MEMORIA, configuracion_kernel->PUERTO_MEMORIA);
 
     uint32_t resultado_handshake;
     uint32_t t_modulo = 0;

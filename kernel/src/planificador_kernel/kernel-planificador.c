@@ -23,6 +23,7 @@ sem_t sem_cantidad_pcbs_en_ready;
 sem_t sem_cantidad_pcbs_en_blocked;
 sem_t sem_cantidad_pcbs_en_susp_ready;
 
+sem_t sem_puede_replanificar_srt;
 sem_t bin_susp_blocked;
 sem_t bin_eliminar_procesos_en_interfaces;
 sem_t bin_proceso_eliminar;
@@ -76,18 +77,18 @@ void iniciar_planificador_mediano_plazo()
 void iniciar_planificador_corto_plazo(){
     while(1){
         // Semaforo para que se pueda loopear el while hasta que haya algun proceso en READY
-        sem_wait(&sem_cantidad_pcbs_en_ready);
-
+        
         if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "FIFO") == 0) {
-            
+            sem_wait(&bin_cpu_disponible);
             planificar_con_fifo();
             
         } else if(strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SJF") == 0) {
-
+            sem_wait(&bin_cpu_disponible);
             planificar_con_sjf();
-
+            
         } else if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SRT") == 0) {
-
+            
+            sem_wait(&sem_puede_replanificar_srt);
             planificar_con_srt();
 
         } else {

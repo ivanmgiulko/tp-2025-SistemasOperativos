@@ -34,4 +34,7 @@
 
     uint8_t _recibir_handshake_de_cpu(int socket_cliente_cpu, int parte_cpu);
 
+    t_pcb* sacar_proceso_de_exec(uint8_t pid, uint16_t pc);
+
+    void actualizar_metricas_proceso(t_pcb* proceso, uint16_t pc);
 #endif // MANEJAR_CONEXION_CPU_H_

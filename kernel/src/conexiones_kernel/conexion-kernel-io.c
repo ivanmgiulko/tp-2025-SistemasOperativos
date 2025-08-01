@@ -143,8 +143,18 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 			// Ahora chequeamos si la instancia que eliminamos era la ultima de la interfaz
 			if(era_ultima_instancia) {
+
+				pthread_mutex_lock(&(lista_de_io->mutex_lista));
+				list_remove_element(lista_de_io->lista_ios, interfaz_de_instancia_finalizada);
+				log_error(logger_kernel, "La interfaz [%s] ya no tiene mas instancias, por lo que fue eliminada la interfaz completamente...", interfaz_de_instancia_finalizada->nombre);
+				pthread_mutex_unlock(&(lista_de_io->mutex_lista));
+
 				// Si era la ultima entonces agarramos todos los procesos que estaban esperando para usar la interfaz y los pasamos a exit
-				for (int i = 0; i < list_size(interfaz_de_instancia_finalizada->procesos); i++) {
+				pthread_mutex_lock(&(interfaz_de_instancia_finalizada->mutex_lista));
+				int cantidad_procesos_en_espera = list_size(interfaz_de_instancia_finalizada->procesos);
+				pthread_mutex_unlock(&(interfaz_de_instancia_finalizada->mutex_lista));
+				
+				for (int i = 0; i < cantidad_procesos_en_espera; i++) {
 					uint8_t* pid_proceso_en_cola = pop_pid_esperando_io(interfaz_de_instancia_finalizada);
 		
 					t_pcb* proceso_en_cola = buscar_proceso_en_cola(estado_blocked, *pid_proceso_en_cola);
