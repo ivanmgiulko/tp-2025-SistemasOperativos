@@ -80,7 +80,7 @@ void suspender_proceso_swap(uint8_t pid) {
     // Instanciamos proceso del swap
     t_proceso_swap* proceso_swap = malloc(sizeof(t_proceso_swap));
     proceso_swap->pid = pid;
-    proceso_swap->cantidad_paginas = proceso->tamanioMemoria / tam_pagina;
+    proceso_swap->cantidad_paginas = (proceso->tamanioMemoria + tam_pagina - 1) / tam_pagina;
     proceso_swap->posiciones_swap = malloc(sizeof(uint32_t) * proceso_swap->cantidad_paginas);
 
     // Abrimos archivo de swap
@@ -825,7 +825,7 @@ bool realizar_dump_memory(uint8_t pid) {
     }
 
 	// Recorrer páginas y volcar su contenido
-    int paginas_totales = proceso->tamanioMemoria / tam_pagina;
+    int paginas_totales = (proceso->tamanioMemoria + tam_pagina - 1) / tam_pagina;
 
     for (int nro_pagina = 0; nro_pagina < paginas_totales; nro_pagina++) {
 		uint32_t* entradas_por_nivel = calcular_entradas_por_nivel(nro_pagina, cantidad_niveles, entradas_por_tabla);
