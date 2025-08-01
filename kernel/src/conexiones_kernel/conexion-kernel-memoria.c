@@ -35,7 +35,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 
 		case PROCESO_MEMORIA:
 			char* validacion_espacio = recibir_respuesta_memoria(socket_cliente);
-			printf("Validación de espacio en memoria: %s\n", validacion_espacio);
 			if(strcmp(validacion_espacio, "No hay espacio en memoria") == 0) {
 				eliminar_paquete(paquete);
 				free(validacion_espacio);

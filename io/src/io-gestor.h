@@ -6,6 +6,7 @@
     #include <utils/serializacion/serializacion.h>
     #include <utils/cliente/client.h>
     #include <utils/server/server.h>
+    #include "conexiones_io/conexion-io-kernel.h"
 
     /**
 	* @file
@@ -20,6 +21,8 @@
 
     // LOGS
     extern t_log* logger_io;
+
+    extern t_config* config_io;
 
     // CONEXIONES
     extern int conexion_kernel_fd;

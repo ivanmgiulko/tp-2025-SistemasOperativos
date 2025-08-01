@@ -2,7 +2,7 @@
 #define IO_MAIN_H_
 
     #include "io-gestor.h"
-    #include "conexiones_io/conexion-io-kernel.h"
+    #include "utils_io/io-utils.h"
 
     /**
 	* @file
@@ -18,6 +18,8 @@
 
     // LOGS
     t_log* logger_io;
+
+    t_config* config_io;
 
     // CONEXIONES
     int conexion_kernel_fd;
