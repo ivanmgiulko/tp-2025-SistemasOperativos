@@ -9,21 +9,21 @@ typedef struct {
 
 typedef struct {
     char* direccion;
-    int tamanio;
+    uint32_t tamanio;
 } t_param_read;
 
 typedef struct {
-    int valor;
+    uint32_t valor;
 } t_param_goto;
 
 typedef struct {
     char* dispositivo;
-    int tiempo;
+    uint32_t tiempo;
 } t_param_io;
 
 typedef struct {
     char* archivo;
-    int tamanio;
+    uint32_t tamanio;
 } t_param_init_proc;
 
 typedef struct {

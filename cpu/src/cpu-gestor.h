@@ -13,7 +13,7 @@
 extern bool receptor_habilitado;
 extern t_log* logger_cpu;
 extern sem_t sem_cpu;
-extern sem_t sem_cpu_kernel;
+//extern sem_t sem_cpu_kernel;
 extern sem_t sem_memoria;
 extern sem_t sem_read;
 extern sem_t sem_write;

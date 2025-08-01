@@ -60,7 +60,7 @@ int manejar_conexion_memoria(){
             }
 
             case FIN_PID:
-                sem_post(&sem_cpu_kernel);
+             //   sem_post(&sem_cpu_kernel);
                 break;
 
             case -1:

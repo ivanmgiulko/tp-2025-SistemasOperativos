@@ -333,11 +333,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_io);
 
             log_debug(logger_cpu, "Enviando SYSCALL_IO a Kernel");
-            sem_post(&sem_cpu_kernel);
+            //sem_post(&sem_cpu_kernel);
             
-            // sem_wait(&sem_cpu);
 
-            // pedir_instruccion_a_memoria(pcb_actual); 
 
 			break;
 		case INSTR_INIT_PROC:
@@ -345,20 +343,20 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
             char* archivo = instruccion->parametros.init_proc.archivo;
-            int tamanio = instruccion->parametros.init_proc.tamanio;
+            uint32_t tamanio = instruccion->parametros.init_proc.tamanio;
           
             paquete->codigo_operacion = SYSCALL_INIT_PROC;
             
             agregar_a_paquete(paquete, &(pcb_actual->pid), sizeof(uint8_t));
 
-            int len_archivo = strlen(archivo) + 1; 
+            uint32_t len_archivo = strlen(archivo) + 1; 
             agregar_a_paquete(paquete, archivo, len_archivo);
 
             // Agregar tamanio (serializa el int)
-            agregar_a_paquete(paquete, &tamanio, sizeof(int));
+            agregar_a_paquete(paquete, &tamanio, sizeof(uint32_t));
 
             // Serializar y enviar
-            bytes = sizeof(int) + sizeof(uint32_t) + paquete->buffer->size;
+            bytes = sizeof(uint32_t) + sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_init_proc = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_init_proc, bytes, 0);
@@ -368,8 +366,10 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             
             pcb_actual->pc++;
-           
+           int valor =0;
             sem_post(&sem_cpu); 
+            sem_getvalue(&sem_cpu, &valor);
+            log_trace(logger_cpu, "wtf innit proc valor semaforo: %d", valor);
 			break;
 		case INSTR_DUMP_MEMORY:
 
@@ -384,7 +384,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
-            bytes = sizeof(int)+ sizeof(int) + paquete->buffer->size;
+            bytes = sizeof(uint32_t)+ sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_dump_memory = serializar_paquete(paquete, bytes);
             
             send(fd_conexion_kernel_interrupt, paquete_dump_memory, bytes, 0);
@@ -395,7 +395,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             
             log_debug(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
 
-            sem_post(&sem_cpu_kernel);
+           // sem_post(&sem_cpu_kernel);
 
             // pedir_instruccion_a_memoria(pcb_actual); 
 			break;
@@ -411,7 +411,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             agregar_a_paquete(paquete, &(pcb_actual->pc), sizeof(uint16_t));
 
-            bytes = sizeof(int)+ sizeof(uint32_t) + paquete->buffer->size;
+            bytes = sizeof(uint32_t)+ sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_exit = serializar_paquete(paquete, bytes);
             
             send(fd_conexion_kernel_interrupt, paquete_exit, bytes, 0);
@@ -425,7 +425,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 actualizar_memoria_principal_completa();
             if(tlb_esta_activada())
 				limpiar_tlb();
-            sem_post(&sem_cpu_kernel);
+          //  sem_post(&sem_cpu_kernel);
 			break;
 		default:
 			log_error(logger_cpu, "Instrucción desconocida: %d", instruccion->tipo); 

@@ -19,7 +19,7 @@ t_memoria_cache* memoria_cache;
 mmu_t* mmu;
 tlb_t* tlb;
 algoritmo_tlb_t algoritmo;
-sem_t sem_cpu_kernel;
+//sem_t sem_cpu_kernel;
 t_peticion_instruccion* pcb_actual;
 bool flag_interrupt = false;
 bool flag_exit = false;

@@ -62,9 +62,7 @@ void manejar_respuesta_de_instruccion(t_paquete* paquete){
 
 
 	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
-	pthread_t hilo_interrupt;
-	pthread_create(&hilo_interrupt, NULL, (void*)check_interrupt, NULL);
-	pthread_detach(hilo_interrupt);
+
 	
 	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
 
@@ -138,19 +136,26 @@ void _handshake_kernel_con_cpu_id(int fd_conexion, char* cpu_id) {
 }
 
 void check_interrupt(){
-	sem_wait(&sem_cpu);
+     while (1) {
+        log_trace(logger_cpu, "AY");
+        sem_wait(&sem_cpu);
+        log_trace(logger_cpu, "DIOS MIO");
 
-	if(flag_interrupt){
-		log_warning(logger_cpu, "## Llega interrupción al puerto Interrupt");
-		// Enviar el proceso desalojado a kernel
-		flag_interrupt = false; 
-		sem_post(&sem_cpu_kernel);
-		enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
-	
-	} else {
-		pedir_instruccion_a_memoria(pcb_actual);
-	}
-	
+        if(flag_interrupt){
+            log_warning(logger_cpu, "## Llega interrupción al puerto Interrupt");
+            flag_interrupt = false; 
+            enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
+            log_trace(logger_cpu, "ANASHE");
+
+        
+        } else {
+            pedir_instruccion_a_memoria(pcb_actual);
+            log_trace(logger_cpu, "CLARENCE");
+
+        }
+
+        // Si detectás que el kernel se desconectó, break o return
+    }
 }
 
 void enviar_proceso_desalojado(int socket_servidor, uint8_t pid, uint16_t pc) {

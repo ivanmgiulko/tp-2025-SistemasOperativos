@@ -7,7 +7,7 @@ int main(int argc, char* argv[]){
  
 	// argv[1] = "1";
 
-	// argv[2] = "prueba/";
+	// argv[2] = "prueba_cortoplazo/";
 
 	char* cpu_id = argv[1];
 
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	sem_init(&sem_cpu,0,0);
-	sem_init(&sem_cpu_kernel,0,1);
+	//sem_init(&sem_cpu_kernel,0,1);
 	sem_init(&sem_memoria, 0, 0); // Inicializa el semáforo en 0 para bloquear el acceso
 	sem_init(&sem_read,0,0);
 	sem_init(&sem_write,0,0);
@@ -80,18 +80,23 @@ int main(int argc, char* argv[]){
 	receptor_habilitado = true;
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
 	
-	pthread_t hilo_cliente_cpuInt_akernel;
-    pthread_create(&hilo_cliente_cpuInt_akernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
-    pthread_detach(hilo_cliente_cpuInt_akernel);
+	pthread_t hilo_cliente_cpu_int_a_kernel;
+    pthread_create(&hilo_cliente_cpu_int_a_kernel, NULL, (void*)manejar_conexion_kernel_interrupt, NULL);
+    pthread_detach(hilo_cliente_cpu_int_a_kernel);
 	
-	pthread_t hilo_cliente_cputDispatch_akernel;
-    pthread_create(&hilo_cliente_cputDispatch_akernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
-    pthread_detach(hilo_cliente_cputDispatch_akernel);
-	
-	pthread_t hilo_cliente_cpu_amemoria;
-    pthread_create(&hilo_cliente_cpu_amemoria, NULL, (void*)manejar_conexion_memoria, NULL);
-	pthread_join(hilo_cliente_cpu_amemoria, NULL);
+	pthread_t hilo_cliente_cpu_dispatch_a_kernel;
+    pthread_create(&hilo_cliente_cpu_dispatch_a_kernel, NULL, (void*)manejar_conexion_kernel_dispatch, NULL);
+    pthread_detach(hilo_cliente_cpu_dispatch_a_kernel);
 
+	
+	pthread_t hilo_interrupt;
+	pthread_create(&hilo_interrupt, NULL, (void*)check_interrupt, NULL);
+	pthread_detach(hilo_interrupt);
+
+	pthread_t hilo_cliente_cpu_a_memoria;
+    pthread_create(&hilo_cliente_cpu_a_memoria, NULL, (void*)manejar_conexion_memoria, NULL);
+	pthread_join(hilo_cliente_cpu_a_memoria, NULL);
+	
 
 
 	//Libera config y logger,y otros

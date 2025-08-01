@@ -13,7 +13,7 @@ int manejar_conexion_kernel_dispatch(){
 				break;
 				
 			case INFO_PROC_EXEC:
-				sem_wait(&sem_cpu_kernel);
+				//sem_wait(&sem_cpu_kernel);
 
 				recibir_paquete(fd_conexion_kernel_dispatch, paquete);
 				
