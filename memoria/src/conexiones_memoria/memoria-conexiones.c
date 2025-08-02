@@ -13,10 +13,10 @@ void manejar_hilos_clientes(int server_fd){
 
 		pthread_t hilo_cliente;
 		 if (t_modulo == 1){
-			log_debug(logger_memoria, "## SE CONECTO LA CPU");
+		//	log_debug(logger_memoria, "## SE CONECTO LA CPU");
 			pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion_cpu, (void*)ptr_socket_cliente);
 		}else{
-			log_debug(logger_memoria, "## SE CONECTO EL KERNEL ");
+		//	log_debug(logger_memoria, "## SE CONECTO EL KERNEL ");
 			pthread_create(&hilo_cliente, NULL, (void*)manejar_conexion_kernel, (void*)ptr_socket_cliente);
 		}
 		
@@ -49,14 +49,14 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 			pthread_mutex_lock(&memoria_del_sistema->mutex);
 
 			t_pcbMemoria* proceso_a_inicializar = deserializar_proceso(paquete->buffer);
-			log_debug(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
+		//	log_debug(logger_memoria, "PID recibido para inicializar: %d", proceso_a_inicializar->pid);
 
 			//log_debug(logger_memoria, "Cantidad de memoria antes: %d", cantMemoria);
 			cantMemoria -= proceso_a_inicializar->tamanioMemoria;
-			log_warning(logger_memoria, "Cantidad de memoria restante: %d", cantMemoria);
+		//	log_warning(logger_memoria, "Cantidad de memoria restante: %d", cantMemoria);
 			
 			if(cantMemoria < 0) {
-				log_warning(logger_memoria, "No se pudo agregar el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
+			//	log_warning(logger_memoria, "No se pudo agregar el proceso con PID: %d en memoria por falta de espacio", proceso_a_inicializar->pid);
 				cantMemoria += proceso_a_inicializar->tamanioMemoria;
 				enviar_respuesta_kernel("No hay espacio en memoria", socket_cliente);
 			} else {
@@ -65,7 +65,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 
 				//Agrego el proceso (ver que pasa si hay error aca)
 				if(buscar_indice_de_proceso_en_memoria(proceso_a_inicializar->pid) != -1){
-					log_debug(logger_memoria, "Solicita Desuspender el proceso con PID: %d", proceso_a_inicializar->pid);
+				//	log_debug(logger_memoria, "Solicita Desuspender el proceso con PID: %d", proceso_a_inicializar->pid);
 					desuspender_proceso_swap(proceso_a_inicializar->pid);
 				}else {
 					agregar_proceso(proceso_a_inicializar);
@@ -75,7 +75,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 				enviar_respuesta_kernel("Hay espacio en memoria", socket_cliente);
 			}
 
-			log_error(logger_memoria, "UNLOCK: %d", socket_cliente);
+		//	log_error(logger_memoria, "UNLOCK: %d", socket_cliente);
 
 			free(proceso_a_inicializar->pathArchivoPseudocodigo);
 			free(proceso_a_inicializar);
@@ -117,7 +117,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 
 			cantMemoria += proceso_a_finalizar->tamanioMemoria;
 
-			log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
+		//	log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 			
 			enviar_proceso_terminado(pidEliminado, socket_cliente);
 
@@ -139,7 +139,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 				log_error(logger_memoria, "Fallo al realizar el DUMP_MEMORY");
 				enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 0, socket_cliente);
 			} else { // Sale bien
-				log_debug(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
+			//	log_debug(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
 				enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 1, socket_cliente);
 			}
 
@@ -163,7 +163,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 	eliminar_paquete(paquete);
 	close(socket_cliente);  // cerrá el socket
 	pthread_exit(NULL);
-	log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
+	//log_trace(logger_memoria, "Finalizó hilo de conexión con cliente FD: %d", socket_cliente);
 	return EXIT_SUCCESS;
 }
 
@@ -175,7 +175,7 @@ int manejar_conexion_cpu(void* void_socket_cliente){
 		t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
 		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
-	log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
+//	log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
 
 		recibir_buffer_en_paquete(socket_cliente, paquete);
 	
@@ -192,14 +192,14 @@ int manejar_conexion_cpu(void* void_socket_cliente){
 				break;
 
 			case CPU_PIDE_DATOS:
-				log_debug(logger_memoria, "Recibí petición de datos desde CPU");
+			//	log_debug(logger_memoria, "Recibí petición de datos desde CPU");
 				//recibir_mensaje(socket_cliente, logger_memoria);
 				loggear_mensaje_desde_buffer(paquete->buffer, logger_memoria);
 				//RETARDO DE MEMORIA
 				usleep( retardo_memoria * 1000);
 
 				enviar_datos_a_cpu(socket_cliente);
-				log_debug(logger_memoria, "Datos enviados a CPU");
+			//	log_debug(logger_memoria, "Datos enviados a CPU");
 				break;
 
 			case INSTRUCCION:
@@ -213,7 +213,7 @@ int manejar_conexion_cpu(void* void_socket_cliente){
 				//RETARDO DE MEMORIA
 				//(retardo equivalene a acceder a cada nivel)
 				usleep( retardo_memoria * atoi(config_memoria->CANTIDAD_NIVELES) * 1000);
-				log_warning(logger_memoria, "OBTENER_MARCO_CORRESPONDIENTE");
+	//			log_warning(logger_memoria, "OBTENER_MARCO_CORRESPONDIENTE");
 				manejar_acceso_tablas_de_paginas(socket_cliente, paquete);
 				break;
 

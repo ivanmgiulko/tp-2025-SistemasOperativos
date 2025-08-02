@@ -200,7 +200,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //RETARDO DE CACHE:
                 usleep(memoria_cache->retardo * 1000);
                 escribir_en_cache(indice_pagina_cache, pre_direccion_fisica.desplazamiento, instruccion->parametros.write.datos);
-                log_debug(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
+          //      log_debug(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
 
                 pcb_actual->pc++;
                 sem_post(&sem_cpu); 
@@ -227,7 +227,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 
                 //Envia el WRITE a memoria
                 enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos)+1, WRITE_MEMORIA);
-                log_debug(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
+         //       log_debug(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
                 eliminar_paquete(paquete);
                 
                 if (ultima_escritura) 
@@ -339,7 +339,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             free(paquete_io);
 
-            log_debug(logger_cpu, "Enviando SYSCALL_IO a Kernel");
+       //     log_debug(logger_cpu, "Enviando SYSCALL_IO a Kernel");
             
           
             
@@ -402,7 +402,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             free(paquete_dump_memory);
             
-            log_debug(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
+         //   log_debug(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
            
 					
            // sem_post(&sem_cpu_kernel);
@@ -429,7 +429,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete);
             free(paquete_exit);
 
-            log_debug(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
+       //     log_debug(logger_cpu, "Enviando SYSCALL_EXIT a Kernel");
             flag_exit = true;
             if(cache_esta_activada())
                 actualizar_memoria_principal_completa();

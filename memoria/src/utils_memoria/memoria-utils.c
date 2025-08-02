@@ -24,7 +24,7 @@ t_memoria_del_sistema crear_memoria_del_sistema() {
         exit(EXIT_FAILURE);
     }
 
-    log_debug(logger_memoria, "Memoria instanciada - Tamaño: %d bytes, Marcos: %d marcos de %d bytes", memoria.tam_memoria, memoria.cant_marcos, memoria.tam_pagina);
+   // log_debug(logger_memoria, "Memoria instanciada - Tamaño: %d bytes, Marcos: %d marcos de %d bytes", memoria.tam_memoria, memoria.cant_marcos, memoria.tam_pagina);
 
     return memoria;
 }
@@ -45,7 +45,7 @@ int buscar_indice_de_proceso_en_memoria(uint8_t pid){
     }
 
     if (encontrado == -1) {
-        log_warning(logger_memoria, "No se encontró el proceso con PID %d en memoria", pid);
+     //   log_warning(logger_memoria, "No se encontró el proceso con PID %d en memoria", pid);
         return -1;
     }
     return encontrado;
@@ -62,7 +62,7 @@ void inicializar_swap() {
 
     fclose(archivo_swap);
 
-    log_debug(logger_memoria, "SWAP inicializado en: %s", path_swap);
+   // log_debug(logger_memoria, "SWAP inicializado en: %s", path_swap);
 }
 
 void suspender_proceso_swap(uint8_t pid) {
@@ -105,7 +105,7 @@ void suspender_proceso_swap(uint8_t pid) {
         marcos_liberados_bitmap++;
 
     }
-    log_trace(logger_memoria, "PID %d: Se liberaron %d marcos del bitmap de memoria", pid, marcos_liberados_bitmap);
+ //   log_trace(logger_memoria, "PID %d: Se liberaron %d marcos del bitmap de memoria", pid, marcos_liberados_bitmap);
 
     //METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
@@ -166,7 +166,7 @@ void desuspender_proceso_swap(uint8_t pid) {
         void* destino = memoria_del_sistema->memoria_principal + marco * tam_pagina;
 
         fread(destino, 1, tam_pagina, swapfile);
-        log_trace(logger_memoria, "PID %d: Página %d restaurada desde SWAP (offset %ld) al marco %d", pid, i, offset, marco);
+    //    log_trace(logger_memoria, "PID %d: Página %d restaurada desde SWAP (offset %ld) al marco %d", pid, i, offset, marco);
     }
     //METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
@@ -181,7 +181,7 @@ void liberar_swap_proceso(int pid) {
     pthread_mutex_unlock(&(procesos_en_swap->mutex_procesos_swap));
 
     if (!proceso_swap){
-        log_warning(logger_memoria, "PID %d no encontrado para liberar en SWAP", pid);
+      //  log_warning(logger_memoria, "PID %d no encontrado para liberar en SWAP", pid);
         return;
     }
     pthread_mutex_lock(&(procesos_en_swap->mutex_procesos_swap));
@@ -190,7 +190,7 @@ void liberar_swap_proceso(int pid) {
 
     free(proceso_swap->posiciones_swap);
     free(proceso_swap);
-    log_debug(logger_memoria, "Liberado espacio SWAP del proceso PID %d", pid);
+   // log_debug(logger_memoria, "Liberado espacio SWAP del proceso PID %d", pid);
 }
 
 t_proceso_swap* buscar_proceso_en_swap(uint8_t pid) {
@@ -280,7 +280,7 @@ void agregar_proceso(t_pcbMemoria* pcb) {
 
     int paginas_asignadas = 0;
     asignar_marcos_tabla(nuevoProceso.tabla_primera, memoria_del_sistema, paginas_necesarias, &paginas_asignadas);
-    log_debug(logger_memoria, "Creo una tabla de páginas (%d niveles, %d entradas) con %d paginas útiles y %d marcos ocupados para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, paginas_necesarias, paginas_asignadas, nuevoProceso.pid);
+   // log_debug(logger_memoria, "Creo una tabla de páginas (%d niveles, %d entradas) con %d paginas útiles y %d marcos ocupados para el proceso con PID %d", cantidad_niveles, entradas_por_tabla, paginas_necesarias, paginas_asignadas, nuevoProceso.pid);
 
     memoria_del_sistema->procesos[memoria_del_sistema->cant_procesos] = nuevoProceso;
     memoria_del_sistema->cant_procesos++;
@@ -327,7 +327,7 @@ uint8_t finalizar_proceso(uint8_t pid) {
     //Liberar tablas de pagina
     liberar_marcos_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera, memoria_del_sistema);
     liberar_tabla(memoria_del_sistema->procesos[encontrado].tabla_primera);
-    log_debug(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
+   // log_debug(logger_memoria, "libero: tabla de páginas del proceso con PID %d", pid);
 
     // liberar proceso en lista de procesos en swap
     liberar_swap_proceso(pid);
@@ -476,7 +476,7 @@ void liberar_marcos_tabla(t_tabla_pagina* tabla, t_memoria_del_sistema* memoria)
             if (tabla->entradas[i].presente) {
                 int marco = tabla->entradas[i].marco;
                 memoria->bitmap_marcos_ocupados[marco] = false;
-                log_trace(logger_memoria, "Se liberó el marco %d", marco);
+        //        log_trace(logger_memoria, "Se liberó el marco %d", marco);
             }
         }
     }
@@ -667,7 +667,7 @@ void manejar_escritura_memoria_cache(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 
 	// Log obligatorio
-	log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
+	log_info(logger_memoria, "## CACHE - PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
@@ -698,7 +698,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 
     // Logs
     log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
-    log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
+  //  log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
 
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
@@ -709,7 +709,7 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	
     agregar_a_paquete(paquete_confirmacion_read, datos_leidos_como_string, strlen(datos_leidos_como_string)+1);
 
-	log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
+//	log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
 
     enviar_paquete(paquete_confirmacion_read, socket_cliente);
 
@@ -733,8 +733,8 @@ void manejar_lectura_memoria_cache(int socket_cliente, t_paquete* paquete) {
     datos_leidos_como_string[tamanio_a_leer] = '\0';
 
     // Logs
-    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
-    log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
+    log_info(logger_memoria, "## CACHE - PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
+//    log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
 
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
@@ -745,7 +745,7 @@ void manejar_lectura_memoria_cache(int socket_cliente, t_paquete* paquete) {
 	
     agregar_a_paquete(paquete_confirmacion_read, datos_leidos_como_string, strlen(datos_leidos_como_string)+1);
 
-	log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
+	//log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
 
     enviar_paquete(paquete_confirmacion_read, socket_cliente);
 
@@ -769,7 +769,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
         direccion.entrada_nivel[i] = leer_uint32_desde_buffer(paquete->buffer, &desplazamiento);
 	}
 
-	log_debug(logger_memoria, "Iniciando busqueda de marco de pagina %d para proceso PID: %d", direccion.nro_pagina, pid);
+//	log_debug(logger_memoria, "Iniciando busqueda de marco de pagina %d para proceso PID: %d", direccion.nro_pagina, pid);
 
     t_proceso_en_memoria* proceso = buscar_proceso_en_memoria(pid);
     if (!proceso) {
@@ -785,7 +785,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
         return;
     }
 	
-    log_warning(logger_memoria, "PID: %d - Página: %d - Marco: %d", pid, direccion.nro_pagina, marco);
+   // log_warning(logger_memoria, "PID: %d - Página: %d - Marco: %d", pid, direccion.nro_pagina, marco);
 
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
@@ -796,10 +796,10 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 
     agregar_a_paquete(paquete_marco, &marco, sizeof(int32_t));
     
-    log_trace(logger_memoria, "[SEND] Enviando marco: %d", marco);
+   // log_trace(logger_memoria, "[SEND] Enviando marco: %d", marco);
 
     enviar_paquete(paquete_marco, socket_cliente);
-    log_warning(logger_memoria, "ahora si que envie el marcco");
+   // log_warning(logger_memoria, "ahora si que envie el marcco");
     eliminar_paquete(paquete_marco);
     free(direccion.entrada_nivel);
 }
@@ -863,9 +863,9 @@ bool realizar_dump_memory(uint8_t pid) {
     char* dump_path = config_memoria->DUMP_PATH;
     int resultado = mkdir(dump_path, 0755);
 	if (resultado == 0) {
-        log_debug(logger_memoria, "DUMP_MEMORY: directorio creado con éxito");
+   //     log_debug(logger_memoria, "DUMP_MEMORY: directorio creado con éxito");
     } else {
-        log_debug(logger_memoria, "DUMP_MEMORY: el directorio ha sido creado anteriormente");
+     //   log_debug(logger_memoria, "DUMP_MEMORY: el directorio ha sido creado anteriormente");
     }
 
     // Creo el timestamp para el nombre del archivo a dumpear
@@ -909,7 +909,7 @@ bool realizar_dump_memory(uint8_t pid) {
     }
 
     fclose(file);
-    log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
+   // log_trace(logger_memoria, "DUMP_MEMORY: archivo creado %s", filename);
     return true;
 }
 

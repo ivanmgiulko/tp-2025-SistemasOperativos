@@ -14,7 +14,7 @@ int manejar_conexion_kernel_dispatch(){
 				
 			case INFO_PROC_EXEC:
 				//sem_wait(&sem_cpu_kernel);
-				log_debug(logger_cpu, "Recibiendo INFO_PROC_EXEC desde Kernel");
+			//	log_debug(logger_cpu, "Recibiendo INFO_PROC_EXEC desde Kernel");
 				recibir_paquete(fd_conexion_kernel_dispatch, paquete);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);

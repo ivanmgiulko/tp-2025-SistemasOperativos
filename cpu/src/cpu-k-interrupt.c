@@ -16,7 +16,7 @@ int manejar_conexion_kernel_interrupt(){
 			case PROCESO_DESALOJAR:
 			
 
-				log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
+			//	log_warning(logger_cpu, "NIGGA HAY QUE DESALOJAR EL PROCESO");
 				flag_interrupt = true;
 				free(paquete);
 			

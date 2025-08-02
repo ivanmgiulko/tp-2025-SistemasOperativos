@@ -38,8 +38,8 @@ int main(int argc, char* argv[]) {
         abort();
     }
 
-    log_debug(logger_memoria, "Servidor de memoria iniciado con exito");
-    log_trace(logger_memoria, "Servidor de memoria iniciado en el puerto: %s", puerto_servidor_memoria);
+  //  log_debug(logger_memoria, "Servidor de memoria iniciado con exito");
+ //   log_trace(logger_memoria, "Servidor de memoria iniciado en el puerto: %s", puerto_servidor_memoria);
 
     //CREACION DE HILO PARA EL SERVIDOR DE MEMORIA
     pthread_t hilo_servidor;
