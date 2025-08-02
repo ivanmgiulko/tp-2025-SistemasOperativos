@@ -29,6 +29,7 @@ void manejar_hilos_clientes(int server_fd){
 
 int manejar_conexion_kernel(void* void_socket_cliente){
 	int socket_cliente = *(int*)void_socket_cliente;
+	free(void_socket_cliente);
 	log_error(logger_memoria, "ESTE ES UN HILO DE KERNEL");
 	t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
@@ -76,6 +77,9 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 
 			log_error(logger_memoria, "UNLOCK: %d", socket_cliente);
 
+			free(proceso_a_inicializar->pathArchivoPseudocodigo);
+			free(proceso_a_inicializar);
+
 			pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
 			break; 
@@ -95,6 +99,9 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 
 			avisar_kernel_mande_otro_proceso(socket_cliente);
 
+			free(proceso_suspendido->pathArchivoPseudocodigo);
+			free(proceso_suspendido);
+
 			pthread_mutex_unlock(&memoria_del_sistema->mutex);
 
 			break;
@@ -113,6 +120,9 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 			log_debug(logger_memoria, "Se elimino el proceso con PID: %d de memoria", pidEliminado);
 			
 			enviar_proceso_terminado(pidEliminado, socket_cliente);
+
+			free(proceso_a_finalizar->pathArchivoPseudocodigo);
+			free(proceso_a_finalizar);
 		
 			break; 
 
@@ -132,7 +142,10 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 				log_debug(logger_memoria, "Éxito al realizar el DUMP_MEMORY: enviando al kernel");
 				enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 1, socket_cliente);
 			}
-	
+
+			free(proceso_a_dumpear->pathArchivoPseudocodigo);
+			free(proceso_a_dumpear);
+
 			break;
 
 		case LINUS_TORVALDS:
@@ -156,6 +169,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 
 int manejar_conexion_cpu(void* void_socket_cliente){
 	int socket_cliente = *(int*)void_socket_cliente;
+	free(void_socket_cliente);
 	
 	while (1) {
 		t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
