@@ -45,9 +45,7 @@ void manejar_respuesta_de_instruccion(){
     while(1){
         sem_wait(&sem_instruccion);
 
-
-        t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-        instruccion = decode(respuesta_instruccion);
+        t_instruccion* instruccion = decode(respuesta_instruccion);
         if (!instruccion) {
             free_instruccion(instruccion);
 
@@ -56,7 +54,8 @@ void manejar_respuesta_de_instruccion(){
         
         ejecutar_instruccion(instruccion);
         
-        free_instruccion(instruccion);	
+        free_instruccion(instruccion);
+        free(respuesta_instruccion);	
     }
 }
 
@@ -636,6 +635,8 @@ int reemplazo_clock(t_memoria_cache* cache){
                 }
                 log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
+                free(respuesta_memo);
+                respuesta_memo = NULL;
                 pagina->bit_modificado = false;
             }
             int victima = cache->puntero_reemplazo;
@@ -688,7 +689,8 @@ int reemplazo_clock_m(t_memoria_cache* cache, uint32_t tam_pagina) {
 
                 log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
                 free(pre_dir.entrada_nivel);
-
+                free(respuesta_memo);
+                respuesta_memo = NULL;
                 pagina->bit_modificado = false;
 
                 int victima = cache->puntero_reemplazo;
@@ -760,6 +762,8 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     }
     //agrego la pag a cache
     agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, ultima_lectura);
+    free(ultima_lectura);
+    ultima_lectura = NULL;
     return marco_cache;
 }
 void actualizar_memoria_principal_completa() {

@@ -10,6 +10,8 @@ int manejar_conexion_kernel_dispatch(){
 
 			case MENSAJE:
 				recibir_mensaje(fd_conexion_kernel_dispatch, logger_cpu);
+
+				eliminar_paquete(paquete);
 				break;
 				
 			case INFO_PROC_EXEC:

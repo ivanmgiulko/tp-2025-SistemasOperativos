@@ -55,6 +55,7 @@ int manejar_conexion_memoria(){
              //   log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje_cache);
                 respuesta_memo = strdup(mensaje_cache);
                 //log_trace(logger_cpu, "WRITE CACHE");
+                free(mensaje_cache);
                 sem_post(&sem_respuesta_memo);
                 break;
             
