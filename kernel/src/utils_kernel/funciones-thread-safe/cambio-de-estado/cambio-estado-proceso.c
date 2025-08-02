@@ -102,11 +102,9 @@ void pasar_pcb_exec_a_ready(t_pcb* pcb)
 
 uint64_t calcular_estimacion_actual(int64_t estimacion_actual, uint64_t tiempo_rafaga_total) {
     double alfa = atof(configuracion_kernel->ALFA);
-    log_error(logger_kernel, "Estimacion anterior: %ld, Tiempo de rafaga total: %ld, Alfa: %f\n", estimacion_actual, tiempo_rafaga_total, alfa);
 
     uint64_t estimacion = (uint64_t)((1.0 - alfa) * estimacion_actual + alfa * tiempo_rafaga_total);
 
-    log_error(logger_kernel, "NUEVA ESTIMACION: %ld\n", estimacion);
     return estimacion;
 }
 

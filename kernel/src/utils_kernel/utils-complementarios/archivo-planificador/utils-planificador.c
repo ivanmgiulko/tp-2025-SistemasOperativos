@@ -252,7 +252,6 @@ void _enviar_proceso_new_a_cola_ready() {
             pcb_en_new = pop_cola_mutex(estado_new);
             pasar_pcb_new_a_ready(pcb_en_new);
         } else { 
-            log_trace(logger_kernel, "El proceso %d sigue en NEW porque no hay espacio en memo", pcb_en_new->pid);
             // El proceso sigue en la cola de New
             sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
         }
@@ -270,7 +269,6 @@ void _enviar_proceso_susp_ready_a_cola_ready()
             pcb_en_susp_ready = pop_cola_mutex(estado_susp_ready);
             pasar_pcb_susp_ready_a_ready(pcb_en_susp_ready);
         } else { 
-            log_trace(logger_kernel, "El proceso %d sigue en SUSP-NEW porque no hay espacio en memo", pcb_en_susp_ready->pid);
             // El proceso sigue en la cola de New
             sem_wait(&sem_hay_espacio_en_memoria); // Espera el semaforo desde kernel-memoria
         }

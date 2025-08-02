@@ -39,7 +39,6 @@ int main(int argc, char* argv[]) {
 	string_append(&path_relativo, argv[1]);
 	string_append(&path_relativo, ".txt");
 
-	log_debug(logger_kernel, "proc 0 - path: %s - tamanio: %s", path_relativo, argv[2]);
 	crear_proceso_cero(path_relativo, atoi(argv[2]));
 	
 	pthread_t hilo_planificador_largo_plazo;

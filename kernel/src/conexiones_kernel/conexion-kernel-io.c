@@ -22,9 +22,8 @@ void enviar_proceso_en_cola_io(t_io* io_a_encolar_instancia, t_instancia_io* ins
 	int cantidad_procesos_en_espera = list_size(io_a_encolar_instancia->procesos);
 	pthread_mutex_unlock(&io_a_encolar_instancia->mutex_lista);
 
-	if(cantidad_procesos_en_espera == 0) {
-		log_debug(logger_kernel, "No hay procesos esperando en la interfaz [%s]", io_a_encolar_instancia->nombre);
-	}else{
+	if(cantidad_procesos_en_espera != 0) {
+		
 		uint8_t* pid_proceso_en_cola = pop_pid_esperando_io(io_a_encolar_instancia);
 		
 		t_pcb* proceso_en_cola = buscar_proceso_en_cola(estado_blocked, *pid_proceso_en_cola);
@@ -36,7 +35,7 @@ void enviar_proceso_en_cola_io(t_io* io_a_encolar_instancia, t_instancia_io* ins
 		enviar_proceso_a_io_para_bloqueo(*pid_proceso_en_cola,proceso_en_cola->datos_io->tiempo, instancia_io->socket_io);
 		
 		log_info(logger_kernel, "Se envio el proceso [%d] a la interfaz [%s]", *pid_proceso_en_cola, io_a_encolar_instancia->nombre);
-		}
+	}
 
 	pthread_mutex_unlock(&instancia_io->mutex_instancia);
 }
@@ -89,14 +88,14 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			recibir_pid(socket_cliente_io, paquete);
 
 			uint8_t pid_desbloqueado = _recibir_proceso_bloqueado(paquete->buffer);
-			log_info(logger_kernel, "%d finalizó IO", pid_desbloqueado);
-
+		
 			t_pcb* _proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado, estado_blocked);
 			
 			if(_proceso_desbloqueado == NULL) {
 				_proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado,estado_susp_blocked);
 				pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado);
 			}else{
+				log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado);
 				pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 			}
 			
@@ -119,8 +118,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			// Chequeamos si la instancia a eliminar tenia un proceso ejecutando en ella
 			if(instancia_a_eliminar->pid != -1) {
 				// Si tenia un proceso ejecutando lo pasamos a EXIT
-				log_error(logger_kernel, "Se elimino una instancia de [%s]", interfaz_de_instancia_finalizada->nombre);
-				
 				
 				t_pcb* proceso_a_eliminar = buscar_proceso_en_cola(estado_blocked, instancia_a_eliminar->pid);
 
@@ -132,8 +129,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 				}
 				
 				pasar_pcb_blocked_a_exit(proceso_a_eliminar);
-			}else{
-				log_debug(logger_kernel, "La interfaz que se elimino no tenia ningun proceso...");	
 			}
 	
 			pthread_mutex_lock(&(interfaz_de_instancia_finalizada->mutex_lista));
@@ -146,7 +141,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 				pthread_mutex_lock(&(lista_de_io->mutex_lista));
 				list_remove_element(lista_de_io->lista_ios, interfaz_de_instancia_finalizada);
-				log_error(logger_kernel, "La interfaz [%s] ya no tiene mas instancias, por lo que fue eliminada la interfaz completamente...", interfaz_de_instancia_finalizada->nombre);
 				pthread_mutex_unlock(&(lista_de_io->mutex_lista));
 
 				// Si era la ultima entonces agarramos todos los procesos que estaban esperando para usar la interfaz y los pasamos a exit

@@ -14,7 +14,6 @@ t_io* inicializar_io(char* nombre_io, int socket_io)
     list_add(lista_de_io->lista_ios, io);
     pthread_mutex_unlock(&lista_de_io->mutex_lista);
     
-    log_debug(logger_kernel, "IO inicializado: %s", io->nombre);
     return io;
 }
 

@@ -48,7 +48,6 @@ void liberar_cpu_de_proceso(uint8_t pid)
     cpu_a_liberar->pid_en_cpu = -1;
     pthread_mutex_unlock(&lista_cpus->mutex_lista);
 
-    log_debug(logger_kernel, "[Se libero un cpu ");
 
     if (strcmp(configuracion_kernel->ALGORITMO_CORTO_PLAZO, "SRT") == 0){
          sem_post(&sem_puede_replanificar_srt);

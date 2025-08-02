@@ -55,8 +55,6 @@ int manejar_conexion_kernel_memoria(int socket_cliente){
 		
 		case SUSPENSION_HECHA:
 
-			log_debug(logger_kernel, "Se ha suspendido un proceso | mas memoria disponible");
-
 			sem_post(&sem_cantidad_pcbs_en_new);
 			sem_post(&sem_hay_espacio_en_memoria);
 

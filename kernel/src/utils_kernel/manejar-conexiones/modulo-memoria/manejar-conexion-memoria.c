@@ -28,13 +28,11 @@ void loguear_y_finalizar_proceso(t_pcb* proceso_finalizado) {
 
 void recibir_respuesta_dumpeo(t_respuesta_dump* resp_dump, t_pcb* proceso_desbloqueado) {
     if(resp_dump->respuesta == 0){
-	    log_debug(logger_kernel, "Fallo en el DUMP");	
 
 		free(resp_dump);
 		pasar_pcb_blocked_a_exit(proceso_desbloqueado);
 			
 	} else {
-		log_debug(logger_kernel, "Acierto en el DUMP");
 
 		free(resp_dump);
 		pasar_pcb_blocked_a_ready(proceso_desbloqueado);

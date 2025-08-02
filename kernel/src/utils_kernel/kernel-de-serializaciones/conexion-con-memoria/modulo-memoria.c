@@ -20,7 +20,6 @@ t_respuesta_dump* recibir_respuesta_dump(t_buffer* buffer) {
     memcpy(&(respuesta_dump->respuesta), buffer->stream + desplazamiento, sizeof(uint8_t));
     desplazamiento += sizeof(uint8_t);
 
-    printf("La respuesta del DUMP es: %d\n", respuesta_dump->respuesta);
     return respuesta_dump;
 }
 
