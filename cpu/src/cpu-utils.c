@@ -522,7 +522,6 @@ void destruir_cache(t_memoria_cache* cache, uint32_t tam_pagina) {
 bool cache_esta_activada() {
     // Verifica si la cache está activada
     if (memoria_cache->cantidad_paginas == 0) {
-        log_error(logger_cpu, "La cache no está habilitada");
         return false;
     }
     return true;

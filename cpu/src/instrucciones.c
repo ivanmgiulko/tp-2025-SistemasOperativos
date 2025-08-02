@@ -175,7 +175,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
     switch(instruccion->tipo) {
 		case INSTR_NOOP:
-        log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s>", 
+        log_info(logger_cpu, "## PID <%d> - Ejecutando: <%s>", 
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo));            
             pcb_actual->pc++;
             
@@ -184,7 +184,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete);
 			break;
 		case INSTR_WRITE:
-            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> <%s> <%s>", 
+            log_info(logger_cpu, "## PID <%d> - Ejecutando: <%s> <%s> <%s>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.write.direccion, instruccion->parametros.write.datos);          
             //Prepara los datos para calculos de direcciones
             direccion_logica = atoi(instruccion->parametros.write.direccion);
@@ -239,7 +239,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 
 		case INSTR_READ:
-            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> <%s> <%d>", 
+            log_info(logger_cpu, "## PID <%d> - Ejecutando: <%s> <%s> <%d>", 
                 pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio); 
             direccion_logica = atoi(instruccion->parametros.read.direccion);
             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);  
@@ -290,7 +290,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
         
 		case INSTR_GOTO:
-            log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%d>",
+            log_info(logger_cpu, "## PID: <%d> - Ejecutando: <%s> - <%d>",
             pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.go_to.valor);
             pcb_actual->pc = instruccion->parametros.go_to.valor;
             //pcb_actual->pc++;
@@ -311,7 +311,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             }
             if(tlb_esta_activada())
                 limpiar_tlb();
-			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
+			log_info(logger_cpu, "## PID: <%d> - Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
 
             char* dispositivo = instruccion->parametros.io.dispositivo;
@@ -346,7 +346,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
 			break;
 		case INSTR_INIT_PROC:
-			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, 
+			log_info(logger_cpu, "## PID: <%d> - Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, 
                 obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.init_proc.archivo, instruccion->parametros.init_proc.tamanio);
             char* archivo = instruccion->parametros.init_proc.archivo;
@@ -382,7 +382,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             }
             if(tlb_esta_activada())
                 limpiar_tlb();
-			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s>", pcb_actual->pid, 
+			log_info(logger_cpu, "## PID: <%d> - Ejecutando: <%s>", pcb_actual->pid, 
                 obtener_nombre_instruccion(instruccion->tipo));
 
             pcb_actual->pc++;
@@ -411,7 +411,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 		case INSTR_EXIT:
 
-			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s>", pcb_actual->pid, 
+			log_info(logger_cpu, "## PID: <%d> - Ejecutando: <%s>", pcb_actual->pid, 
                 obtener_nombre_instruccion(instruccion->tipo));
 
             

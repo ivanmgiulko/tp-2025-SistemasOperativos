@@ -641,7 +641,7 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 
 	// Log obligatorio
-	log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
+	log_info(logger_memoria, "## PID: <%d> - Escritura - Direccion Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
@@ -667,7 +667,7 @@ void manejar_escritura_memoria_cache(int socket_cliente, t_paquete* paquete) {
 	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
 
 	// Log obligatorio
-	log_info(logger_memoria, "## CACHE - PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
+	log_info(logger_memoria, "## PID: <%d> - Escritura - Direccion Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
 	//METRICAS
 	int indice = buscar_indice_de_proceso_en_memoria(pid);
 	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
@@ -733,7 +733,7 @@ void manejar_lectura_memoria_cache(int socket_cliente, t_paquete* paquete) {
     datos_leidos_como_string[tamanio_a_leer] = '\0';
 
     // Logs
-    log_info(logger_memoria, "## CACHE - PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
+    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
 //    log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
 
 	//METRICAS
