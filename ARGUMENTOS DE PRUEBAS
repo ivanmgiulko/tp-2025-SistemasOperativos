@@ -1,0 +1,36 @@
+PRUEBA CORTO PLAZO 
+KERNEL: ./bin/kernel PLANI_CORTO_PLAZO 0 prueba_cortoplazo/ kernel.config 
+IO: ./bin/io DISCO prueba_cortoplazo/io.config 
+MEMORIA: ./bin/memoria prueba_cortoplazo/memoria.config 
+CPU: ./bin/cpu 1 prueba_cortoplazo/ ./bin/cpu 2 prueba_cortoplazo/ 
+
+PPRUEBA MEDIANO/LARGO PLAZO: 
+KERNEL: ./bin/kernel PLANI_LYM_PLAZO 0 prueba_medianolargoplazo/ kernel.config 
+IO: ./bin/io DISCO prueba_medianolargoplazo/io.config 
+MEMORIA: ./bin/memoria prueba_medianolargoplazo/memoria.config
+CPU: ./bin/cpu 1 prueba_medianolargoplazo/
+
+PRUEBA MEMORIA SWAP: 
+KERNEL: ./bin/kernel MEMORIA_IO 90 prueba_swap/ kernel.config 
+IO: ./bin/io DISCO prueba_swap/io.config 
+MEMORIA: ./bin/memoria prueba_swap/memoria.config 
+CPU: ./bin/cpu 1 prueba_swap/ 
+
+PRUEBA MEMORIA CACHE: 
+KERNEL: ./bin/kernel MEMORIA_BASE 256 prueba_cache/ kernel.config 
+IO: ./bin/io DISCO prueba_cache/io.config 
+MEMORIA: ./bin/memoria prueba_cache/memoria.config 
+CPU: ./bin/cpu 1 prueba_cache/ 
+
+PRUEBA MEMORIA TLB:  
+KERNEL: ./bin/kernel MEMORIA_BASE_TLB 256 prueba_tlb/ kernel.config 
+IO: ./bin/io DISCO prueba_tlb/io.config 
+MEMORIA: ./bin/memoria prueba_tlb/memoria.config 
+CPU: ./bin/cpu 1 prueba_tlb/ 
+
+PRUEBA GENERAL:  
+KERNEL: ./bin/kernel ESTABILIDAD_GENERAL 0 prueba_general/ kernel.config 
+IO: ./bin/io DISCO prueba_general/io.config (4 veces) 
+MEMORIA: ./bin/memoria prueba_general/memoria.config 
+CPU: ./bin/cpu 1 prueba_general/ | ./bin/cpu 2 prueba_general/ | ./bin/cpu 3 prueba_general/ | ./bin/cpu 4 prueba_general/ 
+
