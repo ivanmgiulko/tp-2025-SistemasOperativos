@@ -99,7 +99,7 @@ void crear_proceso_cero(char* path, int tamanio)
 
   	t_pcb* proceso_cero = iniciarPCB(path ,tamanio, asignar_pid(), estimacion_inical);
     pasar_pcb_a_new(proceso_cero);
-	log_info(logger_kernel,"%d Se crea el proceso - Estado: NEW", proceso_cero->pid);
+	log_info(logger_kernel,"## (%d) Se crea el proceso - Estado: NEW", proceso_cero->pid);
 }
 
 void inicializar_pid(){
@@ -121,6 +121,8 @@ void inicializar_estructuras(char* path_relativo, char* path_config)
     string_append(&path_relativo_config, path_config);
 
 	configuracion_kernel = crear_config_kernel(path_relativo_config, logger_kernel);
+
+    free(path_relativo_config);
 
     // INICIAMOS LISTA DE CPU E IOs
     lista_cpus = malloc(sizeof(t_lista_cpus));

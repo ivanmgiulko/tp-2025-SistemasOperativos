@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	_chequear_segundo_argumento_es_numero(argv[2]);
+	// _chequear_segundo_argumento_es_numero(argv[2]);
 
 	// argv[1] = "PLANI_CORTO_PLAZO";
 

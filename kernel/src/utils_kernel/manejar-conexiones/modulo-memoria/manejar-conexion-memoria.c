@@ -2,8 +2,8 @@
 #include "utils_kernel/funciones-thread-safe/cambio-de-estado/cambio-estado-proceso.h"
 
 void loguear_y_finalizar_proceso(t_pcb* proceso_finalizado) {
-    log_info(logger_kernel, "%d - Finaliza el proceso", proceso_finalizado->pid);
-    log_info(logger_kernel, "%d - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
+    log_info(logger_kernel, "## (%d)- Finaliza el proceso", proceso_finalizado->pid);
+    log_info(logger_kernel, "## (%d) - Metricas de estado: NEW [%d] [%ld], READY [%d] [%ld], BLOCKED [%d] [%ld], EXEC [%d] [%ld], EXIT [%d] [%ld], SUSP-READY [%d] [%ld], SUSP-BLOCKED [%d] [%ld]", 
 	proceso_finalizado->pid, 
 	proceso_finalizado->metricas_estado->cantVecesNew, 		   temporal_gettime(proceso_finalizado->metricas_tiempo->tiempoEnNew),
 	proceso_finalizado->metricas_estado->cantVecesReady,       temporal_gettime(proceso_finalizado->metricas_tiempo->tiempoEnReady),
@@ -20,9 +20,12 @@ void loguear_y_finalizar_proceso(t_pcb* proceso_finalizado) {
     temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnReady);
     temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspBlocked);
     temporal_destroy(proceso_finalizado->metricas_tiempo->tiempoEnSuspReady);
+    temporal_destroy(proceso_finalizado->tiempo_rafaga_parcial);
 
 	free(proceso_finalizado->metricas_estado);
 	free(proceso_finalizado->metricas_tiempo);
+    free(proceso_finalizado->datos_io);
+    
 	free(proceso_finalizado);
 }
 

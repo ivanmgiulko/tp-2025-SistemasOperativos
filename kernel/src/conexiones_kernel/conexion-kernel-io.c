@@ -34,7 +34,6 @@ void enviar_proceso_en_cola_io(t_io* io_a_encolar_instancia, t_instancia_io* ins
 		proceso_en_cola->datos_io->instancia_utilizada = instancia_io;
 		enviar_proceso_a_io_para_bloqueo(*pid_proceso_en_cola,proceso_en_cola->datos_io->tiempo, instancia_io->socket_io);
 		
-		log_info(logger_kernel, "Se envio el proceso [%d] a la interfaz [%s]", *pid_proceso_en_cola, io_a_encolar_instancia->nombre);
 	}
 
 	pthread_mutex_unlock(&instancia_io->mutex_instancia);
@@ -61,6 +60,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 	char* nombre_io = malloc(tamanio_interfaz + 1);
 	memcpy(nombre_io, stream, tamanio_interfaz);
+	free(stream);
 	nombre_io[tamanio_interfaz] = '\0';  // Asegurarse de que termine en \0
 
 	// Busco si existe IO del mismo tipo en la lista de IOs
@@ -71,7 +71,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 	t_instancia_io* instancia_io = insertar_nueva_instancia_io(io_a_encolar_instancia, socket_cliente_io);
 
-	
 	enviar_proceso_en_cola_io(io_a_encolar_instancia, instancia_io);
 
 	while (1) {
@@ -95,7 +94,7 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 				_proceso_desbloqueado = _sacar_pcb_de_cola(pid_desbloqueado,estado_susp_blocked);
 				pasar_pcb_suspblocked_a_suspready(_proceso_desbloqueado);
 			}else{
-				log_info(logger_kernel, "%d finalizó IO y pasa a READY", pid_desbloqueado);
+				log_info(logger_kernel, "## (%d) finalizó IO y pasa a READY", pid_desbloqueado);
 				pasar_pcb_blocked_a_ready(_proceso_desbloqueado);
 			}
 			
@@ -132,7 +131,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 			}
 	
 			pthread_mutex_lock(&(interfaz_de_instancia_finalizada->mutex_lista));
-			free(instancia_a_eliminar);
 			bool era_ultima_instancia = list_is_empty(interfaz_de_instancia_finalizada->instancias);
 			pthread_mutex_unlock(&(interfaz_de_instancia_finalizada->mutex_lista));
 
@@ -156,17 +154,20 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 					if(proceso_en_cola == NULL){
 						proceso_en_cola = buscar_proceso_en_cola(estado_susp_blocked, instancia_a_eliminar->pid);	
 						_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_susp_blocked);
+						pasar_pcb_suspblocked_a_exit(proceso_en_cola);
 					}else{
 						_sacar_pcb_de_cola(instancia_a_eliminar->pid,estado_blocked);
+						pasar_pcb_blocked_a_exit(proceso_en_cola);
 					}
 				
 					eliminar_proceso_de_io(interfaz_de_instancia_finalizada, proceso_en_cola->pid);
-					pasar_pcb_blocked_a_exit(proceso_en_cola);
+					
 				}
 				// Finalmente eliminamos la interfaz de IO
 				eliminar_interfaz(interfaz_de_instancia_finalizada);
 			} 
-			 
+
+			free(instancia_a_eliminar);
 			eliminar_paquete(paquete);
 		
 			return EXIT_FAILURE;
@@ -181,7 +182,6 @@ int manejar_cliente_io(void* socket_cliente_ptr){
 
 	pthread_exit(NULL);
 	free(nombre_io);
-	free(stream);
 	close(socket_cliente_io);
 	return EXIT_SUCCESS;
 }
