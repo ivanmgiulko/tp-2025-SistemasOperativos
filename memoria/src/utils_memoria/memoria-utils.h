@@ -110,8 +110,10 @@ t_proceso_swap* buscar_proceso_en_swap(uint8_t pid);
 void manejar_peticion_de_instruccion(int socket_cliente,t_paquete* paquete);
 
 void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete);
+void manejar_escritura_memoria_cache(int socket_cliente, t_paquete* paquete);
 
 void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete);
+void manejar_lectura_memoria_cache(int socket_cliente, t_paquete* paquete);
 
 void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete);
 

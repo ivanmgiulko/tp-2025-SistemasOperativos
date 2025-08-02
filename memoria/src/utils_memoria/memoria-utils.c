@@ -655,7 +655,32 @@ void manejar_escritura_memoria(int socket_cliente, t_paquete* paquete) {
 	free(datos);
 	eliminar_paquete(paquete_confirmacion_write);
 }
+void manejar_escritura_memoria_cache(int socket_cliente, t_paquete* paquete) {
 
+	//Deserializo el paquete:
+    int offset = 0;
+	uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &offset);
+	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	char* datos = leer_string_desde_buffer(paquete->buffer, &offset);
+
+    //ESCRIBE EN MEMORIA
+	memcpy(memoria_del_sistema->memoria_principal + direccion_fisica, datos, strlen(datos));
+
+	// Log obligatorio
+	log_info(logger_memoria, "## PID: <%d> - Escritura - Dir. Física: <%d> - Tamaño <%ld>", pid, direccion_fisica, strlen(datos));
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesWrite++;
+
+    // Enviar confirmación de éxito al cpu
+	t_paquete* paquete_confirmacion_write = crear_paquete_con_codigo(WRITE_MEMORIA_CACHE);
+    char* mensaje_confirmacion_write = "WRITE completado con éxito";
+    agregar_a_paquete(paquete_confirmacion_write, mensaje_confirmacion_write, strlen(mensaje_confirmacion_write)+1);
+    enviar_paquete(paquete_confirmacion_write, socket_cliente);
+
+	free(datos);
+	eliminar_paquete(paquete_confirmacion_write);
+}
 void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 
     //Deserializo el paquete:
@@ -692,7 +717,42 @@ void manejar_lectura_memoria(int socket_cliente, t_paquete* paquete) {
 	free(datos_leidos_como_string);
 	eliminar_paquete(paquete_confirmacion_read);
 }
+void manejar_lectura_memoria_cache(int socket_cliente, t_paquete* paquete) {
 
+    //Deserializo el paquete:
+    int offset = 0;
+	uint8_t pid = leer_uint8_desde_buffer(paquete->buffer, &offset);
+	uint32_t direccion_fisica = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	uint32_t tamanio_a_leer = leer_uint32_desde_buffer(paquete->buffer, &offset);
+	void* datos_leidos = malloc(tamanio_a_leer);
+	memcpy(datos_leidos, memoria_del_sistema->memoria_principal + direccion_fisica, tamanio_a_leer);
+	char* datos_leidos_como_string = calloc(tamanio_a_leer + 1, sizeof(char));
+    memcpy(datos_leidos_como_string, datos_leidos, tamanio_a_leer);
+
+    // Asegurarte de que termine en \0
+    datos_leidos_como_string[tamanio_a_leer] = '\0';
+
+    // Logs
+    log_info(logger_memoria, "## PID: <%d> - Lectura - Dir. Física: <%d> - Tamaño: <%d>", pid, direccion_fisica, tamanio_a_leer);
+    log_debug(logger_memoria, "Contenido leído: %s", datos_leidos_como_string);
+
+	//METRICAS
+	int indice = buscar_indice_de_proceso_en_memoria(pid);
+	memoria_del_sistema->procesos[indice].metricas_proceso.cantVecesRead++;
+
+    // Enviar confirmación de éxito al cliente (reemplazar luego por lógica de lectura en memoria)
+	t_paquete* paquete_confirmacion_read = crear_paquete_con_codigo(READ_MEMORIA_CACHE);
+	
+    agregar_a_paquete(paquete_confirmacion_read, datos_leidos_como_string, strlen(datos_leidos_como_string)+1);
+
+	log_warning(logger_memoria, "[SEND] Enviando contenido leído: %s", datos_leidos_como_string);
+
+    enviar_paquete(paquete_confirmacion_read, socket_cliente);
+
+	free(datos_leidos);
+	free(datos_leidos_como_string);
+	eliminar_paquete(paquete_confirmacion_read);
+}
 void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
 	
 	//deserializo el paquete pid, nro pagina, entradas por nivel

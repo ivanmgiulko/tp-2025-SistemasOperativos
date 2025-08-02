@@ -37,8 +37,7 @@ int manejar_conexion_memoria(){
                 log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje);
                 pcb_actual->pc++;
                 respuesta_memo = strdup(mensaje);
-                log_trace(logger_cpu, "QUEDASTE DESBLOQUEADO PAPU");
-                sem_post(&sem_respuesta_memo);
+                log_trace(logger_cpu, "write normal");
                 sem_post(&sem_cpu);
                 break;
             
@@ -46,11 +45,26 @@ int manejar_conexion_memoria(){
             case READ_MEMORIA: 
                 ultima_lectura = deserializar_read_o_write_de_memoria(paquete);
                 log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
+                log_trace(logger_cpu, "read normal");
                 pcb_actual->pc++;
-                log_trace(logger_cpu, "QUEDASTE DESBLOQUEADO PAPU");
+                sem_post(&sem_cpu);
+                break;
+
+            case WRITE_MEMORIA_CACHE: 
+                char* mensaje_cache = deserializar_read_o_write_de_memoria(paquete);
+                log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje);
+                respuesta_memo = strdup(mensaje_cache);
+                log_trace(logger_cpu, "WRITE CACHE");
+                sem_post(&sem_respuesta_memo);
+                break;
+            
+
+            case READ_MEMORIA_CACHE: 
+                ultima_lectura = deserializar_read_o_write_de_memoria(paquete);
+                log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
+                log_trace(logger_cpu, "READ CACHE");
 
                 sem_post(&sem_read);
-                sem_post(&sem_cpu);
                 break;
             
 

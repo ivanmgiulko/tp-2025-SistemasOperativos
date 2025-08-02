@@ -22,12 +22,6 @@ int manejar_conexion_kernel_dispatch(){
 				if(pcb_actual->pid != infoPCB->pid && !flag_exit){
 					log_error(logger_cpu, "PID DISTINTO AL ANTERIOR");
 
-					if(cache_esta_activada()){
-						log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
-						actualizar_memoria_principal_completa();
-					}
-					if(tlb_esta_activada())
-						limpiar_tlb();
 					
 				}
 				pthread_mutex_lock(&mutex_cpu);

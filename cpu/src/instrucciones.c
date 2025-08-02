@@ -184,7 +184,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             eliminar_paquete(paquete);
 			break;
 		case INSTR_WRITE:
-
+            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> <%s> <%s>", 
+                pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.write.direccion, instruccion->parametros.write.datos);          
             //Prepara los datos para calculos de direcciones
             direccion_logica = atoi(instruccion->parametros.write.direccion);
             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);
@@ -211,21 +212,21 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 //TLB
                 if(tlb_esta_activada()){
                 //Verifica si la página está en TLB
-                marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
+                    marco_correspondiente = esta_en_tlb(pre_direccion_fisica.nro_pagina);
 
-                if (marco_correspondiente == -1){
-                    //TLB_MISS, accede a tabla de paginas en memoria para obtener marco
-                    marco_correspondiente = tlb_miss(pre_direccion_fisica);
-                }
+                    if (marco_correspondiente == -1){
+                        //TLB_MISS, accede a tabla de paginas en memoria para obtener marco
+                        marco_correspondiente = tlb_miss(pre_direccion_fisica);
+                    }
                 //TLB_HIT    
-                }
-                else marco_correspondiente = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
+                }else 
+                    marco_correspondiente = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
                 //Calcula direccion fisica
                 direccion_fisica_final = calcular_direccion_fisica_final(marco_correspondiente, pre_direccion_fisica);
                 mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
                 
                 //Envia el WRITE a memoria
-                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos)+1);
+                enviar_write_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.write.datos, strlen(instruccion->parametros.write.datos)+1, WRITE_MEMORIA);
                 log_debug(logger_cpu, "WRITE enviado a Memoria. Esperando respuesta...");
                 eliminar_paquete(paquete);
                 
@@ -238,7 +239,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 
 		case INSTR_READ:
-            //Calculos de predireccion
+            log_info(logger_cpu, "##PID <%d> | Ejecutando: <%s> <%s> <%d>", 
+                pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo), instruccion->parametros.read.direccion, instruccion->parametros.read.tamanio); 
             direccion_logica = atoi(instruccion->parametros.read.direccion);
             pre_direccion_fisica = calcular_pre_direccion_fisica(direccion_logica);  
 
@@ -278,7 +280,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 mmu->ultima_direccion_fisica_calculada = direccion_fisica_final;
                 
                 //Envia el read a memoria
-                enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio);
+                enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio, READ_MEMORIA);
+
                 eliminar_paquete(paquete);
                 
                
@@ -302,6 +305,12 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			////////////////////////////
                         
 		case INSTR_IO:
+             if(cache_esta_activada()){
+                log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
+                actualizar_memoria_principal_completa();
+            }
+            if(tlb_esta_activada())
+                limpiar_tlb();
 			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s> - <%s> <%d>", pcb_actual->pid, obtener_nombre_instruccion(instruccion->tipo),
 			instruccion->parametros.io.dispositivo, instruccion->parametros.io.tiempo);
 
@@ -331,9 +340,9 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_io);
 
             log_debug(logger_cpu, "Enviando SYSCALL_IO a Kernel");
-            //sem_post(&sem_cpu_kernel);
             
-
+          
+            
 
 			break;
 		case INSTR_INIT_PROC:
@@ -364,13 +373,15 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 
             
             pcb_actual->pc++;
-           int valor =0;
             sem_post(&sem_cpu); 
-            sem_getvalue(&sem_cpu, &valor);
-            log_trace(logger_cpu, "wtf innit proc valor semaforo: %d", valor);
 			break;
 		case INSTR_DUMP_MEMORY:
-
+            if(cache_esta_activada()){
+                log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
+                actualizar_memoria_principal_completa();
+            }
+            if(tlb_esta_activada())
+                limpiar_tlb();
 			log_info(logger_cpu, "##PID: <%d> | Ejecutando: <%s>", pcb_actual->pid, 
                 obtener_nombre_instruccion(instruccion->tipo));
 
@@ -392,7 +403,8 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             free(paquete_dump_memory);
             
             log_debug(logger_cpu, "Enviando SYSCALL_DUMP_MEMORY a Kernel");
-
+           
+					
            // sem_post(&sem_cpu_kernel);
 
             // pedir_instruccion_a_memoria(pcb_actual); 

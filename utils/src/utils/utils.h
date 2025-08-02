@@ -54,6 +54,8 @@ typedef enum
 	INTERFAZ,
 	WRITE_MEMORIA,
 	READ_MEMORIA,
+	WRITE_MEMORIA_CACHE,
+	READ_MEMORIA_CACHE,
 	// Syscalls que recibe Kernel desde CPU INTERRUPT
 
 	SYSCALL_IO,

@@ -213,7 +213,17 @@ int manejar_conexion_cpu(void* void_socket_cliente){
 				usleep( retardo_memoria * 1000);
 				manejar_lectura_memoria(socket_cliente, paquete);
 				break;
+			case WRITE_MEMORIA_CACHE:
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
+				manejar_escritura_memoria_cache(socket_cliente, paquete);
+				break;
 
+			case READ_MEMORIA_CACHE:
+				//RETARDO DE MEMORIA
+				usleep( retardo_memoria * 1000);
+				manejar_lectura_memoria_cache(socket_cliente, paquete);
+				break;
 			case LINUS_TORVALDS:
 				log_error(logger_memoria, "el cliente se desconecto.");
 				close(socket_cliente);  // cerrá el socket

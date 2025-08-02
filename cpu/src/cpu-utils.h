@@ -20,8 +20,8 @@ void _handshake_kernel_con_cpu_id(int, char*);
 void check_interrupt();
 void enviar_proceso_desalojado(int , uint8_t , uint16_t );
 
-void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_t tamanio);
-void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos, uint32_t tamanio);
+void enviar_read_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, uint32_t tamanio, op_code codigo);
+void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* datos, uint32_t tamanio, op_code codigo);
 
 
 
