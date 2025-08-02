@@ -1,0 +1,6 @@
+==45613== Memcheck, a memory error detector
+==45613== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==45613== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==45613== Command: ./bin/cpu 1 prueba_general/
+==45613== Parent PID: 27785
+==45613== 

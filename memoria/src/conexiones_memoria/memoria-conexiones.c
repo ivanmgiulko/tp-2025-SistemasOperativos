@@ -33,7 +33,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 	t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
 	paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
-
+	log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
 	recibir_buffer_en_paquete(socket_cliente, paquete);
 
 	if(paquete->buffer->stream == NULL){
@@ -198,7 +198,7 @@ int manejar_conexion_cpu(void* void_socket_cliente){
 				//RETARDO DE MEMORIA
 				//(retardo equivalene a acceder a cada nivel)
 				usleep( retardo_memoria * atoi(config_memoria->CANTIDAD_NIVELES) * 1000);
-
+				log_warning(logger_memoria, "OBTENER_MARCO_CORRESPONDIENTE");
 				manejar_acceso_tablas_de_paginas(socket_cliente, paquete);
 				break;
 

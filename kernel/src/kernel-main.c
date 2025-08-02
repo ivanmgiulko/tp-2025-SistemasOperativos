@@ -5,20 +5,20 @@
 #include <utils_kernel/manejar-conexiones/modulo-io/manejar-conexion-io.h>
 
 int main(int argc, char* argv[]) {
-	// if(argc <= CANT_MINIMA_ARGUMENTOS){
-	// 	fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
-	// 	return EXIT_FAILURE;
-	// }
+	if(argc <= CANT_MINIMA_ARGUMENTOS){
+		fprintf(stderr, "Falta nombre Archivo de pseudocodigo y/o tamanio del proceso papu lince \n");
+		return EXIT_FAILURE;
+	}
 
-	//_chequear_segundo_argumento_es_numero(argv[2]);
+	_chequear_segundo_argumento_es_numero(argv[2]);
 
-	argv[1] = "PLANI_CORTO_PLAZO";
+	// argv[1] = "PLANI_CORTO_PLAZO";
 
-	argv[2] = "0";
+	// argv[2] = "0";
 
-	argv[3] = "prueba_cortoplazo/";
+	// argv[3] = "prueba_cortoplazo/";
 
-	argv[4] = "kernel.config";
+	// argv[4] = "kernel.config";
 
 
 	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");

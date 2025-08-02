@@ -1,6 +1,209 @@
-==49048== Memcheck, a memory error detector
-==49048== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==49048== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==49048== Command: ./bin/kernel PLANI_CORTO_PLAZO 256 prueba_cortoplazo/ kernel.config
-==49048== Parent PID: 22417
-==49048== 
+==45552== Memcheck, a memory error detector
+==45552== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==45552== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==45552== Command: ./bin/kernel ESTABILIDAD_GENERAL 0 prueba_general/ kernel.config
+==45552== Parent PID: 4717
+==45552== 
+==45552== Thread 8:
+==45552== Invalid write of size 1
+==45552==    at 0x10C6E4: liberar_cpu_de_proceso (utils-kernel-cpu.c:48)
+==45552==    by 0x10FF5F: sacar_proceso_de_exec (conexion-kernel-cpu.c:231)
+==45552==    by 0x10FAA2: manejar_cliente_interrupt (conexion-kernel-cpu.c:115)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552==  Address 0x9 is not stack'd, malloc'd or (recently) free'd
+==45552== 
+==45552== 
+==45552== Process terminating with default action of signal 11 (SIGSEGV)
+==45552==  Access not within mapped region at address 0x9
+==45552==    at 0x10C6E4: liberar_cpu_de_proceso (utils-kernel-cpu.c:48)
+==45552==    by 0x10FF5F: sacar_proceso_de_exec (conexion-kernel-cpu.c:231)
+==45552==    by 0x10FAA2: manejar_cliente_interrupt (conexion-kernel-cpu.c:115)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552==  If you believe this happened as a result of a stack
+==45552==  overflow in your program's main thread (unlikely but
+==45552==  possible), you can try to increase the size of the
+==45552==  main thread stack using the --main-stacksize= flag.
+==45552==  The main thread stack size used in this run was 8388608.
+==45552== 
+==45552== HEAP SUMMARY:
+==45552==     in use at exit: 237,247 bytes in 646 blocks
+==45552==   total heap usage: 4,785 allocs, 4,139 frees, 381,358 bytes allocated
+==45552== 
+==45552== Thread 1:
+==45552== 4 bytes in 1 blocks are definitely lost in loss record 7 of 192
+==45552==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x10F63C: manejar_cliente_interrupt (conexion-kernel-cpu.c:25)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 82 bytes in 1 blocks are definitely lost in loss record 104 of 192
+==45552==    at 0x484DCD3: realloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x486E915: string_append (string.c:47)
+==45552==    by 0x10B9BF: inicializar_estructuras (utils-planificador.c:121)
+==45552==    by 0x10ECFC: main (kernel-main.c:29)
+==45552== 
+==45552== 96 bytes in 6 blocks are definitely lost in loss record 110 of 192
+==45552==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x110568: crear_buffer (serializacion.c:8)
+==45552==    by 0x110019: manejar_conexion_kernel_memoria (conexion-kernel-memoria.c:13)
+==45552==    by 0x10C494: iniciar_temporizador_suspblocked (utils-planificador.c:385)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 214 bytes in 15 blocks are definitely lost in loss record 120 of 192
+==45552==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x10AD8C: deserializar_archivo_instrucciones (modulo-cpu.c:56)
+==45552==    by 0x10F93F: manejar_cliente_interrupt (conexion-kernel-cpu.c:92)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 122 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E37F: _iniciar_server_para_cpu_interrupt (manejar-conexion-cpu.c:15)
+==45552==    by 0x10ED1D: main (kernel-main.c:33)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 123 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E433: _iniciar_server_para_cpu_dispatch (manejar-conexion-cpu.c:30)
+==45552==    by 0x10ED27: main (kernel-main.c:35)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 124 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E238: _iniciar_server_para_io (manejar-conexion-io.c:14)
+==45552==    by 0x10ED31: main (kernel-main.c:37)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 125 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10EDCB: main (kernel-main.c:46)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 126 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10B80C: _iniciar_cuando_apreta_enter (utils-planificador.c:85)
+==45552==    by 0x10EA49: iniciar_planificacion_largo_plazo (kernel-planificador.c:38)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 127 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10B835: _iniciar_cuando_apreta_enter (utils-planificador.c:89)
+==45552==    by 0x10EA49: iniciar_planificacion_largo_plazo (kernel-planificador.c:38)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 272 bytes in 1 blocks are possibly lost in loss record 128 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10EAC0: iniciar_planificador_mediano_plazo (kernel-planificador.c:56)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 1,088 bytes in 4 blocks are possibly lost in loss record 155 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E4F7: manejar_conexion_kernel_interrupt (manejar-conexion-cpu.c:48)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 1,088 bytes in 4 blocks are possibly lost in loss record 156 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E5B8: manejar_conexion_kernel_dispatch (manejar-conexion-cpu.c:67)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 1,088 bytes in 4 blocks are possibly lost in loss record 157 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10E2E0: manejar_conexion_kernel_io (manejar-conexion-io.c:29)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 1,088 bytes in 4 blocks are possibly lost in loss record 158 of 192
+==45552==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x40147D9: calloc (rtld-malloc.h:44)
+==45552==    by 0x40147D9: allocate_dtv (dl-tls.c:375)
+==45552==    by 0x40147D9: _dl_allocate_tls (dl-tls.c:634)
+==45552==    by 0x495E7B4: allocate_stack (allocatestack.c:430)
+==45552==    by 0x495E7B4: pthread_create@@GLIBC_2.34 (pthread_create.c:647)
+==45552==    by 0x10EB54: iniciar_planificador_mediano_plazo (kernel-planificador.c:69)
+==45552==    by 0x495DAC2: start_thread (pthread_create.c:442)
+==45552==    by 0x49EEA03: clone (clone.S:100)
+==45552== 
+==45552== 2,304 bytes in 1 blocks are possibly lost in loss record 166 of 192
+==45552==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45552==    by 0x4005D97: malloc (rtld-malloc.h:56)
+==45552==    by 0x4005D97: _dlfo_mappings_segment_allocate (dl-find_object.c:217)
+==45552==    by 0x4005D97: _dl_find_object_update_1 (dl-find_object.c:671)
+==45552==    by 0x4005D97: _dl_find_object_update (dl-find_object.c:804)
+==45552==    by 0x400ECCF: dl_open_worker_begin (dl-open.c:735)
+==45552==    by 0x4A3DA97: _dl_catch_exception (dl-error-skeleton.c:208)
+==45552==    by 0x400DF99: dl_open_worker (dl-open.c:782)
+==45552==    by 0x4A3DA97: _dl_catch_exception (dl-error-skeleton.c:208)
+==45552==    by 0x400E34D: _dl_open (dl-open.c:883)
+==45552==    by 0x4A3DE00: do_dlopen (dl-libc.c:95)
+==45552==    by 0x4A3DA97: _dl_catch_exception (dl-error-skeleton.c:208)
+==45552==    by 0x4A3DB62: _dl_catch_error (dl-error-skeleton.c:227)
+==45552==    by 0x4A3DF36: dlerror_run (dl-libc.c:45)
+==45552==    by 0x4A3DF36: __libc_dlopen_mode (dl-libc.c:162)
+==45552==    by 0x49EE610: __libc_unwind_link_get (unwind-link.c:50)
+==45552==    by 0x49EE610: __libc_unwind_link_get (unwind-link.c:40)
+==45552== 
+==45552== LEAK SUMMARY:
+==45552==    definitely lost: 396 bytes in 23 blocks
+==45552==    indirectly lost: 0 bytes in 0 blocks
+==45552==      possibly lost: 8,560 bytes in 24 blocks
+==45552==    still reachable: 228,291 bytes in 599 blocks
+==45552==         suppressed: 0 bytes in 0 blocks
+==45552== Reachable blocks (those to which a pointer was found) are not shown.
+==45552== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==45552== 
+==45552== For lists of detected and suppressed errors, rerun with: -s
+==45552== ERROR SUMMARY: 17 errors from 17 contexts (suppressed: 0 from 0)

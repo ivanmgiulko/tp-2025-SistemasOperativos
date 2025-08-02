@@ -10,17 +10,16 @@
 #include <stdint.h>
 #include <limits.h>
 
-extern bool receptor_habilitado;
 extern t_log* logger_cpu;
 extern sem_t sem_cpu;
-//extern sem_t sem_cpu_kernel;
-extern sem_t sem_memoria;
 extern sem_t sem_read;
 extern sem_t sem_write;
+extern sem_t sem_rta_marco;
+extern sem_t sem_instruccion;
+extern int32_t marco_global;
 extern pthread_mutex_t mutex_cpu;
-extern pthread_mutex_t mutex_conexion_memoria;
-extern pthread_cond_t condicion_reactivacion_recepcion_memoria;
-
+extern sem_t sem_respuesta_memo;
+extern char* respuesta_memo;
 extern uint32_t entradas_cache;
 extern uint32_t retardo_cache;
 extern char* algoritmo_reemplazo_cache;
@@ -31,7 +30,7 @@ extern char* ultima_escritura;
 extern char* ultima_lectura;
 extern bool flag_interrupt;
 extern bool flag_exit;
-
+extern char* respuesta_instruccion;
 //conexiones
 extern int fd_conexion_kernel_interrupt;
 extern int fd_conexion_kernel_dispatch;

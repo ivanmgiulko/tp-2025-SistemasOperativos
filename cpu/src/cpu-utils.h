@@ -7,7 +7,7 @@
 
 void pedir_instruccion_a_memoria(t_peticion_instruccion*);
 
-void manejar_respuesta_de_instruccion(t_paquete* paquete);
+void manejar_respuesta_de_instruccion();
 
 void _crear_conexion_kernel_interrupt(char*, char*, char*);
 
@@ -55,7 +55,6 @@ uint32_t* calcular_entradas_por_nivel(int nro_pagina, int cantidad_niveles, int 
 uint32_t calcular_direccion_fisica_final(uint32_t marco, t_pre_direccion_fisica pre_direccion_fisica);
 
 int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, uint8_t pid);
-int32_t recibir_marco_solicitado(t_paquete* paquete);
 
 //FUNCIONES Y DEFINICIONES DE TLB
 

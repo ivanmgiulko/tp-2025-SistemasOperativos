@@ -739,6 +739,7 @@ void manejar_acceso_tablas_de_paginas(int socket_cliente, t_paquete* paquete) {
     log_trace(logger_memoria, "[SEND] Enviando marco: %d", marco);
 
     enviar_paquete(paquete_marco, socket_cliente);
+    log_warning(logger_memoria, "ahora si que envie el marcco");
     eliminar_paquete(paquete_marco);
     free(direccion.entrada_nivel);
 }

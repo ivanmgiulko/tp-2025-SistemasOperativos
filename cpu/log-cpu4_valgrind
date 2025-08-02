@@ -1,0 +1,27 @@
+==45631== Memcheck, a memory error detector
+==45631== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==45631== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==45631== Command: ./bin/cpu 4 prueba_general/
+==45631== Parent PID: 13726
+==45631== 
+==45631== Thread 4:
+==45631== Syscall param socketcall.sendto(msg) points to uninitialised byte(s)
+==45631==    at 0x4A838FE: __libc_send (send.c:28)
+==45631==    by 0x4A838FE: send (send.c:23)
+==45631==    by 0x10BAAC: enviar_proceso_desalojado (cpu-utils.c:165)
+==45631==    by 0x10B911: check_interrupt (cpu-utils.c:133)
+==45631==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==45631==    by 0x4A81A03: clone (clone.S:100)
+==45631==  Address 0x4baf88b is 11 bytes inside a block of size 16 alloc'd
+==45631==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45631==    by 0x10BA25: enviar_proceso_desalojado (cpu-utils.c:159)
+==45631==    by 0x10B911: check_interrupt (cpu-utils.c:133)
+==45631==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==45631==    by 0x4A81A03: clone (clone.S:100)
+==45631==  Uninitialised value was created by a heap allocation
+==45631==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==45631==    by 0x10B9AA: enviar_proceso_desalojado (cpu-utils.c:150)
+==45631==    by 0x10B911: check_interrupt (cpu-utils.c:133)
+==45631==    by 0x49F0AC2: start_thread (pthread_create.c:442)
+==45631==    by 0x4A81A03: clone (clone.S:100)
+==45631== 

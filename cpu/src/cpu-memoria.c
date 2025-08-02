@@ -1,23 +1,12 @@
 #include "cpu-memoria.h"
 int manejar_conexion_memoria(){
-    log_trace(logger_cpu, "[DEBUG] Hilo de recepción de memoria iniciado");
 
     while (1) {
-        pthread_mutex_lock(&mutex_conexion_memoria);
-        while (!receptor_habilitado) {
-            log_debug(logger_cpu, "[RECEPTOR] En pausa, esperando señal...");
-            pthread_cond_wait(&condicion_reactivacion_recepcion_memoria, &mutex_conexion_memoria);
-        }
-        pthread_mutex_unlock(&mutex_conexion_memoria);
-
-        // Solo si está habilitado recibe
+        
         t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
-        // 🛑 Esto solo debería ejecutarse si receptor_habilitado sigue siendo true
         paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
- //       log_warning(logger_cpu, "[RECV] Recibido código de operación: %s (nro: %d)", 
-  //                  convertir_cod_op_a_string(paquete->codigo_operacion), 
-    //                paquete->codigo_operacion);
+        
         recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
 
         if(paquete->buffer->stream == NULL){
@@ -25,7 +14,7 @@ int manejar_conexion_memoria(){
             eliminar_paquete(paquete);
             continue;
         }
-
+        log_warning(logger_cpu, "RECIBI CODIGO: %d", paquete->codigo_operacion );
         switch (paquete->codigo_operacion) {
             case MENSAJE:
                 loggear_mensaje_desde_buffer(paquete->buffer, logger_cpu);
@@ -38,29 +27,47 @@ int manejar_conexion_memoria(){
                 break;
 
             case INSTRUCCION:
-                manejar_respuesta_de_instruccion(paquete);
+                int desplazamiento = 0;
+                respuesta_instruccion = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
+                sem_post(&sem_instruccion);
                 break;
 
-            case WRITE_MEMORIA: {
+            case WRITE_MEMORIA: 
                 char* mensaje = deserializar_read_o_write_de_memoria(paquete);
                 log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje);
                 pcb_actual->pc++;
-                sem_wait(&sem_memoria);
+                respuesta_memo = strdup(mensaje);
+                log_trace(logger_cpu, "QUEDASTE DESBLOQUEADO PAPU");
+                sem_post(&sem_respuesta_memo);
                 sem_post(&sem_cpu);
                 break;
-            }
+            
 
-            case READ_MEMORIA: {
+            case READ_MEMORIA: 
                 ultima_lectura = deserializar_read_o_write_de_memoria(paquete);
                 log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
                 pcb_actual->pc++;
-                sem_wait(&sem_memoria);
+                log_trace(logger_cpu, "QUEDASTE DESBLOQUEADO PAPU");
+
+                sem_post(&sem_read);
                 sem_post(&sem_cpu);
                 break;
-            }
+            
 
+            case OBTENER_MARCO_CORRESPONDIENTE:
+                log_warning(logger_cpu, "EL NO HIZO NADA");
+                if (paquete && paquete->buffer && paquete->buffer->stream) {
+                    memcpy(&marco_global, paquete->buffer->stream + sizeof(uint32_t), sizeof(int32_t));
+                    log_warning(logger_cpu, "recibir_marco_solicitado ==== %d", marco_global);
+                }
+                else{
+                    log_error(logger_cpu, "Error al recibir el marco solicitado");
+                }
+                log_warning(logger_cpu, "EL NO HIZO NADA   2");
+                sem_post(&sem_rta_marco);
+                break;
             case FIN_PID:
-             //   sem_post(&sem_cpu_kernel);
+
                 break;
 
             case -1:

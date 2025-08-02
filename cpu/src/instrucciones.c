@@ -202,7 +202,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 log_debug(logger_cpu, "Contenido de página: %.10s", memoria_cache->paginas[indice_pagina_cache].contenido);
 
                 pcb_actual->pc++;
-                sem_post(&sem_cpu); // Libera el semáforo de CPU
+                sem_post(&sem_cpu); 
                 eliminar_paquete(paquete);
 
             }
@@ -233,7 +233,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                     free(ultima_escritura);
                 ultima_escritura = strdup(instruccion->parametros.write.datos);
 
-               sem_post(&sem_memoria); // Espera a que la memoria confirme el read
             }
             free(pre_direccion_fisica.entrada_nivel);
 			break;
@@ -282,7 +281,6 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                 enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, instruccion->parametros.read.tamanio);
                 eliminar_paquete(paquete);
                 
-                sem_post(&sem_memoria); // Espera a que la memoria confirme el read
                
             }
             free(pre_direccion_fisica.entrada_nivel);
@@ -324,7 +322,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
             agregar_a_paquete(paquete, &tiempo, sizeof(int32_t));
 
             // Serializar y enviar
-            bytes = sizeof(int) + sizeof(uint32_t) + paquete->buffer->size;
+            bytes = sizeof(int32_t) + sizeof(uint32_t) + paquete->buffer->size;
             void* paquete_io = serializar_paquete(paquete, bytes);
 
             send(fd_conexion_kernel_interrupt, paquete_io, bytes, 0);

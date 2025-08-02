@@ -1,13 +1,13 @@
 #include "cpu.h"
 int main(int argc, char* argv[]){
-	if(argc < 3){
-		fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
-		return EXIT_FAILURE;
-	}
+	// if(argc < 3){
+	// 	fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
+	// 	return EXIT_FAILURE;
+	// }
  
 	// argv[1] = "1";
 
-	// argv[2] = "prueba_cortoplazo/";
+	 argv[2] = "prueba_general/";
 
 	char* cpu_id = argv[1];
 
@@ -70,14 +70,12 @@ int main(int argc, char* argv[]){
 
 	//este post tendria que estar cuando se recibe un proceso y cada vez que se tenga que pedir otra instruccion a memoria.
 	sem_init(&sem_cpu,0,0);
-	//sem_init(&sem_cpu_kernel,0,1);
-	sem_init(&sem_memoria, 0, 0); // Inicializa el semáforo en 0 para bloquear el acceso
 	sem_init(&sem_read,0,0);
 	sem_init(&sem_write,0,0);
+	sem_init(&sem_instruccion, 0, 0);
 	pthread_mutex_init(&mutex_cpu, NULL);
-	pthread_mutex_init(&mutex_conexion_memoria, NULL);
-	pthread_cond_init(&condicion_reactivacion_recepcion_memoria, NULL);
-	receptor_habilitado = true;
+	sem_init(&sem_respuesta_memo, 0,0);
+	sem_init(&sem_rta_marco, 0, 0);
 	//ahora esta asi para que solo se ejecute una vez y no afecte en la ejecucion del resto.
 	
 	pthread_t hilo_cliente_cpu_int_a_kernel;
@@ -92,6 +90,10 @@ int main(int argc, char* argv[]){
 	pthread_t hilo_interrupt;
 	pthread_create(&hilo_interrupt, NULL, (void*)check_interrupt, NULL);
 	pthread_detach(hilo_interrupt);
+
+	pthread_t hilo_instruccion;
+	pthread_create(&hilo_instruccion, NULL, (void*)manejar_respuesta_de_instruccion, NULL);
+	pthread_detach(hilo_instruccion);
 
 	pthread_t hilo_cliente_cpu_a_memoria;
     pthread_create(&hilo_cliente_cpu_a_memoria, NULL, (void*)manejar_conexion_memoria, NULL);

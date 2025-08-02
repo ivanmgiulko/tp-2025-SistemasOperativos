@@ -41,37 +41,23 @@ void pedir_instruccion_a_memoria(t_peticion_instruccion* infoPCB){
     eliminar_paquete(paquete); 
 }	
 	
-void manejar_respuesta_de_instruccion(t_paquete* paquete){
+void manejar_respuesta_de_instruccion(){
+    while(1){
+        sem_wait(&sem_instruccion);
 
-	//Deserializa la instrucción recibida
-    int desplazamiento = 0;
-	char* respuesta_instruccion = leer_string_desde_buffer(paquete->buffer, &desplazamiento);
 
-	t_instruccion* instruccion = malloc(sizeof(t_instruccion));
-	instruccion = decode(respuesta_instruccion);
-	if (!instruccion) {
-        // No olvides liberar respuesta->instruccion antes de salir
-        free_instruccion(instruccion);
-        free(respuesta_instruccion);
-        return;  // Finaliza la función si no se pudo decodificar la instrucción
+        t_instruccion* instruccion = malloc(sizeof(t_instruccion));
+        instruccion = decode(respuesta_instruccion);
+        if (!instruccion) {
+            free_instruccion(instruccion);
+
+            return; 
+        }
+        
+        ejecutar_instruccion(instruccion);
+        
+        free_instruccion(instruccion);	
     }
-	
-	ejecutar_instruccion(instruccion);
-	//ejecutar_instruccion(instruccion);
-	//Se chequea luego de excecute, si llego una interrupcion.
-
-
-	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
-
-	
-	//log_trace(logger_cpu, "Valor de sem_cpu: %d", valor_sem_cpu);
-
-	// si hay interrupcion, se detiene la ejecucion del proceso actual y se envia a kernel el proceso desalojado.
-	// si no hay interrupcion, se pide la siguiente instruccion a memoria.
-	
-	
-	free_instruccion(instruccion);	
-	free(respuesta_instruccion);
 }
 
 void _crear_conexion_kernel_interrupt(char* ip_kernel, char* puerto_kernel_interrupt, char* cpu_id) 
@@ -154,7 +140,6 @@ void check_interrupt(){
 
         }
 
-        // Si detectás que el kernel se desconectó, break o return
     }
 }
 
@@ -222,31 +207,6 @@ void enviar_write_a_memoria(uint8_t pid, uint32_t direccion_fisica_final, char* 
     eliminar_paquete(paquete_write);
 }
 
-char* obtener_pagina_de_memoria(uint8_t pid, uint32_t direccion_fisica) {
-    // Enviar solicitud a memoria para obtener la página correspondiente
-    enviar_read_a_memoria(pid, direccion_fisica, mmu->tamanio_pagina);
-
-    // Esperar respuesta de memoria
-    t_paquete* paquete_respuesta = crear_paquete_con_codigo(PAQUETE);
-    paquete_respuesta->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
-    recibir_buffer_en_paquete(fd_conexion_memoria,paquete_respuesta);
-    if (paquete_respuesta == NULL) {
-        log_error(logger_cpu, "Error al recibir respuesta de memoria");
-        return NULL;
-    }
-
-    // Verificar que la respuesta sea válida
-    if (paquete_respuesta->codigo_operacion != READ_MEMORIA) {
-//        log_error(logger_cpu, "Error al obtener página de memoria, código de operación: %d", paquete_respuesta->codigo_operacion);
-        eliminar_paquete(paquete_respuesta);
-        return NULL;
-    }
-
-    // Deserializar contenido de la página
-    char* pagina = deserializar_read_o_write_de_memoria(paquete_respuesta);
-    eliminar_paquete(paquete_respuesta);
-    return pagina;
-}
 char* recibir_read_o_write_de_memoria() {
     t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
@@ -287,14 +247,18 @@ char* recibir_read_o_write_de_memoria() {
 }
 
 char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
-    uint32_t tamanio = 0;
+      uint32_t tamanio = 0;
     uint32_t desplazamiento = 0;
     memcpy(&tamanio, paquete->buffer->stream + desplazamiento, sizeof(uint32_t));
     desplazamiento += sizeof(uint32_t);
 
-    char* contenido = malloc(tamanio + 1); // +1 para el '\0'
+    // Reservá SIEMPRE mmu->tamanio_pagina bytes
+    char* contenido = calloc(1, mmu->tamanio_pagina); // inicializa en 0
     memcpy(contenido, paquete->buffer->stream + desplazamiento, tamanio);
-    log_debug(logger_cpu, "Contenido deserializado: %s", contenido);
+
+    // Opcional: loguear solo los primeros bytes como string
+    log_debug(logger_cpu, "Contenido deserializado (primeros bytes): %.32s", contenido);
+
     return contenido;
 }
 
@@ -373,34 +337,14 @@ int32_t solicitar_marco_a_memoria(t_pre_direccion_fisica pre_direccion_fisica, u
     enviar_paquete(paquete, fd_conexion_memoria);
     log_debug(logger_cpu, "[SEND] Solicitud de marco enviada");
 
-    paquete->codigo_operacion = recibir_cod_operacion(fd_conexion_memoria);
-    if (paquete->codigo_operacion != OBTENER_MARCO_CORRESPONDIENTE) {
-        log_error(logger_cpu, "Código inesperado: %d", paquete->codigo_operacion);
-        eliminar_paquete(paquete);
-
-
-        return -1;
-    }
-
-    int32_t marco = recibir_marco_solicitado(paquete);
+    sem_wait(&sem_rta_marco);
     log_info(logger_cpu,"PID: <%d> - OBTENER MARCO - Página: <%d> - Marco: <%d>", 
-             pid, pre_direccion_fisica.nro_pagina, marco);
+             pid, pre_direccion_fisica.nro_pagina, marco_global);
     eliminar_paquete(paquete);
-    return marco;
+    return marco_global;
 }
 
-int32_t recibir_marco_solicitado(t_paquete* paquete){
-    int32_t marco;
-    recibir_buffer_en_paquete(fd_conexion_memoria, paquete);
-    if (paquete && paquete->buffer && paquete->buffer->stream) {
-        memcpy(&marco, paquete->buffer->stream + sizeof(uint32_t), sizeof(int32_t));
-        return marco;
-    }
-    else{
-        log_error(logger_cpu, "Error al recibir el marco solicitado");
-        return -1;//VALOR DE ERROR PARA INDICAR MARCO INVALIDO
-    }
-}
+
 //FUNCIONES DE TLB
 
 tlb_t* inicializar_tlb(uint32_t maximas_entradas_tlb) {
@@ -785,23 +729,18 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
     //Una vez que sabemos el marco de la página, podemos calcular la direccion física
     uint32_t direccion_fisica_final = pre_direccion_fisica.nro_pagina * mmu->tamanio_pagina;
     //Con la dirección física, buscamos la página en memoria y la cargamos en cache
-    char* pagina = obtener_pagina_de_memoria(pcb_actual->pid, direccion_fisica_final);
-    if (pagina == NULL) {
+    enviar_read_a_memoria(pcb_actual->pid, direccion_fisica_final, mmu->tamanio_pagina);
+    sem_wait(&sem_read);
+    if (ultima_lectura == NULL) {
         log_error(logger_cpu, "Error al obtener la página de memoria para PID: %d, Página: %d", pcb_actual->pid, pre_direccion_fisica.nro_pagina);
         return -1; // Error al obtener la página
     }
     //agrego la pag a cache
-    agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, pagina);
-    free(pagina);
+    agregar_pagina_a_cache(pre_direccion_fisica.nro_pagina, marco_cache, ultima_lectura);
     return marco_cache;
 }
 void actualizar_memoria_principal_completa() {
-    char* respuesta;
-    // 🛑 Desactivar receptor para control total de recv
-    pthread_mutex_lock(&mutex_conexion_memoria);
-    receptor_habilitado = false;
-    pthread_mutex_unlock(&mutex_conexion_memoria);
-
+    
     for (uint32_t i = 0; i < memoria_cache->cantidad_paginas; i++) {
 
         t_pagina_de_cache* pagina = &memoria_cache->paginas[i];
@@ -817,18 +756,18 @@ void actualizar_memoria_principal_completa() {
             log_debug(logger_cpu, "Contenido de pagina antes de enviar a memoria: %s", pagina->contenido);
             // Escribir en memoria principal
             enviar_write_a_memoria(pcb_actual->pid, direccion_fisica, pagina->contenido, mmu->tamanio_pagina);
-            respuesta = recibir_read_o_write_de_memoria();
+            sem_wait(&sem_respuesta_memo);
 
-            if (respuesta && strcmp(respuesta, "WRITE completado con éxito") == 0) {
+            if (respuesta_memo && strcmp(respuesta_memo, "WRITE completado con éxito") == 0) {
                 log_info(logger_cpu, "PID: <%d> - Memory Update - Página: <%d> - Frame: <%d>", pcb_actual->pid, pagina->nro_pagina, marco);
-            } else if (respuesta) {
+            } else if (respuesta_memo) {
                 log_error(logger_cpu, "Error al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
-                log_error(logger_cpu, "Respuesta inesperada de memoria: %s", respuesta);
+                log_error(logger_cpu, "Respuesta inesperada de memoria: %s", respuesta_memo);
             } else {
                 log_error(logger_cpu, "Error: respuesta NULL al actualizar la memoria principal para PID: %d, Página: %d", pcb_actual->pid, pagina->nro_pagina);
             }
 
-            free(respuesta);
+            free(respuesta_memo);
             free(pre_dir.entrada_nivel);
             pagina->bit_modificado = false;
         }
@@ -842,11 +781,7 @@ void actualizar_memoria_principal_completa() {
 
     memoria_cache->puntero_reemplazo = 0;
 
-    // ✅ Reactivar receptor al final
-    pthread_mutex_lock(&mutex_conexion_memoria);
-    receptor_habilitado = true;
-    pthread_cond_signal(&condicion_reactivacion_recepcion_memoria);
-    pthread_mutex_unlock(&mutex_conexion_memoria);
+  
 }
 
     

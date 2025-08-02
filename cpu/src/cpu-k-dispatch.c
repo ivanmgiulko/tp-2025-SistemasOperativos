@@ -14,21 +14,18 @@ int manejar_conexion_kernel_dispatch(){
 				
 			case INFO_PROC_EXEC:
 				//sem_wait(&sem_cpu_kernel);
-
+				log_debug(logger_cpu, "Recibiendo INFO_PROC_EXEC desde Kernel");
 				recibir_paquete(fd_conexion_kernel_dispatch, paquete);
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
-				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-				// 	log_trace(logger_cpu, "Bits de uso previo a limpiar: %d",tlb->entradas[i].bit_en_uso);
-
-				// }
-				// for(uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
-					// 	log_trace(logger_cpu, "Bits de uso luego de limpiar: %d",tlb->entradas[i].bit_en_uso);
-					
-					// }				
+						
 				if(pcb_actual->pid != infoPCB->pid && !flag_exit){
-					if(cache_esta_activada())
+					log_error(logger_cpu, "PID DISTINTO AL ANTERIOR");
+
+					if(cache_esta_activada()){
+						log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
 						actualizar_memoria_principal_completa();
+					}
 					if(tlb_esta_activada())
 						limpiar_tlb();
 					
