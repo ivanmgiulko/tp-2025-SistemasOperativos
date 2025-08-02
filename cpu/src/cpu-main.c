@@ -1,19 +1,19 @@
 #include "cpu.h"
 int main(int argc, char* argv[]){
-	// if(argc < 3){
-	// 	fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
-	// 	return EXIT_FAILURE;
-	// }
+	if(argc < 3){
+		fprintf(stderr, "Falta ID del CPU o ruta para la prueba\n");
+		return EXIT_FAILURE;
+	}
  
-	argv[1] = "1";
+	// argv[1] = "1";
 
-	argv[2] = "prueba_cache/";
+	// argv[2] = "prueba_cache/";
 
 	char* cpu_id = argv[1];
 
 
-	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-//	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+//	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 
 	string_append(&path_relativo, argv[2]);
 	string_append(&path_relativo, "cpu");

@@ -21,11 +21,7 @@ int manejar_conexion_kernel_dispatch(){
 				
 				t_peticion_instruccion* infoPCB = deserializar_info_pcb(paquete->buffer);
 						
-				if(pcb_actual->pid != infoPCB->pid && !flag_exit){
-					log_error(logger_cpu, "PID DISTINTO AL ANTERIOR");
-
-					
-				}
+				
 				pthread_mutex_lock(&mutex_cpu);
 				pcb_actual->pid = infoPCB->pid;
 				pcb_actual->pc = infoPCB->pc;

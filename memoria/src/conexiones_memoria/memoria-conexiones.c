@@ -143,8 +143,7 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 				enviar_respuesta_dump_memory(proceso_a_dumpear->pid, 1, socket_cliente);
 			}
 
-			free(proceso_a_dumpear->pathArchivoPseudocodigo);
-			free(proceso_a_dumpear);
+		
 
 			break;
 

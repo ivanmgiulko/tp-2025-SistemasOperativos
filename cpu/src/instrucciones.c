@@ -306,7 +306,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
                         
 		case INSTR_IO:
              if(cache_esta_activada()){
-                log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
+              //  log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
                 actualizar_memoria_principal_completa();
             }
             if(tlb_esta_activada())
@@ -377,7 +377,7 @@ void ejecutar_instruccion(t_instruccion* instruccion) {
 			break;
 		case INSTR_DUMP_MEMORY:
             if(cache_esta_activada()){
-                log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
+             //   log_error(logger_cpu, "SE ENTRA A cache_esta_activada");
                 actualizar_memoria_principal_completa();
             }
             if(tlb_esta_activada())

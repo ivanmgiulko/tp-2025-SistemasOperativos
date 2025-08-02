@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	// _chequear_segundo_argumento_es_numero(argv[2]);
+	 _chequear_segundo_argumento_es_numero(argv[2]);
 
 	// argv[1] = "PLANI_CORTO_PLAZO";
 
@@ -21,8 +21,8 @@ int main(int argc, char* argv[]) {
 	// argv[4] = "kernel.config";
 
 
-	char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
-//	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	//char* path_relativo = string_duplicate("/home/utnso/Desktop/tp-2025-1c-FAMILIA-MATRIX/prueba/");
+	char* path_relativo = string_duplicate("/home/utnso/so-deploy/tp-2025-1c-FAMILIA-MATRIX/prueba/");
 	string_append(&path_relativo, argv[3]);
 	
 	// Iniciamos las Colas con sus respectivos Mutex (como si fuera un monitor); tambien inicia Log y Config

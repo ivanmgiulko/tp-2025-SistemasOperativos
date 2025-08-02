@@ -29,7 +29,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
             case MENSAJE:
                 recibir_mensaje(socket_interrupt, logger_kernel);
                 free(paquete);
-                free(offset);
                 break;
 
             case SYSCALL_IO:
@@ -79,7 +78,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 }
                 
                 eliminar_paquete(paquete);
-                free(offset);
             
                 break;
 
@@ -104,7 +102,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 pasar_pcb_a_new(nuevo_proceso);
 
                 eliminar_paquete(paquete);
-                free(offset);
                 break;
 
             case SYSCALL_DUMP_MEMORY:
@@ -131,7 +128,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                     manejar_conexion_kernel_memoria(fd_conexion_memoria);
                 }
 
-                free(offset);
                 eliminar_paquete(paquete);
                 break;
 
@@ -151,7 +147,6 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
 
                 pasar_de_exec_a_exit(_proceso_a_finalizar);
                 
-                free(offset);
                 eliminar_paquete(paquete);
                 break;
 
@@ -172,19 +167,16 @@ int manejar_cliente_interrupt(void* socket_cliente_ptr){
                 pasar_pcb_exec_a_ready(_proceso_desalojado);
 
                 eliminar_paquete(paquete);
-                free(offset);
                 
                 break;
 
             case -1:
                 log_error(logger_kernel, "El cliente [CPU - Interrupt] se desconectó.");
                 eliminar_paquete(paquete);
-                free(offset);
                 return EXIT_FAILURE;
             default:
             log_warning(logger_kernel, "Operación desconocida en interrupt.");
                 eliminar_paquete(paquete);
-                free(offset);
                 break;
             }
         }
