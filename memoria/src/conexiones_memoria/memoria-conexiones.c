@@ -30,11 +30,11 @@ void manejar_hilos_clientes(int server_fd){
 int manejar_conexion_kernel(void* void_socket_cliente){
 	int socket_cliente = *(int*)void_socket_cliente;
 	free(void_socket_cliente);
-	log_error(logger_memoria, "ESTE ES UN HILO DE KERNEL");
+	//log_error(logger_memoria, "ESTE ES UN HILO DE KERNEL");
 	t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
 	paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
-	log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
+	//log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
 	recibir_buffer_en_paquete(socket_cliente, paquete);
 
 	if(paquete->buffer->stream == NULL){
@@ -170,11 +170,12 @@ int manejar_conexion_kernel(void* void_socket_cliente){
 int manejar_conexion_cpu(void* void_socket_cliente){
 	int socket_cliente = *(int*)void_socket_cliente;
 	free(void_socket_cliente);
-	
+
 	while (1) {
 		t_paquete* paquete = crear_paquete_con_codigo(PAQUETE);
 
 		paquete->codigo_operacion = recibir_cod_operacion(socket_cliente);
+	log_warning(logger_memoria, "RECIBI CODIGO: %d", paquete->codigo_operacion );
 
 		recibir_buffer_en_paquete(socket_cliente, paquete);
 	

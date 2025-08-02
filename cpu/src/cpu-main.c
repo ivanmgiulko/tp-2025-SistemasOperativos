@@ -5,9 +5,9 @@ int main(int argc, char* argv[]){
 	// 	return EXIT_FAILURE;
 	// }
  
-	// argv[1] = "1";
+	argv[1] = "1";
 
-	argv[2] = "prueba_general/";
+	argv[2] = "prueba_cache/";
 
 	char* cpu_id = argv[1];
 

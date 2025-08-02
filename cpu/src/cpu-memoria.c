@@ -14,7 +14,7 @@ int manejar_conexion_memoria(){
             eliminar_paquete(paquete);
             continue;
         }
-        log_warning(logger_cpu, "RECIBI CODIGO: %d", paquete->codigo_operacion );
+     //   log_warning(logger_cpu, "RECIBI CODIGO: %d", paquete->codigo_operacion );
         switch (paquete->codigo_operacion) {
             case MENSAJE:
                 loggear_mensaje_desde_buffer(paquete->buffer, logger_cpu);
@@ -37,47 +37,49 @@ int manejar_conexion_memoria(){
                 log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje);
                 pcb_actual->pc++;
                 respuesta_memo = strdup(mensaje);
-                log_trace(logger_cpu, "write normal");
+               // log_trace(logger_cpu, "write normal");
                 sem_post(&sem_cpu);
                 break;
             
 
-            case READ_MEMORIA: 
+          case READ_MEMORIA: 
+                if (ultima_lectura) free(ultima_lectura); // Liberá la anterior si corresponde
                 ultima_lectura = deserializar_read_o_write_de_memoria(paquete);
                 log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
-                log_trace(logger_cpu, "read normal");
                 pcb_actual->pc++;
                 sem_post(&sem_cpu);
                 break;
 
             case WRITE_MEMORIA_CACHE: 
                 char* mensaje_cache = deserializar_read_o_write_de_memoria(paquete);
-                log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje_cache);
+             //   log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje_cache);
                 respuesta_memo = strdup(mensaje_cache);
-                log_trace(logger_cpu, "WRITE CACHE");
+                //log_trace(logger_cpu, "WRITE CACHE");
                 sem_post(&sem_respuesta_memo);
                 break;
             
 
             case READ_MEMORIA_CACHE: 
+                if (ultima_lectura) free(ultima_lectura); // Liberá la anterior si corresponde
+
                 ultima_lectura = deserializar_read_o_write_de_memoria(paquete);
-                log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
-                log_trace(logger_cpu, "READ CACHE");
+               // log_info(logger_cpu, "PID: <%d> - LEER <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, ultima_lectura);
+               // log_trace(logger_cpu, "READ CACHE");
 
                 sem_post(&sem_read);
                 break;
             
 
             case OBTENER_MARCO_CORRESPONDIENTE:
-                log_warning(logger_cpu, "EL NO HIZO NADA");
+            //    log_warning(logger_cpu, "EL NO HIZO NADA");
                 if (paquete && paquete->buffer && paquete->buffer->stream) {
                     memcpy(&marco_global, paquete->buffer->stream + sizeof(uint32_t), sizeof(int32_t));
-                    log_warning(logger_cpu, "recibir_marco_solicitado ==== %d", marco_global);
+                //    log_warning(logger_cpu, "recibir_marco_solicitado ==== %d", marco_global);
                 }
                 else{
-                    log_error(logger_cpu, "Error al recibir el marco solicitado");
+                  //  log_error(logger_cpu, "Error al recibir el marco solicitado");
                 }
-                log_warning(logger_cpu, "EL NO HIZO NADA   2");
+              //  log_warning(logger_cpu, "EL NO HIZO NADA   2");
                 sem_post(&sem_rta_marco);
                 break;
             case FIN_PID:

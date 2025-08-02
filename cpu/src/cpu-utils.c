@@ -128,7 +128,7 @@ void check_interrupt(){
         log_trace(logger_cpu, "DIOS MIO");
 
         if(flag_interrupt){
-            log_warning(logger_cpu, "## Llega interrupción al puerto Interrupt");
+            log_info(logger_cpu, "## Llega interrupción al puerto Interrupt");
             flag_interrupt = false; 
             enviar_proceso_desalojado(fd_conexion_kernel_interrupt, pcb_actual->pid, pcb_actual->pc);
             log_trace(logger_cpu, "ANASHE");
@@ -239,7 +239,7 @@ char* recibir_read_o_write_de_memoria() {
     memcpy(contenido, paquete->buffer->stream + desplazamiento, tamanio);
 
 
-    log_debug(logger_cpu, "Contenido recibido: %s", contenido);
+  //  log_debug(logger_cpu, "Contenido recibido: %s", contenido);
 
     // Log según el tipo de operación
     if (paquete->codigo_operacion == READ_MEMORIA) {
@@ -253,17 +253,17 @@ char* recibir_read_o_write_de_memoria() {
 }
 
 char* deserializar_read_o_write_de_memoria(t_paquete* paquete){
-      uint32_t tamanio = 0;
+    uint32_t tamanio = 0;
     uint32_t desplazamiento = 0;
     memcpy(&tamanio, paquete->buffer->stream + desplazamiento, sizeof(uint32_t));
     desplazamiento += sizeof(uint32_t);
 
-    // Reservá SIEMPRE mmu->tamanio_pagina bytes
-    char* contenido = calloc(1, mmu->tamanio_pagina); // inicializa en 0
+    // Reservá solo lo necesario (+1 para '\0')
+    char* contenido = malloc(tamanio + 1);
     memcpy(contenido, paquete->buffer->stream + desplazamiento, tamanio);
+    contenido[tamanio] = '\0'; 
 
-    // Opcional: loguear solo los primeros bytes como string
-    log_debug(logger_cpu, "Contenido deserializado (primeros bytes): %.32s", contenido);
+    log_debug(logger_cpu, "Contenido deserializado: %s", contenido);
 
     return contenido;
 }
@@ -382,7 +382,7 @@ void destruir_tlb(tlb_t* tlb) {
 
 void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrante, algoritmo_tlb_t algoritmo){
 	if (tlb->cantidad_entradas == 0) {
-    log_warning(logger_cpu, "No se usa TLB: cantidad de entradas es 0.");
+   // log_warning(logger_cpu, "No se usa TLB: cantidad de entradas es 0.");
     return;
     }
  	for (uint32_t i = 0; i < tlb->cantidad_entradas; i++) {
@@ -390,7 +390,7 @@ void agregar_a_tlb(uint32_t nro_pagina_entrante, uint32_t marco_asociado_entrant
             tlb->entradas[i].nro_pagina = nro_pagina_entrante;
             tlb->entradas[i].marco_asociado = marco_asociado_entrante;
 			tlb->entradas[i].bit_en_uso = 1; 
-            log_debug(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
+      //      log_debug(logger_cpu, "Agregada a TLB: Pagina <%d> - Marco <%d> en posicion <%d>", nro_pagina_entrante, marco_asociado_entrante, i);
             // log_warning(logger_cpu, "TLB: bit en uso <%d> - Marco <%d> en numero de pagina <%d>", tlb->entradas[i].bit_en_uso, tlb->entradas[i].marco_asociado, 
 			// 			tlb->entradas[i].nro_pagina);
 
@@ -718,7 +718,7 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
         
         //Si la pagina NO está en TLB, es necesario acceder a la tabla de paginas
         if (marco == -1) {
-            log_warning(logger_cpu, "Marco correspondiente a la Página %d NO encontrado en TLB, Es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
+        //    log_warning(logger_cpu, "Marco correspondiente a la Página %d NO encontrado en TLB, Es necesario acceder a la tabla de páginas", pre_direccion_fisica.nro_pagina);
             // Accede a la tabla de páginas para obtener el marco y la agrega a la tlb
                 marco = tlb_miss(pre_direccion_fisica);
 
@@ -729,7 +729,7 @@ int manejar_cache_miss(t_pre_direccion_fisica pre_direccion_fisica) {
         }
     }
     else {
-        log_warning(logger_cpu, "TLB no está activada, se accederá a la tabla de páginas directamente");
+     //   log_warning(logger_cpu, "TLB no está activada, se accederá a la tabla de páginas directamente");
         // Accede a la tabla de páginas para obtener el marco
         marco = solicitar_marco_a_memoria(pre_direccion_fisica, pcb_actual->pid);
     } 
