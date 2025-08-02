@@ -108,6 +108,7 @@ int main(int argc, char* argv[]){
 	destruir_mmu(mmu);
 	config_destroy(config_cpu);
 	log_destroy(logger_cpu);
+	free(path_relativo);
 
     return 0;
 }

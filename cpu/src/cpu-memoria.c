@@ -54,7 +54,12 @@ int manejar_conexion_memoria(){
                 char* mensaje_cache = deserializar_read_o_write_de_memoria(paquete);
              //   log_info(logger_cpu, "PID: <%d> - ESCRIBIR en <%d> -> %s", pcb_actual->pid, mmu->ultima_direccion_fisica_calculada, mensaje_cache);
                 respuesta_memo = strdup(mensaje_cache);
+<<<<<<< Updated upstream
                 //log_trace(logger_cpu, "WRITE CACHE");
+=======
+                log_trace(logger_cpu, "WRITE CACHE");
+                free(mensaje_cache);
+>>>>>>> Stashed changes
                 sem_post(&sem_respuesta_memo);
                 break;
             
