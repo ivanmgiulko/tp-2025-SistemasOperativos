@@ -42,10 +42,10 @@ Si querés profundizar más en los requerimientos y requisitos del TP, podés ac
 ## Consultas o Contactos
 Por cualquier consulta, por favor contactar a cualquiera de los integrantes:
 
-Luciano Lobo: [Github](https://github.com/LoboLuciano) - [Linkedin](https://www.linkedin.com/in/luciano-lobo-81b0b4212/) (Kernel & IO)
-Facundo Vinitzca: [Github](https://github.com/ViniBitCode) - [Linkedin](https://www.linkedin.com/in/facundo-hern%C3%A1n-vinitzca-a2bb38284/) (Kernel & IO)
-Leandro Calviño: [Github](https://github.com/LeandroCalvinoGITutn) - [Linkedin](https://www.linkedin.com/in/leandro-calvino/) (Memoria & CPU)
-Iván Giulkovich: [Github](https://github.com/ivanmgiulko) - [Linkedin](https://www.linkedin.com/in/ivan-giulkovich-a561b9306/) (CPU & Memoria)
-Thiago Santero: [Github](https://github.com/tsantero22) - [Linkedin](https://www.linkedin.com/in/thiago-santero-94bb6b1b6/) (Memoria & CPU)
+Luciano Lobo: [Github](https://github.com/LoboLuciano) - [Linkedin](https://www.linkedin.com/in/luciano-lobo-81b0b4212/) (Kernel & IO).
+Facundo Vinitzca: [Github](https://github.com/ViniBitCode) - [Linkedin](https://www.linkedin.com/in/facundo-hern%C3%A1n-vinitzca-a2bb38284/) (Kernel & IO).
+Leandro Calviño: [Github](https://github.com/LeandroCalvinoGITutn) - [Linkedin](https://www.linkedin.com/in/leandro-calvino/) (Memoria & CPU).
+Iván Giulkovich: [Github](https://github.com/ivanmgiulko) - [Linkedin](https://www.linkedin.com/in/ivan-giulkovich-a561b9306/) (CPU & Memoria).
+Thiago Santero: [Github](https://github.com/tsantero22) - [Linkedin](https://www.linkedin.com/in/thiago-santero-94bb6b1b6/) (Memoria & CPU).
 
 
